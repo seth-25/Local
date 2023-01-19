@@ -86,29 +86,23 @@ public class VersionAction {
         Version newVersion = CacheUtil.curVersion.deepCopy();
 //        System.out.println("---------------------------------");
         if (versionBytes[0] == 0) {
-            Integer[] inVer = {0};
-            Integer[] outVer = {0};
-            Long[] fileNum = {0L};
-            byte[] minSax = new byte[Parameters.saxDataSize];
-            byte[] maxSax = new byte[Parameters.saxDataSize];
-            Long[] minTime = {0L};
-            Long[] maxTime = {0L};
+            VersionUtil.Version1Content ver1 = new VersionUtil.Version1Content();
 
-            VersionUtil.analysisVersionBytes(versionBytes,
-                    inVer, outVer, fileNum, minSax, maxSax, minTime, maxTime);
+            VersionUtil.analysisVersionBytes(versionBytes, ver1);
 
-            System.out.println("\t需要更新版本1:" + "内" + inVer[0] + " 外" + outVer[0] + " 文件" + fileNum[0] + " " + minTime[0] + " " + maxTime[0]);
-            newVersion.updateVersion(workerHostName, new Pair<>(inVer[0], outVer[0]));
+            System.out.println("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件"
+                    + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
+            newVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
 
 
             // rtree插入
             RTree<String, Rectangle> tree = newVersion.getrTree();
-            System.out.println("\trtree插入:" + VersionUtil.saxToDouble(minSax) + " " + VersionUtil.saxToDouble(maxSax) + " 文件名" + fileNum[0]);
+            System.out.println("\trtree插入:" + VersionUtil.saxToDouble(ver1.minSax) + " " + VersionUtil.saxToDouble(ver1.maxSax) + " 文件名" + ver1.fileNum);
 //            System.out.println("\trtree插入sax(long):" + VersionUtil.bytesToLong(minSax) + " " + VersionUtil.bytesToLong(maxSax));
 //            System.out.println("\trtree插入sax(byte):" + Arrays.toString(minSax) + " " + Arrays.toString(maxSax));
-            tree = tree.add(Parameters.hostName + ":" + fileNum[0], Geometries.rectangle (
-                    VersionUtil.saxToDouble(minSax), (double) minTime[0],
-                    VersionUtil.saxToDouble(maxSax), (double) maxTime[0]));
+            tree = tree.add(Parameters.hostName + ":" + ver1.fileNum, Geometries.rectangle (
+                    VersionUtil.saxToDouble(ver1.minSax), (double) ver1.minTime,
+                    VersionUtil.saxToDouble(ver1.maxSax), (double) ver1.maxTime));
 
             newVersion.setrTree(tree);
             System.out.println("\trtree插入完成");
@@ -126,35 +120,24 @@ public class VersionAction {
         }
         else if (versionBytes[0] == 1) {
             Integer[] outVer = {0};
-            ArrayList<Long> addFileNums = new ArrayList<>();
-            ArrayList<byte[]> addMinSaxes = new ArrayList<>();
-            ArrayList<byte[]> addMaxSaxes = new ArrayList<>();
-            ArrayList<Long> addMinTimes = new ArrayList<>();
-            ArrayList<Long> addMaxTimes = new ArrayList<>();
-            ArrayList<Long> delFileNums = new ArrayList<>();
-            ArrayList<byte[]> delMinSaxes = new ArrayList<>();
-            ArrayList<byte[]> delMaxSaxes = new ArrayList<>();
-            ArrayList<Long> delMinTimes = new ArrayList<>();
-            ArrayList<Long> delMaxTimes = new ArrayList<>();
-            VersionUtil.analysisVersionBytes(versionBytes, outVer,
-                    addFileNums, addMinSaxes, addMaxSaxes, addMinTimes, addMaxTimes,
-                    delFileNums, delMinSaxes, delMaxSaxes, delMinTimes, delMaxTimes);
+            VersionUtil.Version2Content ver2 = new VersionUtil.Version2Content();
+            VersionUtil.analysisVersionBytes(versionBytes, ver2);
 
             newVersion.updateVersion(workerHostName, outVer[0]);
 
             // rtree删除
             RTree<String, Rectangle> tree = newVersion.getrTree();
 
-            for (int i = 0; i < delMaxSaxes.size(); i ++ ) {
-                tree = tree.delete(Parameters.hostName + ":" + delFileNums.get(i), Geometries.rectangle (
-                        VersionUtil.saxToDouble(delMinSaxes.get(i)), (double) delMinTimes.get(i),
-                        VersionUtil.saxToDouble(delMaxSaxes.get(i)),(double) delMaxTimes.get(i)));
+            for (int i = 0; i < ver2.delMaxSaxes.size(); i ++ ) {
+                tree = tree.delete(Parameters.hostName + ":" + ver2.delFileNums.get(i), Geometries.rectangle (
+                        VersionUtil.saxToDouble(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i),
+                        VersionUtil.saxToDouble(ver2.delMaxSaxes.get(i)),(double) ver2.delMaxTimes.get(i)));
             }
             // rtree增加
-            for (int i = 0; i < addMaxSaxes.size(); i ++ ) {
-                tree = tree.delete(Parameters.hostName + ":" + addFileNums.get(i), Geometries.rectangle (
-                        VersionUtil.saxToDouble(addMinSaxes.get(i)), (double) addMinTimes.get(i),
-                        VersionUtil.saxToDouble(addMaxSaxes.get(i)), (double) addMaxTimes.get(i)));
+            for (int i = 0; i < ver2.addMaxSaxes.size(); i ++ ) {
+                tree = tree.add(Parameters.hostName + ":" + ver2.addFileNums.get(i), Geometries.rectangle (
+                        VersionUtil.saxToDouble(ver2.addMinSaxes.get(i)), (double) ver2.addMinTimes.get(i),
+                        VersionUtil.saxToDouble(ver2.addMaxSaxes.get(i)), (double) ver2.addMaxTimes.get(i)));
             }
             newVersion.setrTree(tree);
 
@@ -167,6 +150,92 @@ public class VersionAction {
             throw new RuntimeException("版本错误");
         }
     }
+
+//    public static void changeVersion(byte[] versionBytes, String workerHostName) {
+//        Version newVersion = CacheUtil.curVersion.deepCopy();
+////        System.out.println("---------------------------------");
+//        if (versionBytes[0] == 0) {
+//            Integer[] inVer = {0};
+//            Integer[] outVer = {0};
+//            Long[] fileNum = {0L};
+//            byte[] minSax = new byte[Parameters.saxDataSize];
+//            byte[] maxSax = new byte[Parameters.saxDataSize];
+//            Long[] minTime = {0L};
+//            Long[] maxTime = {0L};
+//
+//            VersionUtil.analysisVersionBytes(versionBytes,
+//                    inVer, outVer, fileNum, minSax, maxSax, minTime, maxTime);
+//
+//            System.out.println("\t需要更新版本1:" + "内" + inVer[0] + " 外" + outVer[0] + " 文件" + fileNum[0] + " " + minTime[0] + " " + maxTime[0]);
+//            newVersion.updateVersion(workerHostName, new Pair<>(inVer[0], outVer[0]));
+//
+//
+//            // rtree插入
+//            RTree<String, Rectangle> tree = newVersion.getrTree();
+//            System.out.println("\trtree插入:" + VersionUtil.saxToDouble(minSax) + " " + VersionUtil.saxToDouble(maxSax) + " 文件名" + fileNum[0]);
+////            System.out.println("\trtree插入sax(long):" + VersionUtil.bytesToLong(minSax) + " " + VersionUtil.bytesToLong(maxSax));
+////            System.out.println("\trtree插入sax(byte):" + Arrays.toString(minSax) + " " + Arrays.toString(maxSax));
+//            tree = tree.add(Parameters.hostName + ":" + fileNum[0], Geometries.rectangle (
+//                    VersionUtil.saxToDouble(minSax), (double) minTime[0],
+//                    VersionUtil.saxToDouble(maxSax), (double) maxTime[0]));
+//
+//            newVersion.setrTree(tree);
+//            System.out.println("\trtree插入完成");
+//
+//            newVersion.setRef(1);    // 大版本ref=1
+//            refWorkerVersions(newVersion.getWorkerVersions());  // 该大版本包括所有worker的小版本ref+1
+//
+//            System.out.println("\t当前版本ref" + CacheUtil.curVersion.getRef());
+//            unRefCurVersion();  // 上一个大版本ref-1
+////            System.out.println("当前版本ref" + CacheUtil.curVersion.getRef());
+//            updateCurVersion(newVersion);   // 新版本覆盖旧版本
+//
+//            System.out.println("\t更新完成 " + CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName));
+//            printWorkerVersion();
+//        }
+//        else if (versionBytes[0] == 1) {
+//            Integer[] outVer = {0};
+//            ArrayList<Long> addFileNums = new ArrayList<>();
+//            ArrayList<byte[]> addMinSaxes = new ArrayList<>();
+//            ArrayList<byte[]> addMaxSaxes = new ArrayList<>();
+//            ArrayList<Long> addMinTimes = new ArrayList<>();
+//            ArrayList<Long> addMaxTimes = new ArrayList<>();
+//            ArrayList<Long> delFileNums = new ArrayList<>();
+//            ArrayList<byte[]> delMinSaxes = new ArrayList<>();
+//            ArrayList<byte[]> delMaxSaxes = new ArrayList<>();
+//            ArrayList<Long> delMinTimes = new ArrayList<>();
+//            ArrayList<Long> delMaxTimes = new ArrayList<>();
+//            VersionUtil.analysisVersionBytes(versionBytes, outVer,
+//                    addFileNums, addMinSaxes, addMaxSaxes, addMinTimes, addMaxTimes,
+//                    delFileNums, delMinSaxes, delMaxSaxes, delMinTimes, delMaxTimes);
+//
+//            newVersion.updateVersion(workerHostName, outVer[0]);
+//
+//            // rtree删除
+//            RTree<String, Rectangle> tree = newVersion.getrTree();
+//
+//            for (int i = 0; i < delMaxSaxes.size(); i ++ ) {
+//                tree = tree.delete(Parameters.hostName + ":" + delFileNums.get(i), Geometries.rectangle (
+//                        VersionUtil.saxToDouble(delMinSaxes.get(i)), (double) delMinTimes.get(i),
+//                        VersionUtil.saxToDouble(delMaxSaxes.get(i)),(double) delMaxTimes.get(i)));
+//            }
+//            // rtree增加
+//            for (int i = 0; i < addMaxSaxes.size(); i ++ ) {
+//                tree = tree.add(Parameters.hostName + ":" + addFileNums.get(i), Geometries.rectangle (
+//                        VersionUtil.saxToDouble(addMinSaxes.get(i)), (double) addMinTimes.get(i),
+//                        VersionUtil.saxToDouble(addMaxSaxes.get(i)), (double) addMaxTimes.get(i)));
+//            }
+//            newVersion.setrTree(tree);
+//
+//            newVersion.setRef(1);
+//            refWorkerVersions(newVersion.getWorkerVersions());
+//            unRefCurVersion();
+//            updateCurVersion(newVersion);
+//
+//        } else {
+//            throw new RuntimeException("版本错误");
+//        }
+//    }
 
 
 

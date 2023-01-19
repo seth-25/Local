@@ -18,25 +18,9 @@ import java.util.*;
 public class SearchAction {
 
 
-    static public class SearchContent {
-        public byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
-        public long startTime;
-        public long endTime;
-        public int k;
-        public int needNum;
-        public float topDist;
-        List<Long> pList = new ArrayList<>();
-        /**
-         * 排序，同一个文件挨着搜
-         */
-        public void sortPList() {
-            Collections.sort(pList);
-        }
-    }
-
     public static byte[] searchNearlyTs(byte[] info) {  // 查找最近的至多k个ts
         System.out.println("查询相近");
-        SearchContent aQuery = new SearchContent();
+        SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         SearchUtil.analysisSearchSend(info, aQuery);
         aQuery.sortPList();

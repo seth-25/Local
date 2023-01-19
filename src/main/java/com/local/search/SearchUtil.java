@@ -4,6 +4,8 @@ import com.local.domain.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class SearchUtil {
 
@@ -95,7 +97,23 @@ public class SearchUtil {
         return aQuery;
     }
 
-    public static void analysisSearchSend(byte[] info, SearchAction.SearchContent aQuery) {
+    static public class SearchContent {
+        public byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
+        public long startTime;
+        public long endTime;
+        public int k;
+        public int needNum;
+        public float topDist;
+        List<Long> pList = new ArrayList<>();
+        /**
+         * 排序，同一个文件挨着搜
+         */
+        public void sortPList() {
+            Collections.sort(pList);
+        }
+    }
+
+    public static void analysisSearchSend(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4], longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(info, Parameters.timeSeriesDataSize, longBytes, 0, 8);

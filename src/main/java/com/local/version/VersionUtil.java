@@ -4,6 +4,8 @@ import com.local.domain.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class VersionUtil {
 
@@ -58,7 +60,32 @@ public class VersionUtil {
         return (double) l;
     }
 
-    //第一个字节为0， 发送versionid 4字节, amV_id 4字节, number 8字节，saxt_smallest 8字节，saxt_biggest 8字节，startTime 8字节，endTime 8字节，
+    static public class Version1Content {
+        public int inVer;
+        public int outVer;
+        public long fileNum;
+        public byte[] minSax = new byte[Parameters.saxDataSize];
+        public byte[] maxSax = new byte[Parameters.saxDataSize];
+        public long minTime;
+        public long maxTime;
+    }
+    public static void analysisVersionBytes(byte[] versionBytes, Version1Content ver1) {
+        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        System.arraycopy(versionBytes, 1, intBytes, 0, 4);
+        ver1.outVer = bytesToInt(intBytes);
+        System.arraycopy(versionBytes, 1 + 4, intBytes, 0, 4);
+        ver1.inVer = bytesToInt(intBytes);
+        System.arraycopy(versionBytes, 1 + 4 + 4, longBytes, 0, 8);
+        ver1.fileNum = bytesToLong(longBytes);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8, ver1.minSax, 0, Parameters.saxDataSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize, ver1.maxSax, 0, Parameters.saxDataSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+        ver1.minTime = bytesToLong(longBytes);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize + 8, longBytes, 0, 8);
+        ver1.maxTime = bytesToLong(longBytes);
+    }
+
+    //第一个字节为0， 发送versionid 4字节, amV_id 4字节, number 8字节，saxt_smallest 16/8字节，saxt_biggest 16/8字节，startTime 8字节，endTime 8字节，
     public static void analysisVersionBytes(byte[] versionBytes,
                                             Integer[] inVer, Integer[] outVer, Long[] fileNum,
                                             byte[] minSax, byte[] maxSax, Long[] minTime, Long[] maxTime) {
@@ -72,16 +99,81 @@ public class VersionUtil {
         inVer[0] = bytesToInt(intBytes);
         System.arraycopy(versionBytes, 1 + 4 + 4, longBytes, 0, 8);
         fileNum[0] = bytesToLong(longBytes);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8, minSax, 0, 8);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + 8, maxSax, 0, 8);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + 8 + 8, longBytes, 0, 8);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8, minSax, 0, Parameters.saxDataSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize, maxSax, 0, Parameters.saxDataSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
         minTime[0] = bytesToLong(longBytes);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + 8 + 8 + 8, longBytes, 0, 8);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize + 8, longBytes, 0, 8);
         maxTime[0] = bytesToLong(longBytes);
     }
 
-    //第一个字节为1，发送versionid 4字节， 删除的个数n1 4字节，(saxt_smallest 8字节，saxt_biggest 8字节，startTime 8字节，endTime 8字节) * n1
-    //增加的个数n2 4字节，(number 8字节，saxt_smallest 8字节，saxt_biggest 8字节，startTime 8字节，endTime 8字节) * n2
+    public static class Version2Content {
+        int outVer;
+        ArrayList<Long> addFileNums = new ArrayList<>();
+        ArrayList<byte[]> addMinSaxes = new ArrayList<>();
+        ArrayList<byte[]> addMaxSaxes = new ArrayList<>();
+        ArrayList<Long> addMinTimes = new ArrayList<>();
+        ArrayList<Long> addMaxTimes = new ArrayList<>();
+        ArrayList<Long> delFileNums = new ArrayList<>();
+        ArrayList<byte[]> delMinSaxes = new ArrayList<>();
+        ArrayList<byte[]> delMaxSaxes = new ArrayList<>();
+        ArrayList<Long> delMinTimes = new ArrayList<>();
+        ArrayList<Long> delMaxTimes = new ArrayList<>();
+    }
+    //第一个字节为1，发送versionid 4字节
+    //删除的个数n1 4字节，(number 8字节，saxt_smallest 8/16字节，saxt_biggest 8/16字节，startTime 8字节，endTime 8字节) * n1
+    //增加的个数n2 4字节，(number 8字节，saxt_smallest 8/16字节，saxt_biggest 8/16字节，startTime 8字节，endTime 8字节) * n2
+
+    public static void analysisVersionBytes(byte[] versionBytes, Version2Content ver2) {
+        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        System.arraycopy(versionBytes, 1, intBytes, 0, 4);
+        ver2.outVer = bytesToInt(intBytes);
+        int numDel, numAdd;
+        int nodeByteNum =  8 + 2 * Parameters.saxDataSize + 16;
+
+        System.arraycopy(versionBytes, 5, intBytes, 0, 4);
+        numDel = bytesToInt(intBytes);
+        for (int i = 0; i < numDel; i ++ ) {
+            byte[] delMinSax = new byte[Parameters.saxDataSize];
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum, longBytes, 0, 8);
+            ver2.delFileNums.add(bytesToLong(longBytes));
+
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8, delMinSax, 0, Parameters.saxDataSize);
+            ver2.delMinSaxes.add(delMinSax);
+
+            byte[] delMaxSax = new byte[Parameters.saxDataSize];
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxDataSize, delMaxSax, 0, Parameters.saxDataSize);
+            ver2.delMaxSaxes.add(delMaxSax);
+
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            ver2.delMinTimes.add(bytesToLong(longBytes));
+
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 16 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            ver2.delMaxTimes.add(bytesToLong(longBytes));
+        }
+
+        System.arraycopy(versionBytes, 9 + numDel * nodeByteNum, intBytes, 0, 4);
+        numAdd = bytesToInt(intBytes);
+        for (int i = 0; i < numAdd; i ++ ) {
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum, longBytes, 0, 8);
+            ver2.addFileNums.add(bytesToLong(longBytes));
+
+            byte[] addMinSax = new byte[Parameters.saxDataSize];
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8, addMinSax, 0, Parameters.saxDataSize);
+            ver2.addMinSaxes.add(addMinSax);
+
+            byte[] addMaxSax = new byte[Parameters.saxDataSize];
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxDataSize, addMaxSax, 0, Parameters.saxDataSize);
+            ver2.addMaxSaxes.add(addMaxSax);
+
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            ver2.addMinTimes.add(bytesToLong(longBytes));
+
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 16 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            ver2.addMaxTimes.add(bytesToLong(longBytes));
+        }
+    }
+
     public static void analysisVersionBytes(byte[] versionBytes,
                                             Integer[] outVer,
                                             ArrayList<Long> addFileNums,
