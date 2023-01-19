@@ -27,20 +27,8 @@ public class SearchAction {
 
         List<Pair<byte[], Float>> searchTS = new ArrayList<>();
         for (Long p : aQuery.pList) {
-//            System.out.println(p);
-//            System.out.println(Arrays.toString(p));
             int p_hash = (int)(p >> 56);
             long offset = p.longValue() & 0x00ffffffffffffffL;
-//            System.out.println("offset:"+offset);
-
-//            TimeSeries timeSeries = null;
-//            try {
-//                timeSeries = FileUtil.readTsFromFIle(Parameters.tsFolder, offset);
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            byte[] ts = CacheUtil.fileEnv.get(offset, 0);
-
 
             FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             byte[] tskey = null;
@@ -62,6 +50,10 @@ public class SearchAction {
             }
         });
 
+        //  ares
+        //  ts 256*4 time 8
+        //  float dist 4 最后4位为空
+        //  1040
         int cnt = 0;
         byte[] tmp = new byte[aQuery.pList.size() * 1040];
         for (Pair<byte[], Float> tsPair: searchTS) {
@@ -70,6 +62,7 @@ public class SearchAction {
             if (cnt >= aQuery.needNum) {
                 if (dis > aQuery.topDist || cnt >= aQuery.k) break;
             }
+
             System.arraycopy(tsPair.getKey(), 0, tmp, cnt * 1040, Parameters.tsSize);
             System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * 1040 + Parameters.tsSize, 4);
             cnt ++;
