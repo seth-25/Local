@@ -85,7 +85,7 @@ public class SearchAction {
 
         boolean isUseAm = true; // sax范围 是否在个该机器上
         byte[] saxData = new byte[Parameters.saxDataSize];
-        float[] paa = new float[32];
+        float[] paa = new float[Parameters.paaSize];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxData, paa);
         System.out.println("sax: "  + Arrays.toString(saxData));
         System.out.println("sax的浮点值: " + VersionUtil.saxToDouble(saxData));

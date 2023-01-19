@@ -30,6 +30,7 @@ public class Main1 {
             int i = 0;
             while(flag) {
                 for (Map.Entry<Integer, FileChannelReader> entry: CacheUtil.fileChannelReaderMap.entrySet()) {
+                    long readStartTime = System.currentTimeMillis();
                     flag = false;
                     // 从文件读ts
 //                        long t = System.currentTimeMillis();
@@ -43,6 +44,7 @@ public class Main1 {
                     else {  // 读完了跳过
                         continue;
                     }
+                    readTime += System.currentTimeMillis() - readStartTime;
                     System.out.println("读" + (++cnt));
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
@@ -71,6 +73,7 @@ public class Main1 {
         return new Runnable() {
             @Override
             public void run() {
+
                 FileChannelReader reader2 = null;
                 try {
                     reader2 = new FileChannelReader(Parameters.FileSetting.inputPath + "output.bin", 1024, 0 );
@@ -148,6 +151,7 @@ public class Main1 {
 //        newFixedThreadPool.execute(putThread());
 
 
+        System.out.println("读文件时间 " + readTime);
         Thread.sleep(3000);
 
         FileChannelReader reader2 = null;

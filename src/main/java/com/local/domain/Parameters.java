@@ -12,9 +12,12 @@ public class Parameters {
 
 
 
-    public static final int saxDataSize = 8; // sax中数据大小
-    public static final int saxPointerSize = 8; // sax中指针的大小,7字节p_offset+1字节p_hash
-    public static final int saxSize = saxDataSize + saxPointerSize + timeStampSize; // 一条sax大小多少字节
+    public static final int segmentSize = 8;   // 分成几段
+    public static final int paaSize = segmentSize; // paa个数,一段一个paa
+    public static final int bitCardinality = 8; // paa离散化几位
+    public static final int saxDataSize = segmentSize * bitCardinality / 8; // sax多少字节
+    public static final int saxPointerSize = 8; // sax中指针的大小,1字节p_hash+7字节p_offset
+    public static final int saxSize = saxDataSize + saxPointerSize + timeStampSize; // 一个sax结构大小多少字节
 
 
     public static class Init {

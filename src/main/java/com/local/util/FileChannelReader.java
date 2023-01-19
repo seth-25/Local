@@ -37,7 +37,6 @@ public class FileChannelReader {
             throw new RuntimeException(e);
         }
         if (bytes != -1) {
-
             int oldOffset = offset;
             offset += bytes / Parameters.tsSize;
             byteBuf.flip();
