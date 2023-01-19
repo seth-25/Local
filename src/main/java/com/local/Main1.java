@@ -164,7 +164,7 @@ public class Main1 {
         int k = 100;
 
         System.out.println("开始查询");
-        byte[] ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
+        byte[] ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
         System.out.println(ans.length);
 
 

@@ -59,7 +59,10 @@ public class SearchAction {
 
 
             FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
-            byte[] tskey = reader.readTs(offset);
+            byte[] tskey = null;
+            synchronized (reader) {
+                tskey = reader.readTs(offset);
+            }
 
 //            System.out.println(Arrays.toString(tskey));
             long timestamps = TsUtil.bytesToLong(tskey, Parameters.timeSeriesDataSize);
@@ -92,6 +95,7 @@ public class SearchAction {
         System.arraycopy(tmp, 0, res, 0, cnt * 1040);
         return res;
     }
+
 
     public static byte[] searchTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
 

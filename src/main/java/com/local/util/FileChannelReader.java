@@ -15,6 +15,7 @@ public class FileChannelReader {
     private int offset;
     private int fileNum;
     private byte[] array;
+    private byte[] oneTsArray;
     private FileChannel fileChannel;
     public FileChannelReader(String fileName, int arraySize, int fileNum) throws IOException {
         this.fileIn = new FileInputStream(fileName);
@@ -23,6 +24,8 @@ public class FileChannelReader {
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
         this.fileChannel = fileIn.getChannel();
         this.fileNum = fileNum;
+        this.array = new byte[arraySize];
+        this.oneTsArray = new byte[Parameters.tsSize];
     }
 
 
@@ -37,8 +40,6 @@ public class FileChannelReader {
 
             int oldOffset = offset;
             offset += bytes / Parameters.tsSize;
-
-            array = new byte[bytes];// 字节数组长度为已读取长度
             byteBuf.flip();
             byteBuf.get(array);// 从ByteBuffer中得到字节数组
             byteBuf.clear();
@@ -53,16 +54,16 @@ public class FileChannelReader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        byte[] ts = new byte[Parameters.tsSize];
         readTsByteBuf.flip();
-        readTsByteBuf.get(ts);
+        readTsByteBuf.get(oneTsArray);
         readTsByteBuf.clear();
-        return ts;
+        return oneTsArray;
     }
 
     public void close() throws IOException {
         fileIn.close();
         array = null;
+        oneTsArray = null;
     }
 
     public byte[] getArray() {
