@@ -44,6 +44,11 @@ public class VersionUtil {
     }
 
     public static double saxToDouble(byte[] saxBytes) {
+        if (saxBytes.length > 8) {
+            byte[] newSaxBytes = new byte[8];
+            System.arraycopy(saxBytes, 0, newSaxBytes, 0, 8);
+            saxBytes = newSaxBytes;
+        }
         long l = 0;
         for (int i = saxBytes.length - 1; i >= 0; i --) {
             l <<= 8;
