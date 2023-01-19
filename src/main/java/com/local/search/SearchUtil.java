@@ -49,6 +49,14 @@ public class SearchUtil {
         }
         return bytes;
     }
+    static float bytesToFloat(byte[] b) {
+        int tb = 0;
+        tb |= (b[0] & 0xff);
+        tb |= (b[1] & 0xff) << 8;
+        tb |= (b[2] & 0xff) << 16;
+        tb |= (b[3] & 0xff) << 24;
+        return Float.intBitsToFloat(tb);
+    }
     static float computeDist(byte[] a, byte[] b) {
         assert a.length == b.length;
         float dis = 0;
@@ -99,7 +107,7 @@ public class SearchUtil {
         System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4, intBytes, 0, 4);
         aQuery.needNum = bytesToInt(intBytes);
         System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4, intBytes, 0, 4);
-        aQuery.topDist = bytesToInt(intBytes);
+        aQuery.topDist = bytesToFloat(intBytes);
         System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4, intBytes, 0, 4);
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
