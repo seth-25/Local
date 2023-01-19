@@ -23,9 +23,6 @@ public class Parameters {
     public static class Init {
         public static final int numTs = 1000000; // 初始化ts的个数
     }
-    public static class Insert {
-        public static final int numTempTs = 3; // 暂存几个Ts，达到个数后开始发送
-    }
 
     public static class FileSetting {
         //        public static final int readSize = tsSize * 10000; // 读取文件时一次读取字节数
