@@ -1,6 +1,7 @@
 package com.local;
 
 import com.local.domain.Parameters;
+import com.local.insert.Insert;
 import com.local.insert.InsertAction;
 import com.local.search.SearchAction;
 import com.local.util.*;
@@ -8,66 +9,9 @@ import com.local.version.VersionAction;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 
 
 public class Main {
-    public static void init1() {
-        ArrayList<File> files = null;
-        try {
-
-            files = FileUtil.getAllFile("./db");
-            for (File file: files) {
-                FileUtil.deleteFile(file.getPath());
-            }
-            int saxtNum = 1000000;
-
-            byte[] leaftimekeys = new byte[saxtNum * Parameters.saxSize];
-            boolean flag = true;
-            int i = 0;
-            while(flag) {
-                for (Map.Entry<Integer, MappedFileReader> entry: CacheUtil.mappedFileReaderMap.entrySet()) {
-                    long readStartTime = System.currentTimeMillis();
-                    flag = false;
-                    // 从文件读ts
-//                        long t = System.currentTimeMillis();
-                    MappedFileReader reader = entry.getValue();
-                    long offset = reader.read();
-                    byte[] tsBytes = reader.getArray();
-//                        readTime += System.currentTimeMillis() - t;
-                    if (offset != -1) { // 这个文件没读完
-                        flag = true;
-                    }
-                    else {  // 读完了跳过
-                        continue;
-                    }
-                    readTime += System.currentTimeMillis() - readStartTime;
-                    System.out.println("读" + (++cnt));
-//                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
-//                        InsertAction.putSaxes(saxes);
-                    byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
-                    System.arraycopy(leafTimeKeysBytes, 0, leaftimekeys, i * 100000 * Parameters.saxSize, 100000 * Parameters.saxSize);
-                    i++;
-                }
-            }
-
-            //排序
-            DBUtil.dataBase.leaftimekey_sort(leaftimekeys);
-
-            CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
-            CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
-            VersionAction.initVersion();
-
-            DBUtil.dataBase.open("db");
-            DBUtil.dataBase.init(leaftimekeys, saxtNum);
-            System.out.println("初始化成功==========================");
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
     public static void init() {
         ArrayList<File> files = null;
         try {
@@ -119,45 +63,11 @@ public class Main {
                 int k = 100;
 
                 System.out.println("开始查询");
-                byte[] ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
-                System.out.println("查询结果 " + Arrays.toString(ans));
+                byte[] ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
 
             }
         };
     }
-
-    static int cnt = 0;
-    public static Runnable putThread() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                boolean flag = true;
-                while(flag) {
-                    for (Map.Entry<Integer, MappedFileReader> entry: CacheUtil.mappedFileReaderMap.entrySet()) {
-                        flag = false;
-                        // 从文件读ts
-                        MappedFileReader reader = entry.getValue();
-                        long offset = reader.read();
-                        byte[] tsBytes = reader.getArray();
-                        if (offset != -1) { // 这个文件没读完
-                            flag = true;
-                        }
-                        else {  // 读完了跳过
-                            continue;
-                        }
-                        System.out.println("读" + (++cnt));
-//                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
-//                        InsertAction.putSaxes(saxes);
-                        byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
-                        InsertAction.putSaxesBytes(leafTimeKeysBytes);
-                    }
-                }
-            }
-        };
-    }
-
-
-    public static ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
 
     public static long readTime = 0;
     public static long writeTime = 0;
@@ -173,24 +83,22 @@ public class Main {
             CacheUtil.mappedFileReaderMap.put(fileNum, reader);
         }
 
-        init1();
+        init();
 
+        Thread.sleep(3000);
 
+//        CacheUtil.insertThreadPool.execute(new Insert());
 
-
-//        System.out.println("查询结果 " + Arrays.toString(ans));
-
-
-//        while(true) {
-//            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-//                Thread.sleep(3000);
-//                for (int i = 0; i < 10; i ++) {
-//                    newFixedThreadPool.execute(searchThread());
-//                }
-//                break;
-//            }
-//            Thread.sleep(100);
-//        }
+        while(true) {
+            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
+                Thread.sleep(3000);
+                for (int i = 0; i < 10; i ++) {
+                    CacheUtil.searchThreadPool.execute(searchThread());
+                }
+                break;
+            }
+            Thread.sleep(100);
+        }
 
 
         /////////////////////////////////////////////////////////////////////////
@@ -198,7 +106,8 @@ public class Main {
 
         Thread.sleep(Long.MAX_VALUE);
         DBUtil.dataBase.close();
-        newFixedThreadPool.shutdown();
+        CacheUtil.insertThreadPool.shutdown();
+        CacheUtil.searchThreadPool.shutdown();
     }
 
 

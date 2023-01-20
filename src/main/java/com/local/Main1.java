@@ -117,7 +117,7 @@ public class Main1 {
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
                         byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
-                        InsertAction.putSaxesBytes(leafTimeKeysBytes);
+                        InsertAction.putLeafTimeKeysBytes(leafTimeKeysBytes);
                     }
                 }
             }

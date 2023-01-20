@@ -183,8 +183,14 @@ public class InsertAction {
 
         }
     }
-    public static void putSaxesBytes(byte[] leafTimeKeysBytes) {
+    public static void putLeafTimeKeysBytes(byte[] leafTimeKeysBytes) {
         DBUtil.dataBase.put(leafTimeKeysBytes);
+//        CacheUtil.insertThreadPool.execute(new Runnable() {
+//            @Override
+//            public void run() {
+//                DBUtil.dataBase.put(leafTimeKeysBytes);
+//            }
+//        });
 //        System.out.println("sax存储完成");
     }
 }

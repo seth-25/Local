@@ -49,7 +49,7 @@ public class Insert implements Runnable{
                 return false;
             }
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
-            InsertAction.putSaxesBytes(leafTimeKeys);
+            InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
             return true;
         }
     }
@@ -68,7 +68,7 @@ public class Insert implements Runnable{
                 }
             }
         });
-
+        System.out.println("开始插入======================");
         try {
             tsToSaxChannel.produce();
         } catch (InterruptedException e) {

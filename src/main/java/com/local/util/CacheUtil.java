@@ -18,4 +18,5 @@ public class CacheUtil {
     public static Map<Integer, MappedFileReader> mappedFileReaderMap = new HashMap<>();
 
     public static ExecutorService insertThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
+    public static ExecutorService searchThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
 }
