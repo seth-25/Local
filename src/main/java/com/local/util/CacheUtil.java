@@ -1,9 +1,12 @@
 package com.local.util;
 
+import com.local.domain.Parameters;
 import com.local.domain.Version;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CacheUtil {
 
@@ -13,4 +16,6 @@ public class CacheUtil {
 
     public static Map<Integer, FileChannelReader> fileChannelReaderMap = new HashMap<>();
     public static Map<Integer, MappedFileReader> mappedFileReaderMap = new HashMap<>();
+
+    public static ExecutorService insertThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
 }

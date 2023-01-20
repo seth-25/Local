@@ -1,16 +1,10 @@
 package com.local.insert;
 
-import com.local.Main1;
 import com.local.domain.Parameters;
-import com.local.domain.Sax;
-import com.local.domain.TimeSeries;
+import com.local.domain.LeafTimeKey;
 import com.local.util.*;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
 
 public class InsertAction {
 
@@ -156,32 +150,35 @@ public class InsertAction {
 //        return offset;
 //    }
 
-    public static ArrayList<Sax> getSaxes(byte[] tsBytes, int fileNum, long offset) {
+    public static ArrayList<LeafTimeKey> getSaxes(byte[] tsBytes, int fileNum, long offset) {
         byte[] leafTimeKeysBytes = DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, false);
-        ArrayList<Sax> saxes = new ArrayList<>();
-        for (int i = 0; i < leafTimeKeysBytes.length / Parameters.saxSize; i ++ ) {
-            byte[] data = new byte[Parameters.saxDataSize];
-            byte[] p_offset = new byte[Parameters.saxPointerSize - 1];
+        ArrayList<LeafTimeKey> leafTimeKeys = new ArrayList<>();
+        for (int i = 0; i < leafTimeKeysBytes.length / Parameters.LeafTimeKeysSize; i ++ ) {
+            byte[] data = new byte[Parameters.saxSize];
+            byte[] p_offset = new byte[Parameters.pointerSize - 1];
             byte[] timeStamp = new byte[Parameters.timeStampSize];
-            System.arraycopy(leafTimeKeysBytes, Parameters.saxSize * i, p_offset, 0, p_offset.length);
-            byte p_hash = leafTimeKeysBytes[Parameters.saxSize * i + p_offset.length];
-            System.arraycopy(leafTimeKeysBytes, Parameters.saxSize * i + 1 + p_offset.length, data, 0, data.length);
-            System.arraycopy(leafTimeKeysBytes, Parameters.saxSize * i + data.length + 1 + p_offset.length, timeStamp, 0, timeStamp.length);
-            Sax sax = new Sax(data, p_hash, p_offset, timeStamp);
-            saxes.add(sax);
+            System.arraycopy(leafTimeKeysBytes, Parameters.LeafTimeKeysSize * i, p_offset, 0, p_offset.length);
+            byte p_hash = leafTimeKeysBytes[Parameters.LeafTimeKeysSize * i + p_offset.length];
+            System.arraycopy(leafTimeKeysBytes, Parameters.LeafTimeKeysSize * i + 1 + p_offset.length, data, 0, data.length);
+            System.arraycopy(leafTimeKeysBytes, Parameters.LeafTimeKeysSize * i + data.length + 1 + p_offset.length, timeStamp, 0, timeStamp.length);
+            LeafTimeKey leafTimeKey = new LeafTimeKey(data, p_hash, p_offset, timeStamp);
+            leafTimeKeys.add(leafTimeKey);
         }
-        return saxes;
+        return leafTimeKeys;
     }
 
-    public static byte[] getSaxesBytes(byte[] tsBytes, int fileNum, long offset) {
+    public static byte[] getLeafTimeKeysBytes(byte[] tsBytes, int fileNum, long offset) {
         return DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, false);
     }
+    public static byte[] getLeafTimeKeysBytes(byte[] tsBytes, int fileNum, long offset, boolean isSort) {
+        return DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, isSort);
+    }
     static int c = 0;
-    public static void putSaxes(ArrayList<Sax> saxes) {
+    public static void putSaxes(ArrayList<LeafTimeKey> leafTimeKeys) {
 
-        for (Sax sax: saxes) {
+        for (LeafTimeKey leafTimeKey : leafTimeKeys) {
 //            System.out.println(Arrays.toString(sax.getLeafTimeKeys()));
-            DBUtil.dataBase.put(sax.getLeafTimeKeys());
+            DBUtil.dataBase.put(leafTimeKey.getLeafTimeKeys());
 
 
         }

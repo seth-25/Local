@@ -1,7 +1,6 @@
 package com.local;
 
 import com.local.domain.Parameters;
-import com.local.domain.Sax;
 import com.local.insert.InsertAction;
 import com.local.search.SearchAction;
 import com.local.util.*;
@@ -15,7 +14,7 @@ import java.util.concurrent.Executors;
 
 
 public class Main {
-    public static void init() {
+    public static void init1() {
         ArrayList<File> files = null;
         try {
 
@@ -48,7 +47,7 @@ public class Main {
                     System.out.println("读" + (++cnt));
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
-                    byte[] leafTimeKeysBytes = InsertAction.getSaxesBytes(tsBytes, reader.getFileNum(), offset);
+                    byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
                     System.arraycopy(leafTimeKeysBytes, 0, leaftimekeys, i * 100000 * Parameters.saxSize, 100000 * Parameters.saxSize);
                     i++;
                 }
@@ -63,6 +62,36 @@ public class Main {
 
             DBUtil.dataBase.open("db");
             DBUtil.dataBase.init(leaftimekeys, saxtNum);
+            System.out.println("初始化成功==========================");
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static void init() {
+        ArrayList<File> files = null;
+        try {
+            files = FileUtil.getAllFile("./db");
+            for (File file: files) {
+                FileUtil.deleteFile(file.getPath());
+            }
+            int saxtNum = Parameters.FileSetting.readTsNum;
+
+            MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(0);
+            if (reader == null) {
+                throw new RuntimeException("reader不存在");
+            }
+            long offset = reader.read();
+            byte[] tsBytes = reader.getArray();
+            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
+            System.out.println(leafTimeKeysBytes.length);
+
+            CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
+            CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
+            VersionAction.initVersion();
+
+            DBUtil.dataBase.open("db");
+            DBUtil.dataBase.init(leafTimeKeysBytes, saxtNum);
             System.out.println("初始化成功==========================");
 
         } catch (IOException e) {
@@ -119,7 +148,7 @@ public class Main {
                         System.out.println("读" + (++cnt));
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
-                        byte[] leafTimeKeysBytes = InsertAction.getSaxesBytes(tsBytes, reader.getFileNum(), offset);
+                        byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
                         InsertAction.putSaxesBytes(leafTimeKeysBytes);
                     }
                 }
@@ -144,32 +173,9 @@ public class Main {
             CacheUtil.mappedFileReaderMap.put(fileNum, reader);
         }
 
-        init();
+        init1();
 
 
-//        CacheUtil.fileEnv = new FileEnv(new int[]{0});
-//        newFixedThreadPool.execute(putThread());
-
-
-        System.out.println("读文件时间 " + readTime);
-        Thread.sleep(3000);
-
-        MappedFileReader reader2 = null;
-        try {
-            reader2 = new MappedFileReader(Parameters.FileSetting.inputPath + "output.bin", Parameters.tsSize, 0 );
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        reader2.read();
-        byte[] searchTsBytes = reader2.getArray();  // 查插入的第一个
-
-        long startTime = 0;
-        long endTime = new Date().getTime() / 1000;
-        int k = 100;
-
-        System.out.println("开始查询");
-        byte[] ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
-        System.out.println(ans.length);
 
 
 //        System.out.println("查询结果 " + Arrays.toString(ans));
@@ -178,7 +184,9 @@ public class Main {
 //        while(true) {
 //            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
 //                Thread.sleep(3000);
-//                newFixedThreadPool.execute(searchThread());
+//                for (int i = 0; i < 10; i ++) {
+//                    newFixedThreadPool.execute(searchThread());
+//                }
 //                break;
 //            }
 //            Thread.sleep(100);

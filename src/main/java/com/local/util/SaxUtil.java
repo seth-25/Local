@@ -4,8 +4,8 @@ import com.local.domain.Parameters;
 
 public class SaxUtil {
     public static byte[] createPointerOffset(long offset) {
-        byte[] p_offset = new byte[Parameters.saxPointerSize - 1];
-        for (int i = 0; i < Parameters.saxPointerSize - 1; i ++ ) {
+        byte[] p_offset = new byte[Parameters.pointerSize - 1];
+        for (int i = 0; i < Parameters.pointerSize - 1; i ++ ) {
             p_offset[i] = (byte) (offset >> i * 8);  // 小端 从long的低位开始截断，放在地址低的地方
         }
         return p_offset;

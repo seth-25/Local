@@ -3,9 +3,6 @@ package com.local.version;
 import com.local.domain.Parameters;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class VersionUtil {
 
@@ -69,8 +66,8 @@ public class VersionUtil {
         public int inVer;
         public int outVer;
         public long fileNum;
-        public byte[] minSax = new byte[Parameters.saxDataSize];
-        public byte[] maxSax = new byte[Parameters.saxDataSize];
+        public byte[] minSax = new byte[Parameters.saxSize];
+        public byte[] maxSax = new byte[Parameters.saxSize];
         public long minTime;
         public long maxTime;
     }
@@ -83,11 +80,11 @@ public class VersionUtil {
         ver1.inVer = bytesToInt(intBytes);
         System.arraycopy(versionBytes, 1 + 4 + 4, longBytes, 0, 8);
         ver1.fileNum = bytesToLong(longBytes);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8, ver1.minSax, 0, Parameters.saxDataSize);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize, ver1.maxSax, 0, Parameters.saxDataSize);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8, ver1.minSax, 0, Parameters.saxSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxSize, ver1.maxSax, 0, Parameters.saxSize);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxSize + Parameters.saxSize, longBytes, 0, 8);
         ver1.minTime = bytesToLong(longBytes);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxDataSize + Parameters.saxDataSize + 8, longBytes, 0, 8);
+        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxSize + Parameters.saxSize + 8, longBytes, 0, 8);
         ver1.maxTime = bytesToLong(longBytes);
     }
 
@@ -135,26 +132,26 @@ public class VersionUtil {
         System.arraycopy(versionBytes, 1, intBytes, 0, 4);
         ver2.outVer = bytesToInt(intBytes);
         int numDel, numAdd;
-        int nodeByteNum =  8 + 2 * Parameters.saxDataSize + 16;
+        int nodeByteNum =  8 + 2 * Parameters.saxSize + 16;
 
         System.arraycopy(versionBytes, 5, intBytes, 0, 4);
         numDel = bytesToInt(intBytes);
         for (int i = 0; i < numDel; i ++ ) {
-            byte[] delMinSax = new byte[Parameters.saxDataSize];
+            byte[] delMinSax = new byte[Parameters.saxSize];
             System.arraycopy(versionBytes, 9 + i * nodeByteNum, longBytes, 0, 8);
             ver2.delFileNums.add(bytesToLong(longBytes));
 
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8, delMinSax, 0, Parameters.saxDataSize);
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8, delMinSax, 0, Parameters.saxSize);
             ver2.delMinSaxes.add(delMinSax);
 
-            byte[] delMaxSax = new byte[Parameters.saxDataSize];
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxDataSize, delMaxSax, 0, Parameters.saxDataSize);
+            byte[] delMaxSax = new byte[Parameters.saxSize];
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxSize, delMaxSax, 0, Parameters.saxSize);
             ver2.delMaxSaxes.add(delMaxSax);
 
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxSize + Parameters.saxSize, longBytes, 0, 8);
             ver2.delMinTimes.add(bytesToLong(longBytes));
 
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 16 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 16 + Parameters.saxSize + Parameters.saxSize, longBytes, 0, 8);
             ver2.delMaxTimes.add(bytesToLong(longBytes));
         }
 
@@ -164,18 +161,18 @@ public class VersionUtil {
             System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum, longBytes, 0, 8);
             ver2.addFileNums.add(bytesToLong(longBytes));
 
-            byte[] addMinSax = new byte[Parameters.saxDataSize];
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8, addMinSax, 0, Parameters.saxDataSize);
+            byte[] addMinSax = new byte[Parameters.saxSize];
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8, addMinSax, 0, Parameters.saxSize);
             ver2.addMinSaxes.add(addMinSax);
 
-            byte[] addMaxSax = new byte[Parameters.saxDataSize];
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxDataSize, addMaxSax, 0, Parameters.saxDataSize);
+            byte[] addMaxSax = new byte[Parameters.saxSize];
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxSize, addMaxSax, 0, Parameters.saxSize);
             ver2.addMaxSaxes.add(addMaxSax);
 
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxSize + Parameters.saxSize, longBytes, 0, 8);
             ver2.addMinTimes.add(bytesToLong(longBytes));
 
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 16 + Parameters.saxDataSize + Parameters.saxDataSize, longBytes, 0, 8);
+            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 16 + Parameters.saxSize + Parameters.saxSize, longBytes, 0, 8);
             ver2.addMaxTimes.add(bytesToLong(longBytes));
         }
     }

@@ -7,7 +7,6 @@ import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.local.domain.Parameters;
 import com.local.domain.Version;
 import com.local.util.CacheUtil;
-import com.local.version.VersionUtil;
 import javafx.util.Pair;
 import org.junit.Test;
 
@@ -55,7 +54,7 @@ public class versionTest {
         for (Entry<String, Rectangle> result : results) {
             String value = result.value();
             System.out.println(value.length());
-            String maxSaxStr = value.substring(0, Parameters.saxDataSize);
+            String maxSaxStr = value.substring(0, Parameters.saxSize);
             System.out.println(Arrays.toString(maxSaxStr.getBytes(StandardCharsets.ISO_8859_1)));
 //            System.out.println(hostName);
         }

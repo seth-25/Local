@@ -5,14 +5,11 @@ import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.local.domain.Parameters;
-import com.local.domain.TimeSeries;
 import com.local.util.*;
 import com.local.version.VersionAction;
 import com.local.version.VersionUtil;
-import javafx.collections.transformation.SortedList;
 import javafx.util.Pair;
 
-import java.io.IOException;
 import java.util.*;
 
 public class SearchAction {
@@ -77,7 +74,7 @@ public class SearchAction {
     public static byte[] searchTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
 
         boolean isUseAm = true; // sax范围 是否在个该机器上
-        byte[] saxData = new byte[Parameters.saxDataSize];
+        byte[] saxData = new byte[Parameters.saxSize];
         float[] paa = new float[Parameters.paaSize];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxData, paa);
         System.out.println("sax: "  + Arrays.toString(saxData));
@@ -125,7 +122,7 @@ public class SearchAction {
     public static byte[] searchExactTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
 
         boolean isUseAm = true; // sax范围 是否在个该机器上
-        byte[] saxData = new byte[Parameters.saxDataSize];
+        byte[] saxData = new byte[Parameters.saxSize];
         float[] paa = new float[32];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxData, paa);
         System.out.println("sax: "  + Arrays.toString(saxData));

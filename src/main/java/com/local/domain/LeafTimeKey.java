@@ -1,10 +1,9 @@
 package com.local.domain;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
-public class Sax implements Comparable<Sax>{
-    private byte[] data;
+public class LeafTimeKey implements Comparable<LeafTimeKey>{
+    private byte[] sax;
     private byte p_hash;
     private byte[] p_offset;
     private byte[] timeStamp;
@@ -19,15 +18,15 @@ public class Sax implements Comparable<Sax>{
 //        System.arraycopy(leafTimeKeys, data.length + 1 + p_offset.length, timeStamp, 0, timeStamp.length);
 //    }
 
-    public Sax(byte[] saxData, byte p_hash, byte[] p_offset, byte[] timeStamp) {
-        this.data = saxData;
+    public LeafTimeKey(byte[] saxData, byte p_hash, byte[] p_offset, byte[] timeStamp) {
+        this.sax = saxData;
         this.p_offset = p_offset;
         this.p_hash = p_hash;
         this.timeStamp = timeStamp;
     }
 
-    public byte[] getData(){
-        return data;
+    public byte[] getSax(){
+        return sax;
     }
 
     public byte[] getTimeStamp() {
@@ -35,23 +34,23 @@ public class Sax implements Comparable<Sax>{
     }
 
     public byte[] getLeafTimeKeys() {
-        byte[] res = new byte[data.length + 1 + p_offset.length + timeStamp.length];
+        byte[] res = new byte[sax.length + 1 + p_offset.length + timeStamp.length];
         System.arraycopy(p_offset, 0, res, 0, p_offset.length);
         res[7] = p_hash;
-        System.arraycopy(data, 0, res, 1 + p_offset.length, data.length);
-        System.arraycopy(timeStamp, 0, res, data.length + 1 + p_offset.length, timeStamp.length);
+        System.arraycopy(sax, 0, res, 1 + p_offset.length, sax.length);
+        System.arraycopy(timeStamp, 0, res, sax.length + 1 + p_offset.length, timeStamp.length);
         return res;
     }
 
     public int getSaxLength() {
-        return data.length;
+        return sax.length;
     }
 
     @Override
-    public int compareTo(Sax o) {
+    public int compareTo(LeafTimeKey o) {
         assert this.getSaxLength() == o.getSaxLength();
-        byte[] a = this.getData();
-        byte[] b = o.getData();
+        byte[] a = this.getSax();
+        byte[] b = o.getSax();
         for (int i = a.length - 1; i >= 0; i -- ) { // 小端
             if ((a[i] & 0xff) < (b[i] & 0xff)) return -1;
             else if ((a[i] &0xff) > (b[i] & 0xff)) return 1;
@@ -61,6 +60,6 @@ public class Sax implements Comparable<Sax>{
 
     @Override
     public String toString() {
-        return new String(data, StandardCharsets.UTF_8);
+        return new String(sax, StandardCharsets.UTF_8);
     }
 }

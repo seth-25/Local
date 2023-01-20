@@ -1,7 +1,6 @@
 package com.local;
 
 import com.local.domain.Parameters;
-import com.local.domain.Sax;
 import com.local.insert.InsertAction;
 import com.local.search.SearchAction;
 import com.local.util.*;
@@ -25,7 +24,7 @@ public class Main1 {
             }
             int saxtNum = 1000000;
 
-            byte[] leaftimekeys = new byte[saxtNum * Parameters.saxSize];
+            byte[] leaftimekeys = new byte[saxtNum * Parameters.LeafTimeKeysSize];
             boolean flag = true;
             int i = 0;
             while(flag) {
@@ -33,11 +32,9 @@ public class Main1 {
                     long readStartTime = System.currentTimeMillis();
                     flag = false;
                     // 从文件读ts
-//                        long t = System.currentTimeMillis();
                     FileChannelReader reader = entry.getValue();
                     long offset = reader.read();
                     byte[] tsBytes = reader.getArray();
-//                        readTime += System.currentTimeMillis() - t;
                     if (offset != -1) { // 这个文件没读完
                         flag = true;
                     }
@@ -48,8 +45,8 @@ public class Main1 {
                     System.out.println("读" + (++cnt));
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
-                    byte[] leafTimeKeysBytes = InsertAction.getSaxesBytes(tsBytes, reader.getFileNum(), offset);
-                    System.arraycopy(leafTimeKeysBytes, 0, leaftimekeys, i * 100000 * Parameters.saxSize, 100000 * Parameters.saxSize);
+                    byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
+                    System.arraycopy(leafTimeKeysBytes, 0, leaftimekeys, i * 100000 * Parameters.LeafTimeKeysSize, 100000 * Parameters.LeafTimeKeysSize);
                     i++;
                 }
             }
@@ -119,7 +116,7 @@ public class Main1 {
                         System.out.println("读" + (++cnt));
 //                        ArrayList<Sax> saxes = InsertAction.getSaxes(tsBytes, reader.getFileNum(), offset);
 //                        InsertAction.putSaxes(saxes);
-                        byte[] leafTimeKeysBytes = InsertAction.getSaxesBytes(tsBytes, reader.getFileNum(), offset);
+                        byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
                         InsertAction.putSaxesBytes(leafTimeKeysBytes);
                     }
                 }
