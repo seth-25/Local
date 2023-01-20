@@ -12,17 +12,17 @@ public class FileChannelReader {
     private ByteBuffer byteBuf;
     private ByteBuffer readTsByteBuf;
     private long fileLength;
-    private int offset;
+    private int offset = 0;
     private int fileNum;
     private byte[] array;
     private byte[] oneTsArray;
     private FileChannel fileChannel;
     public FileChannelReader(String fileName, int arraySize, int fileNum) throws IOException {
         this.fileIn = new FileInputStream(fileName);
-        this.fileLength = fileIn.getChannel().size();
+        this.fileChannel = fileIn.getChannel();
+        this.fileLength = fileChannel.size();
         this.byteBuf = ByteBuffer.allocate(arraySize);  // Buffer大小（字节）
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
-        this.fileChannel = fileIn.getChannel();
         this.fileNum = fileNum;
         this.array = new byte[arraySize];
         this.oneTsArray = new byte[Parameters.tsSize];

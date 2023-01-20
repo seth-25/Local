@@ -30,13 +30,13 @@ public class SearchAction {
             int p_hash = (int)(p >> 56);
             long offset = p.longValue() & 0x00ffffffffffffffL;
 
-            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
+//            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
+            MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] tskey = null;
             synchronized (reader) {
                 tskey = reader.readTs(offset);
             }
 
-//            System.out.println(Arrays.toString(tskey));
             long timestamps = TsUtil.bytesToLong(tskey, Parameters.timeSeriesDataSize);
             if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
                 searchTS.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
