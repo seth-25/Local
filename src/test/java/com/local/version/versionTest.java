@@ -89,13 +89,10 @@ public class versionTest {
 
         Iterable<Entry<String, Rectangle>> results = tree.search(Geometries.rectangle(Double.MIN_VALUE,Double.MIN_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
         ArrayList<Long> sstableNumList = new ArrayList<>();
-//        Iterable<Entry<String, Rectangle>> results = tree.entries().toBlocking().toIterable();
         for (Entry<String, Rectangle> result : results) {
             System.out.println(result);
 
-//            String[] str = result.value().split(":");
-//            System.out.println(str[1]);
-//            sstableNumList.add(Long.valueOf(str[1]));
+
         }
 
         System.out.println();
@@ -104,13 +101,7 @@ public class versionTest {
         for (Entry<String, Rectangle> result : results) {
             System.out.println(result);
         }
-//        long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
-//        System.out.println(Arrays.toString(sstableNum));
-//        results = tree.search(Geometries.rectangle(7,5,13,7)).toBlocking().toIterable();
-//        for (Entry<String, Rectangle> result : results) {
-//            System.out.println(result);
-//            System.out.println(result.value());
-//        }
+
     }
     @Test
     public void rTreeTestDel() {
@@ -121,15 +112,11 @@ public class versionTest {
         tree = tree.add(new byte[]{3}, Geometries.rectangle(7, 5, 13, 13));
         tree = tree.add(new byte[]{}, Geometries.rectangle(8, 6, 12, 12));
 
-        Iterable<Entry<byte[], Rectangle>> results = tree.search(Geometries.rectangle(Double.MIN_VALUE,Double.MIN_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
+        Iterable<Entry<byte[], Rectangle>> results = tree.search(Geometries.rectangle(-Double.MAX_VALUE, -Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
         ArrayList<Long> sstableNumList = new ArrayList<>();
-//        Iterable<Entry<String, Rectangle>> results = tree.entries().toBlocking().toIterable();
         for (Entry<byte[], Rectangle> result : results) {
             System.out.println(result);
 
-//            String[] str = result.value().split(":");
-//            System.out.println(str[1]);
-//            sstableNumList.add(Long.valueOf(str[1]));
         }
 
         System.out.println();
@@ -151,31 +138,25 @@ public class versionTest {
     public void rTreeTest1() {
         RTree<String, Rectangle> tree = RTree.create();
 
-//        tree = tree.add(Parameters.hostName + ":"  + "1", Geometries.rectangle(-7.2049724604355024E16, 0.0, 9.1333006301018563E18, 0.0));
-        tree = tree.add(Parameters.hostName + ":"  + "3", Geometries.rectangle(-7, 0.0, 9, 1));
+        byte[] a = {(byte)0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+        byte[] b = {(byte)0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
+
+        String a_str = new String(a, StandardCharsets.ISO_8859_1);
+        String b_str = new String(b, StandardCharsets.ISO_8859_1);
+
+        tree = tree.add(a_str + ":"  + b_str + ":" + 3, Geometries.rectangle(-7, 0.0, 9, 1));
 //        tree = tree.add(Parameters.hostName + ":"  + "6", Geometries.rectangle(-9.1154617147946025E18, 0.0, -7.9938815400873984E16, 0.0));
 //        tree = tree.add(Parameters.hostName + ":"  + "7", Geometries.rectangle(-9.1154617147946025E18, 0.0, -7.9938815400873984E16, 1.67403219458E9));
-        tree = tree.add(Parameters.hostName + ":"  + "7", Geometries.rectangle(-9, -100, -1, 100));
+//        tree = tree.add(Parameters.hostName + ":"  + "7", Geometries.rectangle(-9, -100, -1, 100));
+//        tree = tree.delete("", Geometries.rectangle(-9, -100, -1, 100));
 
         Iterable<Entry<String, Rectangle>> results = tree.search(Geometries.rectangle(-Double.MAX_VALUE,-Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
-
-//        Iterable<Entry<String, Rectangle>> results = tree.search(Geometries.rectangle(-3,Double.MIN_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
-        ArrayList<Long> sstableNumList = new ArrayList<>();
-//        Iterable<Entry<String, Rectangle>> results = tree.entries().toBlocking().toIterable();
         for (Entry<String, Rectangle> result : results) {
-            System.out.println(result);
-
-//            String[] str = result.value().split(":");
-//            System.out.println(str[1]);
-//            sstableNumList.add(Long.valueOf(str[1]));
+            String[] str = result.value().split(":");
+            byte[] get_a = str[0].getBytes(StandardCharsets.ISO_8859_1);
+            byte[] get_b = str[1].getBytes(StandardCharsets.ISO_8859_1);
+            System.out.println(Arrays.toString(get_a) + " " + Arrays.toString(get_b) + " " + str[2]);
         }
-//        long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
-//        System.out.println(Arrays.toString(sstableNum));
-//        results = tree.search(Geometries.rectangle(7,5,13,7)).toBlocking().toIterable();
-//        for (Entry<String, Rectangle> result : results) {
-//            System.out.println(result);
-//            System.out.println(result.value());
-//        }
     }
 
     @Test
@@ -199,14 +180,6 @@ public class versionTest {
         System.out.println(newVersion.getrTree());
     }
 
-    @Test
-    public void myTest() {
-        double a = -4.6723896417293199E18;
-        double b = 1.44054218488241632E17;
-        System.out.println(b >= a);
-        Geometries.rectangle (a, b, 0, 0);
-//        Geometries.rectangle (-1, 0, 0, 0);
-    }
 
     @Test
     public void testSpeed() {

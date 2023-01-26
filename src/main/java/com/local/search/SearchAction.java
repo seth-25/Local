@@ -10,6 +10,7 @@ import com.local.version.VersionAction;
 import com.local.version.VersionUtil;
 import javafx.util.Pair;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class SearchAction {
@@ -103,7 +104,9 @@ public class SearchAction {
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
             String[] str = result.value().split(":");
-            sstableNumList.add(Long.valueOf(str[1]));
+            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
+                sstableNumList.add(Long.valueOf(str[2]));
+            }
         }
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
 
@@ -150,7 +153,9 @@ public class SearchAction {
         ArrayList<Long> sstableNumListNearly = new ArrayList<>();
         for (Entry<String, Rectangle> result : resultsNearly) {
             String[] str = result.value().split(":");
-            sstableNumListNearly.add(Long.valueOf(str[1]));
+            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
+                sstableNumListNearly.add(Long.valueOf(str[2]));
+            }
         }
         long[] sstableNumNearly = sstableNumListNearly.stream().mapToLong(num -> num).toArray();
         ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNumNearly);
@@ -164,7 +169,9 @@ public class SearchAction {
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
             String[] str = result.value().split(":");
-            sstableNumList.add(Long.valueOf(str[1]));
+            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
+                sstableNumList.add(Long.valueOf(str[2]));
+            }
         }
 
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();

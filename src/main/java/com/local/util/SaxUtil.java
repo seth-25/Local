@@ -1,5 +1,6 @@
 package com.local.util;
 
+import com.local.domain.LeafTimeKey;
 import com.local.domain.Parameters;
 
 public class SaxUtil {
@@ -19,4 +20,25 @@ public class SaxUtil {
         }
         return l;
     }
+
+
+    public static int compareSax(byte[] a, byte[] b) {
+        System.out.println(a.length + " " + b.length);
+        assert a.length == b.length;
+        if (Parameters.isSuffix) {
+            for (int i = a.length - 1; i >= 0; i -- ) { // 小端
+                if ((a[i] & 0xff) < (b[i] & 0xff)) return -1;
+                else if ((a[i] &0xff) > (b[i] & 0xff)) return 1;
+            }
+        }
+        else {
+            for (int i = 0; i < a.length; i ++ ) { // 小端
+                if ((a[i] & 0xff) < (b[i] & 0xff)) return -1;
+                else if ((a[i] &0xff) > (b[i] & 0xff)) return 1;
+            }
+        }
+
+        return 0;
+    }
+
 }

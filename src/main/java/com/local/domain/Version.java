@@ -70,8 +70,7 @@ public class Version {
 //        Version copyVersion = gson.fromJson(gson.toJson(this), Version.class);
 //        return copyVersion;
 
-        RTree<String, Rectangle> newRTree = this.rTree.add("", Geometries.rectangle (-1, -1, -1, -1));
-        newRTree = newRTree.delete("", Geometries.rectangle (-1, -1, -1, -1));
+        RTree<String, Rectangle> newRTree = this.rTree.delete("", Geometries.rectangle (-1, -1, -1, -1));
 
         HashMap<String, Pair<Integer, Integer>> newWorkerVersions = new HashMap<>();
         for(Map.Entry<String, Pair<Integer, Integer>> entry: workerVersions.entrySet()) {

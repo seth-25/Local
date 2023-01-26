@@ -2,7 +2,8 @@ package com.local.domain;
 
 import java.nio.charset.StandardCharsets;
 
-public class LeafTimeKey implements Comparable<LeafTimeKey>{
+//public class LeafTimeKey implements Comparable<LeafTimeKey>{
+public class LeafTimeKey{
     private byte[] sax;
     private byte p_hash;
     private byte[] p_offset;
@@ -46,17 +47,6 @@ public class LeafTimeKey implements Comparable<LeafTimeKey>{
         return sax.length;
     }
 
-    @Override
-    public int compareTo(LeafTimeKey o) {
-        assert this.getSaxLength() == o.getSaxLength();
-        byte[] a = this.getSax();
-        byte[] b = o.getSax();
-        for (int i = a.length - 1; i >= 0; i -- ) { // 小端
-            if ((a[i] & 0xff) < (b[i] & 0xff)) return -1;
-            else if ((a[i] &0xff) > (b[i] & 0xff)) return 1;
-        }
-        return 0;
-    }
 
     @Override
     public String toString() {

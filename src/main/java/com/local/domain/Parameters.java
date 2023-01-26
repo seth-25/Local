@@ -20,6 +20,8 @@ public class Parameters {
     public static final int LeafTimeKeysSize = saxSize + pointerSize + timeStampSize; // 一个LeafTimeKeys结构大小多少字节
 
 
+    public static final boolean isSuffix = true;
+
 
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量

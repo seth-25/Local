@@ -9,6 +9,7 @@ import com.local.util.CacheUtil;
 import com.local.util.DBUtil;
 import javafx.util.Pair;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class VersionAction {
@@ -100,9 +101,11 @@ public class VersionAction {
             System.out.println("\trtree插入:" + VersionUtil.saxToDouble(ver1.minSax) + " " + VersionUtil.saxToDouble(ver1.maxSax) + " 文件名" + ver1.fileNum);
 //            System.out.println("\trtree插入sax(long):" + VersionUtil.bytesToLong(minSax) + " " + VersionUtil.bytesToLong(maxSax));
 //            System.out.println("\trtree插入sax(byte):" + Arrays.toString(minSax) + " " + Arrays.toString(maxSax));
-            tree = tree.add(Parameters.hostName + ":" + ver1.fileNum, Geometries.rectangle (
-                    VersionUtil.saxToDouble(ver1.minSax), (double) ver1.minTime,
-                    VersionUtil.saxToDouble(ver1.maxSax), (double) ver1.maxTime));
+//            tree = tree.add(Parameters.hostName + ":" + ver1.fileNum, Geometries.rectangle (
+//                    VersionUtil.saxToDouble(ver1.minSax), (double) ver1.minTime,
+//                    VersionUtil.saxToDouble(ver1.maxSax), (double) ver1.maxTime));
+            tree = tree.add(new String(ver1.minSax, StandardCharsets.ISO_8859_1) + ":" + new String(ver1.maxSax, StandardCharsets.ISO_8859_1) + ":" + ver1.fileNum,
+                    Geometries.rectangle (VersionUtil.saxToDouble(ver1.minSax), (double) ver1.minTime, VersionUtil.saxToDouble(ver1.maxSax), (double) ver1.maxTime));
 
             newVersion.setrTree(tree);
             System.out.println("\trtree插入完成");
@@ -127,17 +130,20 @@ public class VersionAction {
 
             // rtree删除
             RTree<String, Rectangle> tree = newVersion.getrTree();
-
             for (int i = 0; i < ver2.delMaxSaxes.size(); i ++ ) {
-                tree = tree.delete(Parameters.hostName + ":" + ver2.delFileNums.get(i), Geometries.rectangle (
-                        VersionUtil.saxToDouble(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i),
-                        VersionUtil.saxToDouble(ver2.delMaxSaxes.get(i)),(double) ver2.delMaxTimes.get(i)));
+//                tree = tree.delete(Parameters.hostName + ":" + ver2.delFileNums.get(i), Geometries.rectangle (
+//                        VersionUtil.saxToDouble(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i),
+//                        VersionUtil.saxToDouble(ver2.delMaxSaxes.get(i)),(double) ver2.delMaxTimes.get(i)));
+                tree = tree.delete(new String(ver2.delMinSaxes.get(i), StandardCharsets.ISO_8859_1) + ":" + new String(ver2.delMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ":" + ver2.delFileNums.get(i),
+                        Geometries.rectangle (VersionUtil.saxToDouble(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i), VersionUtil.saxToDouble(ver2.delMaxSaxes.get(i)), (double) ver2.delMaxTimes.get(i)));
             }
             // rtree增加
             for (int i = 0; i < ver2.addMaxSaxes.size(); i ++ ) {
-                tree = tree.add(Parameters.hostName + ":" + ver2.addFileNums.get(i), Geometries.rectangle (
-                        VersionUtil.saxToDouble(ver2.addMinSaxes.get(i)), (double) ver2.addMinTimes.get(i),
-                        VersionUtil.saxToDouble(ver2.addMaxSaxes.get(i)), (double) ver2.addMaxTimes.get(i)));
+//                tree = tree.add(Parameters.hostName + ":" + ver2.addFileNums.get(i), Geometries.rectangle (
+//                        VersionUtil.saxToDouble(ver2.addMinSaxes.get(i)), (double) ver2.addMinTimes.get(i),
+//                        VersionUtil.saxToDouble(ver2.addMaxSaxes.get(i)), (double) ver2.addMaxTimes.get(i)));
+                tree = tree.add(new String(ver2.addMinSaxes.get(i), StandardCharsets.ISO_8859_1) + ":" + new String(ver2.addMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ":" + ver2.addFileNums.get(i),
+                        Geometries.rectangle (VersionUtil.saxToDouble(ver2.addMinSaxes.get(i)), (double) ver2.addMinTimes.get(i), VersionUtil.saxToDouble(ver2.addMaxSaxes.get(i)), (double) ver2.addMaxTimes.get(i)));
             }
             newVersion.setrTree(tree);
 

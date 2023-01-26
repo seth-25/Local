@@ -47,16 +47,31 @@ public class VersionUtil {
             saxBytes = newSaxBytes;
         }
         long l = 0;
-        for (int i = saxBytes.length - 1; i >= 0; i --) {
-            l <<= 8;
-            l |= (saxBytes[i] & 0xff);
-        }
-        // 翻转首位
-        if ((saxBytes[saxBytes.length - 1] & 0x80) == 0) {
-            l |= 0x8000000000000000L;
+        if (Parameters.isSuffix) {
+            for (int i = saxBytes.length - 1; i >= 0; i --) {
+                l <<= 8;
+                l |= (saxBytes[i] & 0xff);
+            }
+            // 翻转首位
+            if ((saxBytes[saxBytes.length - 1] & 0x80) == 0) {
+                l |= 0x8000000000000000L;
+            }
+            else {
+                l &= 0x7fffffffffffffffL;
+            }
         }
         else {
-            l &= 0x7fffffffffffffffL;
+            for (byte saxByte : saxBytes) {
+                l <<= 8;
+                l |= (saxByte & 0xff);
+            }
+            // 翻转首位
+            if ((saxBytes[0] & 0x80) == 0) {
+                l |= 0x8000000000000000L;
+            }
+            else {
+                l &= 0x7fffffffffffffffL;
+            }
         }
 
         return (double) l;
