@@ -27,8 +27,9 @@ public class Main {
             }
             long offset = reader.read();
             byte[] tsBytes = reader.getArray();
+            System.out.println("ts长度" + tsBytes.length);
             byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
-            System.out.println(leafTimeKeysBytes.length);
+            System.out.println("leafTimeKeys长度" + leafTimeKeysBytes.length);
 
             CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
             CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());

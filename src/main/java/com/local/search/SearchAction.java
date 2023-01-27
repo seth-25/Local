@@ -15,12 +15,19 @@ import java.util.*;
 
 public class SearchAction {
 
-
+    
+    
     public static byte[] searchNearlyTs(byte[] info) {  // 查找最近的至多k个ts
+        System.out.println("info长度" + info.length);
         System.out.println("查询相近");
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
-        SearchUtil.analysisSearchSend(info, aQuery);
+        if (Parameters.hasTimeStamp > 0) {
+            SearchUtil.analysisSearchSend(info, aQuery);
+        }
+        else {
+            SearchUtil.analysisSearchSendHasNotTime(info, aQuery);
+        }
         aQuery.sortPList();
 
         List<Pair<byte[], Float>> searchTS = new ArrayList<>();
@@ -35,8 +42,13 @@ public class SearchAction {
                 tskey = reader.readTs(offset);
             }
 
-            long timestamps = TsUtil.bytesToLong(tskey, Parameters.timeSeriesDataSize);
-            if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
+            if (Parameters.hasTimeStamp == 1) {
+                long timestamps = TsUtil.bytesToLong(tskey, Parameters.timeSeriesDataSize);
+                if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
+                    searchTS.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
+                }
+            }
+            else {
                 searchTS.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
             }
         }
@@ -48,9 +60,9 @@ public class SearchAction {
             }
         });
 
-        //  ares: ts 256*4, time 8, float dist 4, 最后4位为空 1040
+
         int cnt = 0;
-        byte[] tmp = new byte[aQuery.pList.size() * 1040];
+        byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
         for (Pair<byte[], Float> tsPair: searchTS) {
             float dis = tsPair.getValue();
             System.out.println(dis);
@@ -58,21 +70,20 @@ public class SearchAction {
                 if (dis > aQuery.topDist || cnt >= aQuery.k) break;
             }
 
-            System.arraycopy(tsPair.getKey(), 0, tmp, cnt * 1040, Parameters.tsSize);
-            System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * 1040 + Parameters.tsSize, 4);
+            System.arraycopy(tsPair.getKey(), 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
+            System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
             cnt ++;
         }
-        System.out.println("cnt:"+cnt);
-        byte[] res = new byte[cnt * 1040];  // res: cnt个ares
-        System.arraycopy(tmp, 0, res, 0, cnt * 1040);
+        System.out.println("访问原始时间序列个数cnt:" + cnt);
+        byte[] res = new byte[cnt * Parameters.aresSize];  // res: cnt个ares
+        System.arraycopy(tmp, 0, res, 0, cnt * Parameters.aresSize);
         return res;
     }
 
 
     public static long[] searchRtree(RTree<String, Rectangle> rTree, long startTime, long endTime, byte[] minSaxT, byte[] maxSaxT) {
         Iterable<Entry<String, Rectangle>> results = rTree.search(
-                Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), (double) startTime,
-                        VersionUtil.saxT2Double(maxSaxT), (double) endTime)
+                Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), (double) startTime, VersionUtil.saxT2Double(maxSaxT), (double) endTime)
         ).toBlocking().toIterable();
 
         ArrayList<Long> sstableNumList = new ArrayList<>();
@@ -118,7 +129,7 @@ public class SearchAction {
         ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
 
         VersionAction.unRefCurVersion();
-
+        System.out.println("近似长度" + ares.length);
         return ares;
     }
 
@@ -130,7 +141,13 @@ public class SearchAction {
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
         System.out.println("saxT: "  + Arrays.toString(saxTData));
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
-        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
+        byte[] aQuery;
+        if (Parameters.hasTimeStamp > 0) {
+           aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
+        }
+        else {
+           aQuery = SearchUtil.makeAQuery(searchTsBytes, k, paa, saxTData);
+        }
 
         int d = Parameters.bitCardinality;  // 相聚度,开始为离散化个数,找不到k个则-1
         byte[] res = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
@@ -145,11 +162,17 @@ public class SearchAction {
     public static byte[] searchExactTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
-        float[] paa = new float[32];
+        float[] paa = new float[Parameters.paaSize];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
         System.out.println("saxT: "  + Arrays.toString(saxTData));
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
-        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
+        byte[] aQuery;
+        if (Parameters.hasTimeStamp > 0) {
+            aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
+        }
+        else {
+            aQuery = SearchUtil.makeAQuery(searchTsBytes, k, paa, saxTData);
+        }
 
 
         // 近似

@@ -97,10 +97,16 @@ public class VersionUtil {
         ver1.fileNum = bytesToLong(longBytes);
         System.arraycopy(versionBytes, 1 + 4 + 4 + 8, ver1.minSax, 0, Parameters.saxTSize);
         System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxTSize, ver1.maxSax, 0, Parameters.saxTSize);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
-        ver1.minTime = bytesToLong(longBytes);
-        System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxTSize + Parameters.saxTSize + 8, longBytes, 0, 8);
-        ver1.maxTime = bytesToLong(longBytes);
+        if (Parameters.hasTimeStamp == 0) {
+            ver1.minTime = 0;
+            ver1.maxTime = 0;
+        }
+        else {
+            System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
+            ver1.minTime = bytesToLong(longBytes);
+            System.arraycopy(versionBytes, 1 + 4 + 4 + 8 + Parameters.saxTSize + Parameters.saxTSize + 8, longBytes, 0, 8);
+            ver1.maxTime = bytesToLong(longBytes);
+        }
     }
 
 
@@ -163,11 +169,16 @@ public class VersionUtil {
             System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxTSize, delMaxSax, 0, Parameters.saxTSize);
             ver2.delMaxSaxes.add(delMaxSax);
 
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
-            ver2.delMinTimes.add(bytesToLong(longBytes));
-
-            System.arraycopy(versionBytes, 9 + i * nodeByteNum + 16 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
-            ver2.delMaxTimes.add(bytesToLong(longBytes));
+            if (Parameters.hasTimeStamp == 0) {
+                ver2.delMinTimes.add(0L);
+                ver2.delMaxTimes.add(0L);
+            }
+            else {
+                System.arraycopy(versionBytes, 9 + i * nodeByteNum + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
+                ver2.delMinTimes.add(bytesToLong(longBytes));
+                System.arraycopy(versionBytes, 9 + i * nodeByteNum + 16 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
+                ver2.delMaxTimes.add(bytesToLong(longBytes));
+            }
         }
 
         System.arraycopy(versionBytes, 9 + numDel * nodeByteNum, intBytes, 0, 4);
@@ -184,11 +195,16 @@ public class VersionUtil {
             System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxTSize, addMaxSax, 0, Parameters.saxTSize);
             ver2.addMaxSaxes.add(addMaxSax);
 
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
-            ver2.addMinTimes.add(bytesToLong(longBytes));
-
-            System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 16 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
-            ver2.addMaxTimes.add(bytesToLong(longBytes));
+            if (Parameters.hasTimeStamp == 0) {
+                ver2.addMinTimes.add(0L);
+                ver2.addMaxTimes.add(0L);
+            }
+            else {
+                System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 8 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
+                ver2.addMinTimes.add(bytesToLong(longBytes));
+                System.arraycopy(versionBytes, 9 + numDel * nodeByteNum + 4 + i * nodeByteNum + 16 + Parameters.saxTSize + Parameters.saxTSize, longBytes, 0, 8);
+                ver2.addMaxTimes.add(bytesToLong(longBytes));
+            }
         }
     }
 

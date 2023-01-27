@@ -84,11 +84,7 @@ public class SearchUtil {
     }
 
     // aquery
-    // ts 256*4, startTime 8, endTime 8, k 4(空4)，paa 4*paa大小, saxt 8/16 , 空4位 一共1088
-    // st_number
-    // 选择的sstable
-    // 返回至多k个ares
-    //ares
+    // ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16 , 空4位
     public static byte[] makeAQuery(byte[] ts, long startTime, long endTime, int k, float[] paa, byte[] saxData) {
         byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize + 8 + 4 * Parameters.paaSize + Parameters.saxTSize];
         System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
@@ -99,6 +95,19 @@ public class SearchUtil {
             System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * i, 4);
         }
         System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * Parameters.paaSize, Parameters.saxTSize);
+        return aQuery;
+    }
+
+    // aquery
+    // ts 256*4, k 4，paa 4*paa大小, saxt 8/16 , 空4位
+    public static byte[] makeAQuery(byte[] ts, int k, float[] paa, byte[] saxData) {
+        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 8 + 4 * Parameters.paaSize + Parameters.saxTSize];
+        System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
+        System.arraycopy(intToBytes(k), 0, aQuery, Parameters.timeSeriesDataSize, 4);
+        for (int i = 0; i < Parameters.paaSize; i ++ ) {
+            System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 4 + 4 * i, 4);
+        }
+        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 4 + 4 * Parameters.paaSize, Parameters.saxTSize);
         return aQuery;
     }
 
@@ -131,6 +140,7 @@ public class SearchUtil {
         }
     }
 
+    // info ts 256*4，starttime 8， endtime 8， k 4, 还要多少个 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void analysisSearchSend(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4], longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
@@ -148,6 +158,23 @@ public class SearchUtil {
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
             System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
+            Long p = bytesToLong(longBytes);
+            aQuery.pList.add(p);
+        }
+    }
+    public static void analysisSearchSendHasNotTime(byte[] info, SearchContent aQuery) {
+        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
+        System.arraycopy(info, Parameters.timeSeriesDataSize, longBytes, 0, 8);
+        aQuery.k = bytesToInt(intBytes);
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 4, intBytes, 0, 4);
+        aQuery.needNum = bytesToInt(intBytes);
+        System.arraycopy(info, Parameters.timeSeriesDataSize+ 4 + 4, intBytes, 0, 4);
+        aQuery.topDist = bytesToFloat(intBytes);
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4, intBytes, 0, 4);
+        int numSearch = bytesToInt(intBytes);
+        for (int i = 0; i < numSearch; i ++ ) {
+            System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
         }

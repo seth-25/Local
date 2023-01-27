@@ -11,14 +11,14 @@ public class TimeSeries {
         this.timeStamp = timeStamp;
     }
 
-    public TimeSeries(byte[] ts) {
-        byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
-        byte[] timeStamp = new byte[Parameters.timeStampSize];
-        System.arraycopy(ts, 0, timeSeriesData, 0,  Parameters.timeSeriesDataSize);
-        System.arraycopy(ts, Parameters.timeSeriesDataSize, timeStamp, 0, Parameters.timeStampSize);
-        this.timeSeriesData = timeSeriesData;
-        this.timeStamp = timeStamp;
-    }
+//    public TimeSeries(byte[] ts) {
+//        byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
+//        byte[] timeStamp = new byte[Parameters.timeStampSize];
+//        System.arraycopy(ts, 0, timeSeriesData, 0,  Parameters.timeSeriesDataSize);
+//        System.arraycopy(ts, Parameters.timeSeriesDataSize, timeStamp, 0, Parameters.timeStampSize);
+//        this.timeSeriesData = timeSeriesData;
+//        this.timeStamp = timeStamp;
+//    }
 
     public byte[] getTimeSeriesData() {
         return timeSeriesData;

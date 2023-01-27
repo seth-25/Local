@@ -27,7 +27,7 @@ public class db_send {
 
     //返回至多k个
     public static byte[] find_tskey(byte[] info) {
-        // info ts 256*4，starttime 8， endtime 8， k 4, 还要多少个 4, topdist 4, 要查的个数n 4，p * n 8*n
+
         // 返回至多k个ares 1040一个 见db
         return SearchAction.searchNearlyTs(info);
     }
