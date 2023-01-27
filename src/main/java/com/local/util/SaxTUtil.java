@@ -1,9 +1,10 @@
 package com.local.util;
 
-import com.local.domain.LeafTimeKey;
 import com.local.domain.Parameters;
 
-public class SaxUtil {
+import java.util.Arrays;
+
+public class SaxTUtil {
     public static byte[] createPointerOffset(long offset) {
         byte[] p_offset = new byte[Parameters.pointerSize - 1];
         for (int i = 0; i < Parameters.pointerSize - 1; i ++ ) {
@@ -22,8 +23,8 @@ public class SaxUtil {
     }
 
 
-    public static int compareSax(byte[] a, byte[] b) {
-        System.out.println(a.length + " " + b.length);
+    public static int compareSaxT(byte[] a, byte[] b) {
+//        System.out.println(a.length + " " + b.length);
         assert a.length == b.length;
         if (Parameters.isSuffix) {
             for (int i = a.length - 1; i >= 0; i -- ) { // 小端
@@ -41,4 +42,20 @@ public class SaxUtil {
         return 0;
     }
 
+    public static byte[] makeMinSaxT(byte[] saxT, int d) {    // 根据相距度截取saxT,不足的填充0
+        byte[] minSaxT = new byte[saxT.length];
+        System.arraycopy(saxT, 0, minSaxT, 0, d * Parameters.segmentSize / 8);
+        byte[] zeroBytes = new byte[saxT.length - d * Parameters.segmentSize / 8];
+        Arrays.fill(zeroBytes, (byte) 0x00);
+        System.arraycopy(zeroBytes, 0, minSaxT, d * Parameters.segmentSize / 8, zeroBytes.length);
+        return minSaxT;
+    }
+    public static byte[] makeMaxSaxT(byte[] saxT, int d) {    // 根据相距度截取saxT,不足的填充0xff
+        byte[] maxSaxT = new byte[saxT.length];
+        System.arraycopy(saxT, 0, maxSaxT, 0, d * Parameters.segmentSize / 8);
+        byte[] maxBytes = new byte[saxT.length - d * Parameters.segmentSize / 8];
+        Arrays.fill(maxBytes, (byte) 0xff);
+        System.arraycopy(maxBytes, 0, maxSaxT, d * Parameters.segmentSize / 8, maxBytes.length);
+        return maxSaxT;
+    }
 }

@@ -90,7 +90,7 @@ public class SearchUtil {
     // 返回至多k个ares
     //ares
     public static byte[] makeAQuery(byte[] ts, long startTime, long endTime, int k, float[] paa, byte[] saxData) {
-        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize + 8 + 4 * Parameters.paaSize + Parameters.saxSize];
+        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize + 8 + 4 * Parameters.paaSize + Parameters.saxTSize];
         System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(longToBytes(startTime), 0, aQuery, Parameters.timeSeriesDataSize, Parameters.timeStampSize);
         System.arraycopy(longToBytes(endTime), 0, aQuery, Parameters.timeSeriesDataSize + 8, Parameters.timeStampSize);
@@ -98,7 +98,7 @@ public class SearchUtil {
         for (int i = 0; i < Parameters.paaSize; i ++ ) {
             System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * i, 4);
         }
-        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * Parameters.paaSize, Parameters.saxSize);
+        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * Parameters.paaSize, Parameters.saxTSize);
         return aQuery;
     }
 

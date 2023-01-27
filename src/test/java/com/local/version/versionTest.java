@@ -31,13 +31,13 @@ public class versionTest {
         System.out.println();
 
         byte[] a = {(byte)0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
-        System.out.println(VersionUtil.saxToDouble(a));
+        System.out.println(VersionUtil.saxT2Double(a));
         byte[] b = {(byte)0xff, (byte) 0x00, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
-        System.out.println(VersionUtil.saxToDouble(b));
+        System.out.println(VersionUtil.saxT2Double(b));
         byte[] c = {(byte)0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        System.out.println(VersionUtil.saxToDouble(c));
+        System.out.println(VersionUtil.saxT2Double(c));
         byte[] d = {(byte)0x7f, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
-        System.out.println(VersionUtil.saxToDouble(d));
+        System.out.println(VersionUtil.saxT2Double(d));
     }
 
     @Test
@@ -54,7 +54,7 @@ public class versionTest {
         for (Entry<String, Rectangle> result : results) {
             String value = result.value();
             System.out.println(value.length());
-            String maxSaxStr = value.substring(0, Parameters.saxSize);
+            String maxSaxStr = value.substring(0, Parameters.saxTSize);
             System.out.println(Arrays.toString(maxSaxStr.getBytes(StandardCharsets.ISO_8859_1)));
 //            System.out.println(hostName);
         }

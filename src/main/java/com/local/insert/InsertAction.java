@@ -154,7 +154,7 @@ public class InsertAction {
         byte[] leafTimeKeysBytes = DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, false);
         ArrayList<LeafTimeKey> leafTimeKeys = new ArrayList<>();
         for (int i = 0; i < leafTimeKeysBytes.length / Parameters.LeafTimeKeysSize; i ++ ) {
-            byte[] data = new byte[Parameters.saxSize];
+            byte[] data = new byte[Parameters.saxTSize];
             byte[] p_offset = new byte[Parameters.pointerSize - 1];
             byte[] timeStamp = new byte[Parameters.timeStampSize];
             System.arraycopy(leafTimeKeysBytes, Parameters.LeafTimeKeysSize * i, p_offset, 0, p_offset.length);

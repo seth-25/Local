@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Version {
-    private HashMap<String, Pair<Integer, Integer>> workerVersions = new HashMap<>(); // key是hostName，value是内存和外存版本
+    private HashMap<String, Pair<Integer, Integer>> workerVersions; // key是hostName，value是内存和外存版本
     private int ref = 0;
     private RTree<String, Rectangle> rTree;
 

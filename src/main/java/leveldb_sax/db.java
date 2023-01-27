@@ -43,6 +43,8 @@ public class db {
     //    ts 256*4 time 8
     //    float dist 4 最后4位为空
     //    1040
+
+    // Get和Get_exact返回若干个ares
     public native byte[] Get(byte[] aquery, boolean is_use_am, int am_version_id, int st_version_id, long[] st_number);
     public native byte[] Get_exact(byte[] aquery, int am_version_id, int st_version_id, long[] st_number, byte[] appro_res);
     public native void unref_am(int version_id);

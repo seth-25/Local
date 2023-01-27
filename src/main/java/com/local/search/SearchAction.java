@@ -72,17 +72,25 @@ public class SearchAction {
     }
 
 
-    public static byte[] searchTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
+    public static long[] searchRtree(RTree<String, Rectangle> rTree, long startTime, long endTime, byte[] minSaxT, byte[] maxSaxT) {
+        Iterable<Entry<String, Rectangle>> results = rTree.search(
+                Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), (double) startTime,
+                        VersionUtil.saxT2Double(maxSaxT), (double) endTime)
+        ).toBlocking().toIterable();
 
-        boolean isUseAm = true; // sax范围 是否在个该机器上
-        byte[] saxData = new byte[Parameters.saxSize];
-        float[] paa = new float[Parameters.paaSize];
-        DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxData, paa);
-        System.out.println("sax: "  + Arrays.toString(saxData));
-        System.out.println("sax的浮点值: " + VersionUtil.saxToDouble(saxData));
-        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxData);
+        ArrayList<Long> sstableNumList = new ArrayList<>();
+        for (Entry<String, Rectangle> result : results) {
+            String[] str = result.value().split(":");
+            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), maxSaxT) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), minSaxT) >= 0) {
+                sstableNumList.add(Long.valueOf(str[2]));
+            }
+        }
+        return sstableNumList.stream().mapToLong(num -> num).toArray();
+    }
 
-        byte[] ares = null;
+    // 近似查询
+    public static byte[] getTsFromDB(boolean isUseAm, long startTime, long endTime, byte[] saxTData, byte[] aQuery, int d) {
+        byte[] ares;
         RTree<String, Rectangle> rTree;
         int amVersionID, stVersionID;
         synchronized(VersionAction.class) {
@@ -96,25 +104,20 @@ public class SearchAction {
             VersionAction.refCurVersion();
         }
 
-        Iterable<Entry<String, Rectangle>> results = rTree.search(
-                Geometries.rectangle(VersionUtil.saxToDouble(saxData), (double) startTime,
-                        VersionUtil.saxToDouble(saxData), (double) endTime)
-        ).toBlocking().toIterable();
-
-        ArrayList<Long> sstableNumList = new ArrayList<>();
-        for (Entry<String, Rectangle> result : results) {
-            String[] str = result.value().split(":");
-            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
-                sstableNumList.add(Long.valueOf(str[2]));
-            }
+        long[] sstableNum;
+        if (d == Parameters.bitCardinality) {
+            sstableNum = searchRtree(rTree, startTime, endTime, saxTData, saxTData);
         }
-        long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
+        else {
+            byte[] minSaxT = SaxTUtil.makeMinSaxT(saxTData, d);
+            byte[] maxSaxT = SaxTUtil.makeMaxSaxT(saxTData, d);
+            sstableNum = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
+        }
 
         System.out.println("amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
         System.out.println("sstableNum：" + Arrays.toString(sstableNum));
 
-
-        System.out.println(Arrays.toString(aQuery));
+//        System.out.println(Arrays.toString(aQuery));
         ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
 
         VersionAction.unRefCurVersion();
@@ -122,18 +125,38 @@ public class SearchAction {
         return ares;
     }
 
+
+    public static byte[] searchTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
+        boolean isUseAm = true; // saxT范围 是否在个该机器上
+        byte[] saxTData = new byte[Parameters.saxTSize];
+        float[] paa = new float[Parameters.paaSize];
+        DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
+        System.out.println("saxT: "  + Arrays.toString(saxTData));
+        System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
+        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
+
+        int d = Parameters.bitCardinality;  // 相聚度,开始为离散化个数,找不到k个则-1
+        byte[] res = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
+
+        while(res.length / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
+            d --;
+            res = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
+        }
+        return res;
+    }
+
     public static byte[] searchExactTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
 
-        boolean isUseAm = true; // sax范围 是否在个该机器上
-        byte[] saxData = new byte[Parameters.saxSize];
+        boolean isUseAm = true; // saxT范围 是否在个该机器上
+        byte[] saxTData = new byte[Parameters.saxTSize];
         float[] paa = new float[32];
-        DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxData, paa);
-        System.out.println("sax: "  + Arrays.toString(saxData));
-        System.out.println("sax的浮点值: " + VersionUtil.saxToDouble(saxData));
-        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxData);
+        DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
+        System.out.println("saxT: "  + Arrays.toString(saxTData));
+        System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
+        byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
 
-        byte[] ares = null;
-        byte[] exactRes = null;
+        byte[] ares;
+        byte[] exactRes;
         RTree<String, Rectangle> rTree;
         int amVersionID, stVersionID;
         synchronized(VersionAction.class) {
@@ -146,40 +169,36 @@ public class SearchAction {
             rTree = CacheUtil.curVersion.getrTree();
             VersionAction.refCurVersion();
         }
+
         // 近似
-        Iterable<Entry<String, Rectangle>> resultsNearly = rTree.search(
-                Geometries.rectangle(VersionUtil.saxToDouble(saxData), (double) startTime, VersionUtil.saxToDouble(saxData), (double) endTime)
-        ).toBlocking().toIterable();
-        ArrayList<Long> sstableNumListNearly = new ArrayList<>();
-        for (Entry<String, Rectangle> result : resultsNearly) {
-            String[] str = result.value().split(":");
-            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
-                sstableNumListNearly.add(Long.valueOf(str[2]));
-            }
+        int d = Parameters.bitCardinality;  // 相聚度,开始为离散化个数,找不到k个则-1
+        ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
+
+        while(ares.length / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
+            d --;
+            ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
         }
-        long[] sstableNumNearly = sstableNumListNearly.stream().mapToLong(num -> num).toArray();
-        ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNumNearly);
 
 
         // 精确
-        Iterable<Entry<String, Rectangle>> results = rTree.search(  // 所有sax范围
+        Iterable<Entry<String, Rectangle>> results = rTree.search(  // 所有saxT范围
                 Geometries.rectangle(-Double.MAX_VALUE, (double) startTime, Double.MAX_VALUE, (double) endTime)
         ).toBlocking().toIterable();
 
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
             String[] str = result.value().split(":");
-            if (SaxUtil.compareSax(str[0].getBytes(StandardCharsets.ISO_8859_1), saxData) <= 0 && SaxUtil.compareSax(str[1].getBytes(StandardCharsets.ISO_8859_1), saxData) >= 0) {
+            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), saxTData) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), saxTData) >= 0) {
                 sstableNumList.add(Long.valueOf(str[2]));
             }
         }
-
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
 
         System.out.println("amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
         System.out.println("sstableNum：" + Arrays.toString(sstableNum));
 
         exactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID, sstableNum, ares);
+        System.out.println("结果长度" + exactRes.length);
 
         VersionAction.unRefCurVersion();
 

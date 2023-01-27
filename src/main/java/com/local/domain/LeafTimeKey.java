@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 
 //public class LeafTimeKey implements Comparable<LeafTimeKey>{
 public class LeafTimeKey{
-    private byte[] sax;
+    private byte[] saxT;
     private byte p_hash;
     private byte[] p_offset;
     private byte[] timeStamp;
@@ -19,15 +19,15 @@ public class LeafTimeKey{
 //        System.arraycopy(leafTimeKeys, data.length + 1 + p_offset.length, timeStamp, 0, timeStamp.length);
 //    }
 
-    public LeafTimeKey(byte[] saxData, byte p_hash, byte[] p_offset, byte[] timeStamp) {
-        this.sax = saxData;
+    public LeafTimeKey(byte[] saxT, byte p_hash, byte[] p_offset, byte[] timeStamp) {
+        this.saxT = saxT;
         this.p_offset = p_offset;
         this.p_hash = p_hash;
         this.timeStamp = timeStamp;
     }
 
-    public byte[] getSax(){
-        return sax;
+    public byte[] getSaxT(){
+        return saxT;
     }
 
     public byte[] getTimeStamp() {
@@ -35,21 +35,21 @@ public class LeafTimeKey{
     }
 
     public byte[] getLeafTimeKeys() {
-        byte[] res = new byte[sax.length + 1 + p_offset.length + timeStamp.length];
+        byte[] res = new byte[saxT.length + 1 + p_offset.length + timeStamp.length];
         System.arraycopy(p_offset, 0, res, 0, p_offset.length);
         res[7] = p_hash;
-        System.arraycopy(sax, 0, res, 1 + p_offset.length, sax.length);
-        System.arraycopy(timeStamp, 0, res, sax.length + 1 + p_offset.length, timeStamp.length);
+        System.arraycopy(saxT, 0, res, 1 + p_offset.length, saxT.length);
+        System.arraycopy(timeStamp, 0, res, saxT.length + 1 + p_offset.length, timeStamp.length);
         return res;
     }
 
     public int getSaxLength() {
-        return sax.length;
+        return saxT.length;
     }
 
 
     @Override
     public String toString() {
-        return new String(sax, StandardCharsets.UTF_8);
+        return new String(saxT, StandardCharsets.UTF_8);
     }
 }
