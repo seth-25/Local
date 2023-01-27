@@ -90,16 +90,17 @@ public class Main {
 
         CacheUtil.insertThreadPool.execute(new Insert());
 
-//        while(true) {
-//            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-//                Thread.sleep(3000);
-//                for (int i = 0; i < 1; i ++) {
-//                    CacheUtil.searchThreadPool.execute(searchThread());
-//                }
-//                break;
-//            }
-//            Thread.sleep(100);
-//        }
+        while(true) {
+            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
+//            Thread.sleep(3000);
+                for (int i = 0; i < 20; i ++) {
+                    CacheUtil.searchThreadPool.execute(searchThread());
+                }
+                break;
+            }
+
+            Thread.sleep(100);
+        }
 
         /////////////////////////////////////////////////////////////////////////
 
