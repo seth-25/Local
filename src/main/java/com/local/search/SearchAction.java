@@ -60,7 +60,6 @@ public class SearchAction {
             }
         });
 
-
         int cnt = 0;
         byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
         for (Pair<byte[], Float> tsPair: searchTS) {
@@ -74,7 +73,7 @@ public class SearchAction {
             System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
             cnt ++;
         }
-        System.out.println("访问原始时间序列个数cnt:" + cnt);
+        System.out.println("访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
         byte[] res = new byte[cnt * Parameters.aresSize];  // res: cnt个ares
         System.arraycopy(tmp, 0, res, 0, cnt * Parameters.aresSize);
         return res;

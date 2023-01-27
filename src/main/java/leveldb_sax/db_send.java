@@ -21,6 +21,7 @@ public class db_send {
 //        System.out.println("send_edit:"+edit[0]+" "+versionid + " " + amV_id);
 //        System.out.println("edit长度" + edit.length + " " + Arrays.toString(edit));
 
+        System.out.println("开始更新版本");
         VersionAction.changeVersion(edit, Parameters.hostName);
         VersionAction.checkWorkerVersion();
     }

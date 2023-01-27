@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class VersionAction {
+    private static boolean hasCreateVer = false;
     public static synchronized void unRefCurVersion() {
         CacheUtil.curVersion.unRef();
         if (CacheUtil.curVersion.getRef() == 0) {
@@ -22,14 +23,19 @@ public class VersionAction {
     }
 
     private static synchronized void unRefWorkerVersions(HashMap<String, Pair<Integer, Integer>> workerVersions) {
+        System.out.println("开始unRef");
         for (Map.Entry<String, Pair<Integer, Integer>> entry: workerVersions.entrySet()) {
             String hostName = entry.getKey();
+            System.out.println("hostname " + hostName);
             if (entry.getValue() == null) continue;
+            System.out.println("value " + entry.getValue());
 
             int inVer = entry.getValue().getKey();
             int outVer = entry.getValue().getValue();
 
+
             HashMap<Integer, Integer> workerInVersionMap = CacheUtil.workerInVerRef.get(hostName);
+            System.out.println("workerInVersionMap " + workerInVersionMap);
             workerInVersionMap.put(inVer, workerInVersionMap.get(inVer) - 1);
 
             workerInVersionMap = CacheUtil.workerOutVerRef.get(hostName);
@@ -39,6 +45,7 @@ public class VersionAction {
     }
 
     private static synchronized void refWorkerVersions(HashMap<String, Pair<Integer, Integer>> workerVersions) {
+        System.out.println("开始ref");
         for (Map.Entry<String, Pair<Integer, Integer>> entry: workerVersions.entrySet()) {
             String hostName = entry.getKey();
             if (entry.getValue() == null) continue;
@@ -151,15 +158,17 @@ public class VersionAction {
 
     public static synchronized void createNewVerFromOldVer(byte[] versionBytes, String workerHostName) {
 //        System.out.println("---------------------------------");
+        System.out.println("versionBytes[0]:" + versionBytes[0]);
         if (versionBytes[0] == 0) {
             VersionUtil.Version1Content ver1 = new VersionUtil.Version1Content();
 
             VersionUtil.analysisVersionBytes(versionBytes, ver1);
 
-            System.out.println("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件"
-                    + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
-            CacheUtil.curVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
+            System.out.println("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件" + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
 
+            unRefCurVersion();  // 当前大版本ref-1,清除小版本
+
+            CacheUtil.curVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
 
             // rtree插入
             RTree<String, Rectangle> tree = CacheUtil.curVersion.getrTree();
@@ -171,21 +180,23 @@ public class VersionAction {
             CacheUtil.curVersion.setrTree(tree);
             System.out.println("\trtree插入完成");
 
-//            CacheUtil.curVersion.setRef(1);    // 大版本ref=1
-//            refWorkerVersions(CacheUtil.curVersion.getWorkerVersions());  // 该大版本包括所有worker的小版本ref+1
+            CacheUtil.curVersion.setRef(1);    // 大版本ref=1
+
+            refWorkerVersions(CacheUtil.curVersion.getWorkerVersions());  // 该大版本包括所有worker的小版本ref+1
 
             System.out.println("\t当前版本ref" + CacheUtil.curVersion.getRef());
-//            unRefCurVersion();  // 上一个大版本ref-1
+//
 
             System.out.println("\t更新完成 " + CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName));
             printWorkerVersion();
         }
         else if (versionBytes[0] == 1) {
-            Integer[] outVer = {0};
             VersionUtil.Version2Content ver2 = new VersionUtil.Version2Content();
             VersionUtil.analysisVersionBytes(versionBytes, ver2);
+            System.out.println("\t需要更新版本1:" + " 外" + ver2.outVer + " 文件" + ver2.addFileNums + " " + ver2.delFileNums);
 
-            CacheUtil.curVersion.updateVersion(workerHostName, outVer[0]);
+            unRefCurVersion();  // 上一个大版本ref-1
+            CacheUtil.curVersion.updateVersion(workerHostName, ver2.outVer);
 
             // rtree删除
             RTree<String, Rectangle> tree = CacheUtil.curVersion.getrTree();
@@ -206,10 +217,11 @@ public class VersionAction {
             }
             CacheUtil.curVersion.setrTree(tree);
 
-//            CacheUtil.curVersion.setRef(1);
-//            refWorkerVersions(CacheUtil.curVersion.getWorkerVersions());
-//            unRefCurVersion();
+            CacheUtil.curVersion.setRef(1);
+
+            refWorkerVersions(CacheUtil.curVersion.getWorkerVersions());
 //            updateCurVersion(CacheUtil.curVersion);
+            printWorkerVersion();
 
         } else {
             throw new RuntimeException("版本错误");
@@ -218,13 +230,20 @@ public class VersionAction {
 
 
     public static void changeVersion(byte[] versionBytes, String workerHostName) {
-        if (CacheUtil.curVersion.getRef() == 1) {   // 没有查询正在使用版本
+
+        if (CacheUtil.curVersion.getRef() > 1){    // 有查询正在使用版本或db第一次发来版本
+            System.out.println("有查询");
+            createNewVerFromOldVerCopy(versionBytes, workerHostName);
+//            hasCreateVer = true;
+        }
+        else if (CacheUtil.curVersion.getRef() == 1) {   // 没有查询正在使用版本
+            System.out.println("没有查询");
             createNewVerFromOldVer(versionBytes, workerHostName);
         }
-        else if (CacheUtil.curVersion.getRef() > 1){    // 有查询正在使用版本
-            createNewVerFromOldVerCopy(versionBytes, workerHostName);
+        else {
+            System.out.println("ref=0");
+            throw new RuntimeException("大版本ref错误");
         }
-        else throw new RuntimeException("大版本ref错误");
     }
 
 //    public static void changeVersion(byte[] versionBytes, String workerHostName) {
