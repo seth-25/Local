@@ -93,7 +93,7 @@ public class Main {
         while(true) {
             if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
 //            Thread.sleep(3000);
-                for (int i = 0; i < 20; i ++) {
+                for (int i = 0; i < 1; i ++) {
                     CacheUtil.searchThreadPool.execute(searchThread());
                 }
                 break;
