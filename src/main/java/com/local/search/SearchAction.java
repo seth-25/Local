@@ -48,10 +48,7 @@ public class SearchAction {
             }
         });
 
-        //  ares
-        //  ts 256*4 time 8
-        //  float dist 4 最后4位为空
-        //  1040
+        //  ares: ts 256*4, time 8, float dist 4, 最后4位为空 1040
         int cnt = 0;
         byte[] tmp = new byte[aQuery.pList.size() * 1040];
         for (Pair<byte[], Float> tsPair: searchTS) {
@@ -66,7 +63,7 @@ public class SearchAction {
             cnt ++;
         }
         System.out.println("cnt:"+cnt);
-        byte[] res = new byte[cnt * 1040];
+        byte[] res = new byte[cnt * 1040];  // res: cnt个ares
         System.arraycopy(tmp, 0, res, 0, cnt * 1040);
         return res;
     }
@@ -146,7 +143,6 @@ public class SearchAction {
     }
 
     public static byte[] searchExactTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
-
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
         float[] paa = new float[32];
@@ -155,7 +151,19 @@ public class SearchAction {
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
         byte[] aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
 
+
+        // 近似
         byte[] ares;
+        int d = Parameters.bitCardinality;  // 相聚度,开始为离散化个数,找不到k个则-1
+        ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
+
+        while(ares.length / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
+            d --;
+            ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
+        }
+
+
+        // 精确
         byte[] exactRes;
         RTree<String, Rectangle> rTree;
         int amVersionID, stVersionID;
@@ -170,17 +178,6 @@ public class SearchAction {
             VersionAction.refCurVersion();
         }
 
-        // 近似
-        int d = Parameters.bitCardinality;  // 相聚度,开始为离散化个数,找不到k个则-1
-        ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
-
-        while(ares.length / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
-            d --;
-            ares = getTsFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d);
-        }
-
-
-        // 精确
         Iterable<Entry<String, Rectangle>> results = rTree.search(  // 所有saxT范围
                 Geometries.rectangle(-Double.MAX_VALUE, (double) startTime, Double.MAX_VALUE, (double) endTime)
         ).toBlocking().toIterable();
