@@ -5,8 +5,6 @@ import com.local.domain.Parameters;
 import com.local.search.SearchAction;
 import com.local.version.VersionAction;
 
-import java.util.Arrays;
-
 public class db_send {
 
     //javap -verbose db_send.class
@@ -26,12 +24,24 @@ public class db_send {
         VersionAction.checkWorkerVersion();
     }
 
-    //返回至多k个
+    // 发送 info
+    // info(有时间戳): ts 256*4, starttime 8, endtime 8, k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4, p * n 8*n
+    // info(没时间戳): ts 256*4, k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    // 返回至多k个ares(含p)
+    // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
+    // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
     public static byte[] find_tskey(byte[] info) {
-
-        // 返回至多k个ares 1040一个 见db
-        return SearchAction.searchNearlyTs(info);
+        return SearchAction.searchNearlyTs(info, false);
     }
 
+    // 发送 info
+    // info(有时间戳): ts 256*4，starttime 8， endtime 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    // info(没时间戳): ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    //返回至多k个ares_exact(不含p)
+    // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
+    // ares_exact(没时间戳): ts 256*4, float dist 4
+    public static byte[] find_tskey_exact(byte[] info) {
+        return SearchAction.searchNearlyTs(info, true);
+    }
 
 }

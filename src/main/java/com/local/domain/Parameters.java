@@ -23,13 +23,15 @@ public class Parameters {
     public static final int saxTSize = segmentSize * bitCardinality / 8; // saxT多少字节
     public static final int pointerSize = 8; // LeafTimeKeys中指针的大小,7字节p_offset+1字节p_hash
     public static final int LeafTimeKeysSize = saxTSize + pointerSize + timeStampSize; // 一个LeafTimeKeys结构大小多少字节
-    // 查询原始时间序列的结果 ares
-    // 有时间戳的时候: ts 256*4, time 8, float dist 4, 最后4位为空,1040
-    // 没时间戳的时候: ts 256*4, float dist 4, 1028
-    public static final int aresSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
-//    public static final int aresSize = tsSize + 8;
 
-
+    // 查询原始时间序列的结果 ares(含p)
+    // ares(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8, 总共1048
+    // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8, 总共1040
+    public static final int aresSize = tsSize + 16;
+    //查询原始时间序列的结果 ares_exact(不含p)
+    // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐) 总共1040
+    // ares_exact(没时间戳): ts 256*4, float dist 4, 总共1028
+    public static final int aresExactSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
 
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量

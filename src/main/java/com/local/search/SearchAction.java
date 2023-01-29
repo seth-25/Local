@@ -15,68 +15,123 @@ import java.util.*;
 
 public class SearchAction {
 
-    
-    
-    public static byte[] searchNearlyTs(byte[] info) {  // 查找最近的至多k个ts
-        System.out.println("info长度" + info.length);
-        System.out.println("查询相近");
+    /**
+     访问原始时间序列,查找最近的至多k个ts
+     近似查询返回的ares包含p,精确查询返回的ares不包含p
+    **/
+    static class OriTs {
+        byte[] ts = new byte[Parameters.tsSize];    // 时间序列+时间戳(如果有)
+        float dis;
+        byte[] p;
+        public OriTs(byte[] ts, float dis, byte[] p) {
+            this.ts = ts;
+            this.dis = dis;
+            this.p = p;
+        }
+
+        public byte[] getTs() {
+            return ts;
+        }
+
+        public Float getDis() {
+            return dis;
+        }
+
+        public byte[] getP() {
+            return p;
+        }
+    }
+    public static byte[] searchNearlyTs(byte[] info, boolean isExact) {
+        System.out.println("查询相近 info长度" + info.length);
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
             SearchUtil.analysisSearchSend(info, aQuery);
-        }
-        else {
+        } else {
             SearchUtil.analysisSearchSendHasNotTime(info, aQuery);
         }
         aQuery.sortPList();
 
-        List<Pair<byte[], Float>> searchTS = new ArrayList<>();
-        for (Long p : aQuery.pList) {
-            int p_hash = (int)(p >> 56);
-            long offset = p.longValue() & 0x00ffffffffffffffL;
+//        List<Pair<byte[], Float>> nearlyTsList = new ArrayList<>();
+        List<OriTs> nearlyTsList = new ArrayList<>();
+        for (int i = 0; i < aQuery.pList.size(); i ++ ) {
+            Long p = aQuery.pList.get(i);
+            int p_hash = (int) (p >> 56);   // 文件名
+            long offset = p & 0x00ffffffffffffffL;
 
 //            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
-            byte[] tskey = null;
+            byte[] ts;
             synchronized (reader) {
-                tskey = reader.readTs(offset);
+                ts = reader.readTs(offset);
             }
 
-            if (Parameters.hasTimeStamp == 1) {
-                long timestamps = TsUtil.bytesToLong(tskey, Parameters.timeSeriesDataSize);
+            if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
+                long timestamps = TsUtil.bytesToLong(ts, Parameters.timeSeriesDataSize);
                 if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
-                    searchTS.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
+//                    nearlyTsList.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
+                    OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
+                    nearlyTsList.add(oriTs);
                 }
-            }
-            else {
-                searchTS.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
+            } else {
+//                nearlyTsList.add(new Pair<>(tskey, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, tskey)));
+                OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
+                nearlyTsList.add(oriTs);
             }
         }
 
-        searchTS.sort(new Comparator<Pair<byte[], Float>>() {
+        nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
-            public int compare(Pair<byte[], Float> o1, Pair<byte[], Float> o2) {
-                return o1.getValue().compareTo(o2.getValue());
+            public int compare(OriTs o1, OriTs o2) {
+                return o1.getDis().compareTo(o2.getDis());
             }
         });
 
         int cnt = 0;
-        byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
-        for (Pair<byte[], Float> tsPair: searchTS) {
-            float dis = tsPair.getValue();
-            System.out.println(dis);
-            if (cnt >= aQuery.needNum) {
-                if (dis > aQuery.topDist || cnt >= aQuery.k) break;
-            }
+        if (isExact) {
+            // 返回至多k个ares_exact(不含p)
+            // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐)
+            // ares_exact(没时间戳): ts 256*4, float dist 4
+            byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
+            for (OriTs oriTs : nearlyTsList) {
+                float dis = oriTs.getDis();
+                System.out.println("距离:" + dis);
+                if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
+                    break;
+                }
 
-            System.arraycopy(tsPair.getKey(), 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
-            System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
-            cnt ++;
+                System.arraycopy(oriTs.getTs(), 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
+                System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
+                cnt++;
+            }
+            System.out.println("近似查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
+            byte[] aresExact = new byte[cnt * Parameters.aresExactSize];  // aresExact: cnt个ares
+            System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
+            return aresExact;
         }
-        System.out.println("访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
-        byte[] res = new byte[cnt * Parameters.aresSize];  // res: cnt个ares
-        System.arraycopy(tmp, 0, res, 0, cnt * Parameters.aresSize);
-        return res;
+        else {
+            // 返回至多k个ares(含p)
+            // ares(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8
+            // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8
+            byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
+            for (OriTs oriTs : nearlyTsList) {
+                float dis = oriTs.getDis();
+                System.out.println(dis);
+                if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
+                    break;
+                }
+
+                System.arraycopy(oriTs.getTs(), 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
+                System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
+                System.arraycopy(oriTs.getP(), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
+                cnt++;
+            }
+            System.out.println("近似查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
+            byte[] ares = new byte[cnt * Parameters.aresSize];  // aresExact: cnt个ares
+            System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
+            return ares;
+        }
+
     }
 
 

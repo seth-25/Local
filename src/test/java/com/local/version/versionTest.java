@@ -185,14 +185,16 @@ public class versionTest {
     public void testSpeed() {
 //        byte[] a = new byte[(int)1e9];
 //        byte[] b = new byte[(int)1e9];
+//        long t = System.currentTimeMillis();
         long t1 = System.currentTimeMillis();
 //        for (int i = 0; i < 1e6; i ++){
 //            VersionUtil.bytesToLong(new byte[8]);
 //        }
 //        System.arraycopy(b, 0, a, 0, a.length);
-        byte[] a = new byte[(int)1e3];
-        byte[] b = new byte[(int)1e3];
+//        byte[] a = new byte[(int)1e3];
+//        byte[] b = new byte[(int)1e3];
         System.out.println(System.currentTimeMillis() - t1);
+//        System.out.println(System.currentTimeMillis() - t);
 
     }
 
