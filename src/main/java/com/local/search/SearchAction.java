@@ -224,11 +224,11 @@ public class SearchAction {
 
 
         // 近似查询
-        int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1
+        int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1,增大查询范围
         byte[] ares = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                 rTree, amVersionID, stVersionID);
 
-        while((ares.length - 4) / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
+        while((ares.length - 4) / Parameters.aresSize < k && d > 0) { // 查询结果不够k个
             d --;
             ares = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                 rTree, amVersionID, stVersionID);
@@ -279,7 +279,7 @@ public class SearchAction {
         byte[] approRes = aresAndSSNum.getKey();
         long[] approSSTableNum = aresAndSSNum.getValue();
 
-        while((approRes.length - 4) / Parameters.tsSize < k && d > 0) { // 查询结果不够k个
+        while((approRes.length - 4) / Parameters.aresSize < k && d > 0) { // 查询结果不够k个
             d --;
             approRes = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                         rTree, amVersionID, stVersionID);
