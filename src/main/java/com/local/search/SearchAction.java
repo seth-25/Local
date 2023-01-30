@@ -21,28 +21,16 @@ public class SearchAction {
     **/
     static class OriTs {
         byte[] ts = new byte[Parameters.tsSize];    // 时间序列+时间戳(如果有)
-        float dis;
+        Float dis;
         byte[] p;
         public OriTs(byte[] ts, float dis, byte[] p) {
             this.ts = ts;
             this.dis = dis;
             this.p = p;
         }
-
-        public byte[] getTs() {
-            return ts;
-        }
-
-        public Float getDis() {
-            return dis;
-        }
-
-        public byte[] getP() {
-            return p;
-        }
     }
-    public static byte[] searchNearlyTs(byte[] info, boolean isExact) {
-        System.out.println("查询相近 info长度" + info.length);
+    public static byte[] searchOriTs(byte[] info, boolean isExact) {
+        System.out.println("查询原始时间序列 info长度" + info.length);
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -65,8 +53,8 @@ public class SearchAction {
             synchronized (reader) {
                 ts = reader.readTs(offset);
             }
-
             if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
+
                 long timestamps = TsUtil.bytesToLong(ts, Parameters.timeSeriesDataSize);
                 if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
                     OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
@@ -76,12 +64,13 @@ public class SearchAction {
                 OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
                 nearlyTsList.add(oriTs);
             }
+
         }
 
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
             public int compare(OriTs o1, OriTs o2) {
-                return o1.getDis().compareTo(o2.getDis());
+                return o1.dis.compareTo(o2.dis);
             }
         });
 
@@ -92,17 +81,17 @@ public class SearchAction {
             // ares_exact(没时间戳): ts 256*4, float dist 4
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
             for (OriTs oriTs : nearlyTsList) {
-                float dis = oriTs.getDis();
+                float dis = oriTs.dis;
                 System.out.println("距离:" + dis);
                 if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
                     break;
                 }
 
-                System.arraycopy(oriTs.getTs(), 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
+                System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
                 System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
                 cnt++;
             }
-            System.out.println("近似查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
+            System.out.println("精确查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
             byte[] aresExact = new byte[cnt * Parameters.aresExactSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
             return aresExact;
@@ -113,15 +102,15 @@ public class SearchAction {
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
             for (OriTs oriTs : nearlyTsList) {
-                float dis = oriTs.getDis();
-                System.out.println(dis);
+                float dis = oriTs.dis;
+                System.out.println("距离:" + dis);
                 if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
                     break;
                 }
 
-                System.arraycopy(oriTs.getTs(), 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
+                System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
                 System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
-                System.arraycopy(oriTs.getP(), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
+                System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
                 cnt++;
             }
             System.out.println("近似查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
@@ -194,7 +183,7 @@ public class SearchAction {
     public static byte[] searchTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
-        float[] paa = new float[Parameters.paaSize];
+        float[] paa = new float[Parameters.paaNum];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
         System.out.println("saxT: "  + Arrays.toString(saxTData));
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
@@ -243,7 +232,7 @@ public class SearchAction {
     public static byte[] searchExactTs(byte[] searchTsBytes, long startTime, long endTime, int k) {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
-        float[] paa = new float[Parameters.paaSize];
+        float[] paa = new float[Parameters.paaNum];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
         System.out.println("saxT: "  + Arrays.toString(saxTData));
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
@@ -304,6 +293,9 @@ public class SearchAction {
 
 
         System.out.println("r树结果: sstableNum：" + Arrays.toString(sstableNum));
+
+        System.out.println(amVersionID  + " " + stVersionID + " " + Arrays.toString(sstableNum) + " " + Arrays.toString(approSSTableNum));
+        System.out.println("aQuery长度 " + aQuery.length + " " + "近似查询长度 " + approRes.length);
 
         exactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID, sstableNum, approRes, approSSTableNum);
         System.out.println("精确查询结果长度" + exactRes.length);

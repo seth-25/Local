@@ -18,7 +18,7 @@ public class Parameters {
 
 
     public static final int segmentSize = 8;   // 分成几段
-    public static final int paaSize = segmentSize; // paa个数,一段一个paa
+    public static final int paaNum = segmentSize; // paa个数,一段一个paa
     public static final int bitCardinality = 8; // paa离散化几位
     public static final int saxTSize = segmentSize * bitCardinality / 8; // saxT多少字节
     public static final int pointerSize = 8; // LeafTimeKeys中指针的大小,7字节p_offset+1字节p_hash

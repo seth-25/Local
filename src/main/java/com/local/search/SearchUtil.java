@@ -3,6 +3,7 @@ package com.local.search;
 import com.local.domain.Parameters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -83,29 +84,29 @@ public class SearchUtil {
         return dis;
     }
 
-    // aquery(有时间): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
+    // aquery(有时间戳): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
     public static byte[] makeAQuery(byte[] ts, long startTime, long endTime, int k, float[] paa, byte[] saxData) {
-        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize + 8 + 4 * Parameters.paaSize + Parameters.saxTSize];
+        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize + 8 + 4 * Parameters.paaNum + Parameters.saxTSize];
         System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(longToBytes(startTime), 0, aQuery, Parameters.timeSeriesDataSize, Parameters.timeStampSize);
         System.arraycopy(longToBytes(endTime), 0, aQuery, Parameters.timeSeriesDataSize + 8, Parameters.timeStampSize);
         System.arraycopy(intToBytes(k), 0, aQuery, Parameters.timeSeriesDataSize + 16, 4);
-        for (int i = 0; i < Parameters.paaSize; i ++ ) {
+        for (int i = 0; i < Parameters.paaNum; i ++ ) {
             System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * i, 4);
         }
-        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * Parameters.paaSize, Parameters.saxTSize);
+        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * Parameters.paaNum, Parameters.saxTSize);
         return aQuery;
     }
 
-    // aquery(没时间): ts 256*4, k 4，paa 4*paa大小, saxt 8/16
+    // aquery(没时间戳): ts 256*4, k 4，paa 4*paa大小, saxt 8/16
     public static byte[] makeAQuery(byte[] ts, int k, float[] paa, byte[] saxData) {
-        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 4 + 4 * Parameters.paaSize + Parameters.saxTSize];
+        byte[] aQuery = new byte[Parameters.timeSeriesDataSize + 4 + 4 * Parameters.paaNum + Parameters.saxTSize];
         System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(intToBytes(k), 0, aQuery, Parameters.timeSeriesDataSize, 4);
-        for (int i = 0; i < Parameters.paaSize; i ++ ) {
+        for (int i = 0; i < Parameters.paaNum; i ++ ) {
             System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 4 + 4 * i, 4);
         }
-        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 4 + 4 * Parameters.paaSize, Parameters.saxTSize);
+        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 4 + 4 * Parameters.paaNum, Parameters.saxTSize);
         return aQuery;
     }
 
@@ -178,6 +179,7 @@ public class SearchUtil {
             System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
+            aQuery.pBytesList.add(longBytes);
         }
     }
 }
