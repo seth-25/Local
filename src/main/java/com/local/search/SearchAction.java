@@ -82,15 +82,19 @@ public class SearchAction {
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-                System.out.println("距离:" + dis);
-                if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
+                System.out.println("距离:" + dis + " topDis:" + aQuery.topDist);
+                if (dis < aQuery.topDist || cnt < aQuery.needNum) {
+                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
+                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
+                    cnt++;
+                }
+                else {
                     break;
                 }
 
-                System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
-                System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
-                cnt++;
+
             }
+            System.out.println("需要个数" + aQuery.needNum);
             System.out.println("精确查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
             byte[] aresExact = new byte[cnt * Parameters.aresExactSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
@@ -103,17 +107,19 @@ public class SearchAction {
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-                System.out.println("距离:" + dis);
-                if (cnt >= aQuery.needNum && (dis > aQuery.topDist || cnt >= aQuery.k)) {
+                System.out.println("距离:" + dis + " topDis:" + aQuery.topDist);
+                if (cnt < aQuery.k && (dis < aQuery.topDist || cnt < aQuery.needNum)) {
+                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
+                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
+                    System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
+                    cnt++;
+                }
+                else {
                     break;
                 }
-
-                System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
-                System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
-                System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
-                cnt++;
             }
-            System.out.println("近似查询:访问原始时间序列个数" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
+
+            System.out.println("近似查询:需要个数:"+ aQuery.needNum + "访问原始时间序列个数:" + aQuery.pList.size() + " " + "返回原始时间序列个数cnt:" + cnt);
             byte[] ares = new byte[cnt * Parameters.aresSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
             return ares;

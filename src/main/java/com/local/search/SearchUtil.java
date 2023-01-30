@@ -163,11 +163,11 @@ public class SearchUtil {
             aQuery.pBytesList.add(longBytes);
         }
     }
-    // info: ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    // info: ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p*n 8*n
     public static void analysisSearchSendHasNotTime(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4], longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
-        System.arraycopy(info, Parameters.timeSeriesDataSize, longBytes, 0, 8);
+        System.arraycopy(info, Parameters.timeSeriesDataSize, intBytes, 0, 4);
         aQuery.k = bytesToInt(intBytes);
         System.arraycopy(info, Parameters.timeSeriesDataSize + 4, intBytes, 0, 4);
         aQuery.needNum = bytesToInt(intBytes);
