@@ -37,7 +37,7 @@ public class db_send {
     // 发送 info
     // info(有时间戳): ts 256*4，starttime 8， endtime 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     // info(没时间戳): ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
-    //返回至多k个ares_exact(不含p)
+    //返回至若干个ares_exact(不含p)
     // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // ares_exact(没时间戳): ts 256*4, float dist 4
     public static byte[] find_tskey_exact(byte[] info) {
