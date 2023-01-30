@@ -13,35 +13,29 @@ import java.util.*;
 
 public class Main {
     public static void init() {
-        ArrayList<File> files = null;
-        try {
-            files = FileUtil.getAllFile("./db");
-            for (File file: files) {
-                FileUtil.deleteFile(file.getPath());
-            }
-            int saxtNum = Parameters.FileSetting.readTsNum;
 
-            MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(0);
-            if (reader == null) {
-                throw new RuntimeException("reader不存在");
-            }
-            long offset = reader.read();
-            byte[] tsBytes = reader.getArray();
-            System.out.println("ts长度" + tsBytes.length);
-            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
-            System.out.println("leafTimeKeys长度" + leafTimeKeysBytes.length);
+        FileUtil.createFolder("./db");
+        FileUtil.deleteFolderFiles("./db");
+        int saxtNum = Parameters.FileSetting.readTsNum;
 
-            CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
-            CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
-            VersionAction.initVersion();
-
-            DBUtil.dataBase.open("db");
-            DBUtil.dataBase.init(leafTimeKeysBytes, saxtNum);
-            System.out.println("初始化成功==========================");
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(0);
+        if (reader == null) {
+            throw new RuntimeException("ts文件夹下没有文件, reader不存在");
         }
+        long offset = reader.read();
+        byte[] tsBytes = reader.getArray();
+        System.out.println("ts长度" + tsBytes.length);
+        byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
+        System.out.println("leafTimeKeys长度" + leafTimeKeysBytes.length);
+
+        CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
+        CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
+        VersionAction.initVersion();
+
+        DBUtil.dataBase.open("db");
+        DBUtil.dataBase.init(leafTimeKeysBytes, saxtNum);
+        System.out.println("初始化成功==========================");
+
     }
     public static Runnable searchThread() {
         return new Runnable() {

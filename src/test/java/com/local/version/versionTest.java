@@ -7,7 +7,7 @@ import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.local.domain.Parameters;
 import com.local.domain.Version;
 import com.local.util.CacheUtil;
-import javafx.util.Pair;
+import com.local.domain.Pair;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;

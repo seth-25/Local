@@ -3,7 +3,7 @@ package com.local.domain;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
-import javafx.util.Pair;
+import com.local.domain.Pair;
 
 import java.util.HashMap;
 import java.util.Map;

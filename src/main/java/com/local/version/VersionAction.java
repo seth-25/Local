@@ -7,7 +7,7 @@ import com.local.domain.Parameters;
 import com.local.domain.Version;
 import com.local.util.CacheUtil;
 import com.local.util.DBUtil;
-import javafx.util.Pair;
+import com.local.domain.Pair;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
