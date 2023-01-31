@@ -59,7 +59,9 @@ public class MappedFileReader {
     }
 
     public int read() {
-        if (count >= number) {
+        if (count >= number) {  // 文件读取完毕
+            resArray = null;
+            array = null;
             return -1;
         }
 
@@ -98,13 +100,16 @@ public class MappedFileReader {
     }
 
     public byte[] readTs(long offset) {
+        System.out.println("读取offset: " + offset);
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+//        System.out.println("实际位置" + offset * Parameters.tsSize + " " + fileLength + " read成功 " + oneTsArray.length + " " + Thread.currentThread().getName());
         readTsByteBuf.flip();
         readTsByteBuf.get(oneTsArray);
+//        System.out.println("写入成功");
         readTsByteBuf.clear();
         return oneTsArray;
     }

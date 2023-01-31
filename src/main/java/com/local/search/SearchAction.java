@@ -30,7 +30,7 @@ public class SearchAction {
         }
     }
     public static byte[] searchOriTs(byte[] info, boolean isExact) {
-        System.out.println("查询原始时间序列 info长度" + info.length);
+        System.out.println("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -40,13 +40,15 @@ public class SearchAction {
         }
         aQuery.sortPList();
 
+        System.out.println("解析完成");
 //        List<Pair<byte[], Float>> nearlyTsList = new ArrayList<>();
         List<OriTs> nearlyTsList = new ArrayList<>();
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
             Long p = aQuery.pList.get(i);
+            System.out.println("p:" + p);
             int p_hash = (int) (p >> 56);   // 文件名
             long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
-
+            System.out.println("p_hash:" + p_hash + " " + "offset:" + offset);
 //            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] ts;
@@ -64,9 +66,8 @@ public class SearchAction {
                 OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
                 nearlyTsList.add(oriTs);
             }
-
+            ts = null;
         }
-
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
             public int compare(OriTs o1, OriTs o2) {
@@ -118,8 +119,10 @@ public class SearchAction {
                 }
             }
             System.out.println("近似查询:" + " topDis:" + aQuery.topDist + " 需要个数:" + aQuery.needNum + " 访问ts个数:" + aQuery.pList.size() + " " + "返回ts个数:" + cnt);
+
             byte[] ares = new byte[cnt * Parameters.aresSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
+            tmp = null;
             return ares;
         }
 
@@ -127,9 +130,18 @@ public class SearchAction {
 
 
     public static long[] searchRtree(RTree<String, Rectangle> rTree, long startTime, long endTime, byte[] minSaxT, byte[] maxSaxT) {
-        Iterable<Entry<String, Rectangle>> results = rTree.search(
-                Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), (double) startTime, VersionUtil.saxT2Double(maxSaxT), (double) endTime)
-        ).toBlocking().toIterable();
+        Iterable<Entry<String, Rectangle>> results;
+        if (Parameters.hasTimeStamp > 0) {
+            results = rTree.search(
+                    Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), (double) startTime, VersionUtil.saxT2Double(maxSaxT), (double) endTime)
+            ).toBlocking().toIterable();
+        }
+        else {
+            results = rTree.search(
+                    Geometries.rectangle(VersionUtil.saxT2Double(minSaxT), 0, VersionUtil.saxT2Double(maxSaxT), 0)
+            ).toBlocking().toIterable();
+        }
+
 
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
@@ -174,7 +186,7 @@ public class SearchAction {
             byte[] maxSaxT = SaxTUtil.makeMaxSaxT(saxTData, d);
             sstableNum = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
         }
-        System.out.println("r树结果: sstableNum：" + Arrays.toString(sstableNum));
+        System.out.println("近似r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
         byte[] ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
 
@@ -280,12 +292,20 @@ public class SearchAction {
 
 
         // 精确
+
+        Iterable<Entry<String, Rectangle>> results;
+        if (Parameters.hasTimeStamp > 0) {
+            results = rTree.search(  // 所有saxT范围
+                    Geometries.rectangle(-Double.MAX_VALUE, (double) startTime, Double.MAX_VALUE, (double) endTime)
+            ).toBlocking().toIterable();
+        }
+        else {
+            results = rTree.search(  // 所有saxT范围
+                    Geometries.rectangle(-Double.MAX_VALUE, 0, Double.MAX_VALUE, 0)
+            ).toBlocking().toIterable();
+        }
+
         byte[] exactRes;
-
-        Iterable<Entry<String, Rectangle>> results = rTree.search(  // 所有saxT范围
-                Geometries.rectangle(-Double.MAX_VALUE, (double) startTime, Double.MAX_VALUE, (double) endTime)
-        ).toBlocking().toIterable();
-
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
             String[] str = result.value().split(":");
@@ -296,7 +316,7 @@ public class SearchAction {
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
 
 
-        System.out.println("r树结果: sstableNum：" + Arrays.toString(sstableNum));
+        System.out.println("精确r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
         System.out.println(amVersionID  + " " + stVersionID + " " + Arrays.toString(sstableNum) + " " + Arrays.toString(approSSTableNum));
         System.out.println("aQuery长度 " + aQuery.length + " " + "近似查询长度 " + approRes.length);

@@ -3,6 +3,7 @@ package com.local;
 import com.local.domain.Parameters;
 import com.local.insert.Insert;
 import com.local.insert.InsertAction;
+import com.local.search.Search;
 import com.local.search.SearchAction;
 import com.local.util.*;
 import com.local.version.VersionAction;
@@ -37,32 +38,8 @@ public class Main {
         System.out.println("初始化成功==========================");
 
     }
-    public static Runnable searchThread() {
-        return new Runnable() {
-            @Override
-            public void run() {
 
-                FileChannelReader reader2 = null;
-                try {
-                    reader2 = new FileChannelReader(Parameters.FileSetting.inputPath + "output.bin", 1024, 0 );
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                reader2.read();
-                byte[] searchTsBytes = reader2.getArray();  // 查插入的第一个
 
-                // 要查的内容
-//                byte[] searchTsBytes = new byte[Parameters.timeSeriesDataSize];
-                long startTime = 0;
-                long endTime = new Date().getTime() / 1000;
-                int k = 100;
-
-                System.out.println("开始查询");
-                byte[] ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
-
-            }
-        };
-    }
 
     public static long readTime = 0;
     public static long writeTime = 0;
@@ -86,10 +63,16 @@ public class Main {
 
         while(true) {
             if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-//            Thread.sleep(3000);
-                for (int i = 0; i < 1; i ++) {
-                    CacheUtil.searchThreadPool.execute(searchThread());
+                for (int i = 0; i < 1000; i ++ ) {
+                    new Search(true, 100).run();
+                    System.out.println("-----------------------------------------------\n");
                 }
+
+//                for (int i = 0; i < 100000; i ++) {
+////                    CacheUtil.searchThreadPool.execute(new Search(false, 100));
+//                    new Search(false, 100).run();
+//                    System.out.println("查询完成");
+//                }
                 break;
             }
 
