@@ -100,7 +100,7 @@ public class MappedFileReader {
     }
 
     public byte[] readTs(long offset) {
-        System.out.println("读取offset: " + offset);
+//        System.out.println("读取offset: " + offset);
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
         } catch (IOException e) {

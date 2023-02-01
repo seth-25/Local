@@ -45,10 +45,10 @@ public class SearchAction {
         List<OriTs> nearlyTsList = new ArrayList<>();
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
             Long p = aQuery.pList.get(i);
-            System.out.println("p:" + p);
+//            System.out.println("p:" + p);
             int p_hash = (int) (p >> 56);   // 文件名
             long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
-            System.out.println("p_hash:" + p_hash + " " + "offset:" + offset);
+//            System.out.println("p_hash:" + p_hash + " " + "offset:" + offset);
 //            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] ts;
