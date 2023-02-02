@@ -41,9 +41,8 @@ public class Main {
 
 
 
-    public static long readTime = 0;
-    public static long writeTime = 0;
-    public static long fileTime = 0;
+    public static long insertTime = 0;
+    public static boolean hasInsert = false;
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -59,15 +58,19 @@ public class Main {
 
         Thread.sleep(3000);
 
+        insertTime = System.currentTimeMillis();
         CacheUtil.insertThreadPool.execute(new Insert());
 
         while(true) {
-            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-                for (int i = 0; i < 1000; i ++ ) {
+//            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
+            if (hasInsert) {    // 等到初始化得到版本
+                long startTime = System.currentTimeMillis();
+                for (int i = 0; i < 100; i ++ ) {
                     new Search(true, 100).run();
                     System.out.println("-----------------------------------------------\n");
+                    System.out.println("精确查询时间" + (System.currentTimeMillis() - startTime));
                 }
-
+                System.out.println("精确查询总时间" + (System.currentTimeMillis() - startTime));
 //                for (int i = 0; i < 100000; i ++) {
 ////                    CacheUtil.searchThreadPool.execute(new Search(false, 100));
 //                    new Search(false, 100).run();
@@ -78,8 +81,7 @@ public class Main {
 
             Thread.sleep(100);
         }
-
-        /////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////
 
 
         Thread.sleep(Long.MAX_VALUE);

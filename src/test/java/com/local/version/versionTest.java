@@ -44,21 +44,25 @@ public class versionTest {
     public void rTreeSaxValueTest() {
         byte[] maxSax = new byte[]{(byte)255, (byte)255, (byte)255, (byte)255, (byte) 255, (byte) 255, (byte) 255, (byte) 255};
         System.out.println(Arrays.toString(maxSax));
-        byte[] minSax = new byte[]{(byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0, (byte)0};
+        byte[] minSax = new byte[]{(byte)0, (byte)1, (byte)2, (byte)3, (byte)4, (byte)5, (byte)6, (byte)7};
         System.out.println(Arrays.toString(minSax));
-        String nodeValue = new String(maxSax, StandardCharsets.ISO_8859_1) + new String(minSax, StandardCharsets.ISO_8859_1) + new String(new byte[8], StandardCharsets.ISO_8859_1) + Parameters.hostName;
-        System.out.println("");
+        long fileNum = 123;
+        String nodeValue = new String(maxSax, StandardCharsets.ISO_8859_1) + new String(minSax, StandardCharsets.ISO_8859_1) + fileNum;
+        System.out.println(nodeValue + "\n");
         RTree<String, Rectangle> tree = RTree.create();
         tree = tree.add(nodeValue, Geometries.rectangle(3, 8, 25, 32));
         Iterable<Entry<String, Rectangle>> results = tree.search(Geometries.rectangle(-Double.MAX_VALUE,-Double.MAX_VALUE,Double.MAX_VALUE,Double.MAX_VALUE)).toBlocking().toIterable();
         for (Entry<String, Rectangle> result : results) {
             String value = result.value();
             System.out.println(value.length());
-            String maxSaxStr = value.substring(0, Parameters.saxTSize);
-            System.out.println(Arrays.toString(maxSaxStr.getBytes(StandardCharsets.ISO_8859_1)));
-//            System.out.println(hostName);
+            String minSaxStr = value.substring(0, 8);
+            String maxSaxStr = value.substring(8, 16);
+            String fileNumStr = value.substring(16);
+            System.out.println(Arrays.toString(minSaxStr.getBytes(StandardCharsets.ISO_8859_1)) + " " +Arrays.toString(maxSaxStr.getBytes(StandardCharsets.ISO_8859_1)));
+            System.out.println(Long.valueOf(fileNumStr));
         }
     }
+
 
     @Test
     public void testStringByte() {

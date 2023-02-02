@@ -31,6 +31,7 @@ public class SearchAction {
     }
     public static byte[] searchOriTs(byte[] info, boolean isExact) {
         System.out.println("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);
+//        System.out.println(Arrays.toString(info));
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -48,7 +49,7 @@ public class SearchAction {
 //            System.out.println("p:" + p);
             int p_hash = (int) (p >> 56);   // 文件名
             long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
-//            System.out.println("p_hash:" + p_hash + " " + "offset:" + offset);
+//            System.out.println("p:" + p + " p_hash:" + p_hash + " offset:" + offset);
 //            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] ts;
@@ -145,9 +146,16 @@ public class SearchAction {
 
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
-            String[] str = result.value().split(":");
-            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), maxSaxT) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), minSaxT) >= 0) {
-                sstableNumList.add(Long.valueOf(str[2]));
+//            String[] str = result.value().split(":");
+//            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), maxSaxT) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), minSaxT) >= 0) {
+//                sstableNumList.add(Long.valueOf(str[2]));
+//            }
+
+            String value = result.value();
+            byte[] nodeMinSaxT = value.substring(0, Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
+            byte[] nodeMaxSaxT = value.substring(Parameters.saxTSize, 2 * Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
+            if (SaxTUtil.compareSaxT(nodeMinSaxT, maxSaxT) <= 0 && SaxTUtil.compareSaxT(nodeMaxSaxT, minSaxT) >= 0) {
+                sstableNumList.add(Long.valueOf(value.substring(2 * Parameters.saxTSize)));
             }
         }
         return sstableNumList.stream().mapToLong(num -> num).toArray();
@@ -308,9 +316,11 @@ public class SearchAction {
         byte[] exactRes;
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
-            String[] str = result.value().split(":");
-            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), saxTData) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), saxTData) >= 0) {
-                sstableNumList.add(Long.valueOf(str[2]));
+            String value = result.value();
+            byte[] minSaxT = value.substring(0, Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
+            byte[] maxSaxT = value.substring(Parameters.saxTSize, 2 * Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
+            if (SaxTUtil.compareSaxT(minSaxT, saxTData) <= 0 && SaxTUtil.compareSaxT(maxSaxT, saxTData) >= 0) {
+                sstableNumList.add(Long.valueOf(value.substring(2 * Parameters.saxTSize)));
             }
         }
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
