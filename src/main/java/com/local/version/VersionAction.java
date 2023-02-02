@@ -120,12 +120,11 @@ public class VersionAction {
             printWorkerVersion();
         }
         else if (versionBytes[0] == 1) {
-            Integer[] outVer = {0};
             VersionUtil.Version2Content ver2 = new VersionUtil.Version2Content();
             VersionUtil.analysisVersionBytes(versionBytes, ver2);
             System.out.println("\t需要更新版本2:" + " 外" + ver2.outVer + " 文件" + ver2.addFileNums + " " + ver2.delFileNums);
 
-            newVersion.updateVersion(workerHostName, outVer[0]);
+            newVersion.updateVersion(workerHostName, ver2.outVer);
 
             // rtree删除
             RTree<String, Rectangle> tree = newVersion.getrTree();

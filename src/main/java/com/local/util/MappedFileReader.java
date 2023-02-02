@@ -34,10 +34,14 @@ public class MappedFileReader {
         this.fileChannel = fileIn.getChannel();
         this.fileLength = fileChannel.size();
 
-        // 一个内存映射最大的偏移量(ByteBuffer指针用int存，超过2g无法表示).并且确保是ts的整数倍
-        int maxOffset = Integer.MAX_VALUE / Parameters.tsSize * Parameters.tsSize;
+//        // 一个内存映射最大的偏移量(ByteBuffer指针用int存，超过2g无法表示).并且确保是ts的整数倍
+//        int maxOffset = Integer.MAX_VALUE / Parameters.tsSize * Parameters.tsSize;
+
+        // 一个内存映射最大的偏移量(ByteBuffer指针用int存，超过2g无法表示).并且确保是readSize的整数倍
+        int maxOffset = Integer.MAX_VALUE / Parameters.FileSetting.readSize * Parameters.FileSetting.readSize;
 
         this.number = (int) Math.ceil((double) fileLength / (double) maxOffset);    // 向上取整
+//        System.out.println("number: " + number);
         this.mappedBufArray = new MappedByteBuffer[number];// 内存文件映射数组
         long preLength = 0;
         long regionSize = maxOffset;// 映射区域的大小
@@ -46,6 +50,8 @@ public class MappedFileReader {
                 regionSize = fileLength - preLength;// 最后一片区域的大小
             }
             mappedBufArray[i] = fileChannel.map(FileChannel.MapMode.READ_ONLY, preLength, regionSize);
+//            System.out.println("preLength " + preLength + " " + "size " + regionSize);
+
 //            System.out.println("lim " + mappedBufArray[i].limit());
             preLength += regionSize;// 下一片区域的开始
         }

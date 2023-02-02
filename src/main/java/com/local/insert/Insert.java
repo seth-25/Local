@@ -35,7 +35,7 @@ public class Insert implements Runnable{
                     else {  // 读完了跳过
                         continue;
                     }
-                    System.out.println("读文件: " + reader.getFileNum() + " 次数：" + ++cntRead);
+                    System.out.println("读文件: " + reader.getFileNum() + " 次数：" + ++cntRead + " offset:" + offset);
 
                     TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
                     super.put(tsReadBatch);
