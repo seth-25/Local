@@ -73,6 +73,7 @@ public class FileUtil {
     }
 
 
+
     public static long writeFile(String fileFolder, TimeSeries timeSeries) throws IOException {
         createFolder(fileFolder);
 //        File file = new File(fileFolder + "/" + TsUtil.computeHash(timeSeries));

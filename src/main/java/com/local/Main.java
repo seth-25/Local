@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.*;
 
 
+
 public class Main {
     public static void init() {
 
@@ -43,7 +44,7 @@ public class Main {
 
     public static long insertTime = 0;
     public static boolean hasInsert = false;
-
+    public static long cntP;
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -56,20 +57,28 @@ public class Main {
 
         init();
 
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
-        insertTime = System.currentTimeMillis();
+//        insertTime = System.currentTimeMillis();
         CacheUtil.insertThreadPool.execute(new Insert());
-
+        long maxCntP = 0;
+        long totalCntP = 0;
         while(true) {
 //            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-            if (hasInsert) {    // 等到初始化得到版本
+            if (hasInsert) {    // 插入完成后再查询
                 long startTime = System.currentTimeMillis();
                 for (int i = 0; i < 100; i ++ ) {
+                    long startQuery = System.currentTimeMillis();
+                    cntP = 0;
                     new Search(true, 100).run();
                     System.out.println("-----------------------------------------------\n");
-                    System.out.println("精确查询时间" + (System.currentTimeMillis() - startTime));
+                    System.out.println("精确查询时间" + (System.currentTimeMillis() - startQuery));
+                    System.out.println("访问原始时间序列个数：" + cntP);
+                    maxCntP = Math.max(maxCntP, cntP);
+                    totalCntP += cntP;
                 }
+                System.out.println("最大访问原始时间序列：" + maxCntP);
+                System.out.println("总共访问原始时间序列：" + totalCntP);
                 System.out.println("精确查询总时间" + (System.currentTimeMillis() - startTime));
 //                for (int i = 0; i < 100000; i ++) {
 ////                    CacheUtil.searchThreadPool.execute(new Search(false, 100));
@@ -81,13 +90,34 @@ public class Main {
 
             Thread.sleep(100);
         }
+
+//        while(true) {
+//            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
+//
+//                long startTime = System.currentTimeMillis();
+//                while (!hasInsert) {
+//                    new Search(true, 100).run();
+//                    System.out.println("-----------------------------------------------\n");
+//                    System.out.println("精确查询时间" + (System.currentTimeMillis() - startTime));
+//                }
+//                System.out.println("精确查询总时间" + (System.currentTimeMillis() - startTime));
+////                for (int i = 0; i < 100000; i ++) {
+//////                    CacheUtil.searchThreadPool.execute(new Search(false, 100));
+////                    new Search(false, 100).run();
+////                    System.out.println("查询完成");
+////                }
+//                break;
+//            }
+//
+//            Thread.sleep(100);
+//        }
         ///////////////////////////////////////////////////////////////////////
 
 
         Thread.sleep(Long.MAX_VALUE);
-        DBUtil.dataBase.close();
-        CacheUtil.insertThreadPool.shutdown();
-        CacheUtil.searchThreadPool.shutdown();
+//        DBUtil.dataBase.close();
+//        CacheUtil.insertThreadPool.shutdown();
+//        CacheUtil.searchThreadPool.shutdown();
     }
 
 

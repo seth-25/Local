@@ -66,6 +66,7 @@ public class MappedFileReader {
 
     public int read() {
         if (count >= number) {  // 文件读取完毕
+            System.out.println("清空");
             resArray = null;
             array = null;
             return -1;

@@ -4,6 +4,7 @@ import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
+import com.local.Main;
 import com.local.domain.Parameters;
 import com.local.util.*;
 import com.local.version.VersionAction;
@@ -30,8 +31,17 @@ public class SearchAction {
         }
     }
     public static byte[] searchOriTs(byte[] info, boolean isExact) {
+        long t6 = System.currentTimeMillis(); // todo
         System.out.println("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);
-//        System.out.println(Arrays.toString(info));
+//        System.out.println();
+
+        long readTime = 0;   // todo
+        long readLockTime = 0;   // todo
+        long makePTime = 0;   // todo
+        long forTime = 0;
+        long disTime = 0;
+        long anaTime = 0;   // todo
+//        long t1 = System.currentTimeMillis(); // todo
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -41,10 +51,16 @@ public class SearchAction {
         }
         aQuery.sortPList();
 
-        System.out.println("解析完成");
-//        List<Pair<byte[], Float>> nearlyTsList = new ArrayList<>();
+//        System.out.println("解析完成");
+//        System.out.println("解析时间：" + (System.currentTimeMillis() - t1));// todo
+
+        synchronized (SearchAction.class) { // todo
+            Main.cntP += aQuery.pList.size();
+        }
+        long t5 = System.currentTimeMillis();   // todo
         List<OriTs> nearlyTsList = new ArrayList<>();
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
+            long makeTimeStart = System.currentTimeMillis();    // todo
             Long p = aQuery.pList.get(i);
 //            System.out.println("p:" + p);
             int p_hash = (int) (p >> 56);   // 文件名
@@ -53,11 +69,18 @@ public class SearchAction {
 //            FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(p_hash);
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] ts;
+            makePTime += System.currentTimeMillis() - makeTimeStart;    // todo
+            long readLockTimeStart = System.currentTimeMillis();    // todo
             synchronized (reader) {
+                long t2 = System.currentTimeMillis();   // todo
                 ts = reader.readTs(offset);
+                readTime += (System.currentTimeMillis() - t2);   // todo
+//                System.out.print(offset + " ");
             }
-            if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
+            readLockTime += System.currentTimeMillis() - readLockTimeStart; // todo
 
+            long disTimeStart = System.currentTimeMillis();    // todo
+            if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
                 long timestamps = TsUtil.bytesToLong(ts, Parameters.timeSeriesDataSize);
                 if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
                     OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
@@ -67,24 +90,32 @@ public class SearchAction {
                 OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  aQuery.pBytesList.get(i));
                 nearlyTsList.add(oriTs);
             }
-            ts = null;
+            disTime += System.currentTimeMillis() - disTimeStart; // todo
         }
+        forTime = System.currentTimeMillis() - t5;
+
+        long t3 = System.currentTimeMillis();   // todo
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
             public int compare(OriTs o1, OriTs o2) {
                 return o1.dis.compareTo(o2.dis);
             }
         });
-
+//        System.out.println("排序时间：" + (System.currentTimeMillis() - t3));// todo
+//        System.out.println();
+        System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
+                " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
+        +" 查询个数：" + aQuery.pList.size() + " 线程：" + Thread.currentThread().getName());// todo
         int cnt = 0;
         if (isExact) {
+//            long t4 = System.currentTimeMillis();// todo
             // 返回若干个ares_exact(不含p)
             // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐)
             // ares_exact(没时间戳): ts 256*4, float dist 4
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-                System.out.println("距离:" + dis);
+//                System.out.println("距离:" + dis);
                 if (dis < aQuery.topDist || cnt < aQuery.needNum) { // 距离<topDist都要传给db用于剪枝
                     System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
                     System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
@@ -93,12 +124,12 @@ public class SearchAction {
                 else {
                     break;
                 }
-
-
             }
-            System.out.println("精确查询:" + " topDis:" + aQuery.topDist + " 需要个数:" + aQuery.needNum + " 访问ts个数:" + aQuery.pList.size() + " " + "返回ts个数:" + cnt);
+//            System.out.println("精确查询:" + " topDis:" + aQuery.topDist + " 需要个数:" + aQuery.needNum + " 访问ts个数:" + aQuery.pList.size() + " " + "返回ts个数:" + cnt);
             byte[] aresExact = new byte[cnt * Parameters.aresExactSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
+//            System.out.println("计算距离 生成ares时间：" + (System.currentTimeMillis() - t4));// todo
+            System.out.println("查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + "\n");// todo
             return aresExact;
         }
         else {
@@ -108,7 +139,7 @@ public class SearchAction {
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-                System.out.println("距离:" + dis);
+//                System.out.println("距离:" + dis);
                 if (cnt < aQuery.k && (dis < aQuery.topDist || cnt < aQuery.needNum)) {
                     System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
                     System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
@@ -119,14 +150,14 @@ public class SearchAction {
                     break;
                 }
             }
-            System.out.println("近似查询:" + " topDis:" + aQuery.topDist + " 需要个数:" + aQuery.needNum + " 访问ts个数:" + aQuery.pList.size() + " " + "返回ts个数:" + cnt);
+//            System.out.println("近似查询:" + " topDis:" + aQuery.topDist + " 需要个数:" + aQuery.needNum + " 访问ts个数:" + aQuery.pList.size() + " " + "返回ts个数:" + cnt);
 
             byte[] ares = new byte[cnt * Parameters.aresSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
             tmp = null;
+            System.out.println("查询原始时间序列总时间：" + (System.currentTimeMillis() - t6));// todo
             return ares;
         }
-
     }
 
 
