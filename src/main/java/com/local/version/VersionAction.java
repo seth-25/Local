@@ -13,13 +13,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class VersionAction {
-    public static synchronized void unRefCurVersion() {
-//        System.out.println("开始unRef大版本");
-        CacheUtil.curVersion.unRef();
-        if (CacheUtil.curVersion.getRef() == 0) {
-            HashMap<String, Pair<Integer, Integer>> workerVersions = CacheUtil.curVersion.getWorkerVersions();
+    public static synchronized void unRefVersion(Version version) {
+        System.out.println("unRef大版本");
+
+        version.unRef();
+        if (version.getRef() == 0) {
+            HashMap<String, Pair<Integer, Integer>> workerVersions = version.getWorkerVersions();
             unRefWorkerVersions(workerVersions);
         }
+        printWorkerVersion();
+    }
+    public static synchronized void refVersion(Version version) {
+        System.out.println("ref大版本");
+        version.addRef();
+        printWorkerVersion();
     }
 
     private static synchronized void unRefWorkerVersions(HashMap<String, Pair<Integer, Integer>> workerVersions) {
@@ -66,13 +73,11 @@ public class VersionAction {
         }
     }
 
-    public static synchronized void refCurVersion() {
-        CacheUtil.curVersion.addRef();
-    }
 
-    public static synchronized void updateCurVersion(Version version) {
-        CacheUtil.curVersion = version;
-    }
+
+//    public static synchronized void updateCurVersion(Version version) {
+//        CacheUtil.curVersion = version;
+//    }
 
 
     public static synchronized void initVersion() {
@@ -112,9 +117,9 @@ public class VersionAction {
             refWorkerVersions(newVersion.getWorkerVersions());  // 该大版本包括所有worker的小版本ref+1
 
             System.out.println("\t当前版本ref" + CacheUtil.curVersion.getRef());
-            unRefCurVersion();  // 上一个大版本ref-1
+            unRefVersion(CacheUtil.curVersion);  // 上一个大版本ref-1
 //            System.out.println("当前版本ref" + CacheUtil.curVersion.getRef());
-            updateCurVersion(newVersion);   // 新版本覆盖旧版本
+            CacheUtil.curVersion = newVersion; // 新版本覆盖旧版本
 
             System.out.println("\t更新完成 ");
             printWorkerVersion();
@@ -145,8 +150,8 @@ public class VersionAction {
 
             newVersion.setRef(1);
             refWorkerVersions(newVersion.getWorkerVersions());
-            unRefCurVersion();
-            updateCurVersion(newVersion);
+            unRefVersion(CacheUtil.curVersion);
+            CacheUtil.curVersion = newVersion; // 新版本覆盖旧版本
 
         } else {
             throw new RuntimeException("版本错误");
@@ -162,7 +167,7 @@ public class VersionAction {
 
             System.out.println("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件" + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
 
-            unRefCurVersion();  // 当前大版本ref-1,先清除小版本再加入新的小版本
+            unRefVersion(CacheUtil.curVersion);  // 当前大版本ref-1,先清除小版本再加入新的小版本
             CacheUtil.curVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
 
             // rtree插入
@@ -183,7 +188,6 @@ public class VersionAction {
 
             System.out.println("\t当前版本ref" + CacheUtil.curVersion.getRef());
 //
-
             System.out.println("\t更新完成 ");
             printWorkerVersion();
         }
@@ -192,7 +196,7 @@ public class VersionAction {
             VersionUtil.analysisVersionBytes(versionBytes, ver2);
             System.out.println("\t需要更新版本2:" + " 外" + ver2.outVer + " 文件" + ver2.addFileNums + " " + ver2.delFileNums);
 
-            unRefCurVersion();  // 上一个大版本ref-1
+            unRefVersion(CacheUtil.curVersion);  // 上一个大版本ref-1
             CacheUtil.curVersion.updateVersion(workerHostName, ver2.outVer);
 
             // rtree删除

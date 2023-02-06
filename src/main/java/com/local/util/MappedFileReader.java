@@ -24,7 +24,7 @@ public class MappedFileReader {
     private byte[] resArray;
     boolean isRes = false;
 
-    private byte[] oneTsArray;
+    byte[][] tsArrays;
     private int offset = 0;
 
     private int fileNum;
@@ -57,7 +57,7 @@ public class MappedFileReader {
         }
         this.arraySize = arraySize;
         this.array = new byte[arraySize];
-        this.oneTsArray = new byte[Parameters.tsSize];
+        this.tsArrays = new byte[Parameters.findOriTsNum][Parameters.tsSize];   // new byte时间消耗很大，预先开好空间
 
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
 
@@ -106,7 +106,8 @@ public class MappedFileReader {
         return oldOffset;
     }
 
-    public byte[] readTs(long offset) {
+
+    public byte[] readTs(long offset, int num) {
 //        System.out.println("读取offset: " + offset);
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
@@ -115,10 +116,23 @@ public class MappedFileReader {
         }
 //        System.out.println("实际位置" + offset * Parameters.tsSize + " " + fileLength + " read成功 " + oneTsArray.length + " " + Thread.currentThread().getName());
         readTsByteBuf.flip();
-        readTsByteBuf.get(oneTsArray);
+        readTsByteBuf.get(tsArrays[num]);
 //        System.out.println("写入成功");
         readTsByteBuf.clear();
-        return oneTsArray;
+        return tsArrays[num];
+    }
+
+    public byte[] readTsNewByte(long offset) {
+        try {
+            fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        byte[] oneTs = new byte[Parameters.tsSize];
+        readTsByteBuf.flip();
+        readTsByteBuf.get(oneTs);
+        readTsByteBuf.clear();
+        return oneTs;
     }
 
     public void close() throws IOException {

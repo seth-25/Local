@@ -30,6 +30,7 @@ public class Parameters {
     // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐) 总共1040
     // ares_exact(没时间戳): ts 256*4, float dist 4, 总共1028
     public static final int aresExactSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
+    public static final int findOriTsNum = 20000; // 一次访问原始时间序列个数
 
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量

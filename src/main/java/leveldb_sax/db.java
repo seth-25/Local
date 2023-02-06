@@ -43,6 +43,10 @@ public class db {
     // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
     // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
     public native byte[] Get(byte[] aquery, boolean is_use_am, int am_version_id, int st_version_id, long[] st_number);
+
+    // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
+    // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
+    // ares_exact(有时间戳): ts 256*4, float dist 4
     public native byte[] Get_exact(byte[] aquery, int am_version_id, int st_version_id, long[] st_number, byte[] appro_res, long[] appro_st_number);
     public native void unref_am(int version_id);
 

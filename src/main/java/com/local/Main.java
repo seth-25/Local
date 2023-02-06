@@ -4,7 +4,7 @@ import com.local.domain.Parameters;
 import com.local.insert.Insert;
 import com.local.insert.InsertAction;
 import com.local.search.Search;
-import com.local.search.SearchAction;
+import com.local.search.SearchRandom;
 import com.local.util.*;
 import com.local.version.VersionAction;
 
@@ -44,8 +44,12 @@ public class Main {
 
     public static long insertTime = 0;
     public static boolean hasInsert = false;
-    public static long cntP;
-
+    public static long cntP ;
+    public static long totalCntRes = 0;
+    public static long totalReadTime = 0;
+    public static long totalReadLockTime = 0;
+    public static double totalDis = 0;
+    public static long approCnt = 0;
     public static void main(String[] args) throws IOException, InterruptedException {
 
         ArrayList<File> files = FileUtil.getAllFile(Parameters.FileSetting.inputPath);
@@ -63,28 +67,42 @@ public class Main {
         CacheUtil.insertThreadPool.execute(new Insert());
         long maxCntP = 0;
         long totalCntP = 0;
+
         while(true) {
 //            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
             if (hasInsert) {    // 插入完成后再查询
+                Thread.sleep(10000);
                 long startTime = System.currentTimeMillis();
-                for (int i = 0; i < 100; i ++ ) {
+                for (int i = 0; i < 10; i ++ ) {
                     long startQuery = System.currentTimeMillis();
                     cntP = 0;
-                    new Search(true, 100).run();
-                    System.out.println("-----------------------------------------------\n");
+                    new Search(i, true, 100).run();
+
                     System.out.println("精确查询时间" + (System.currentTimeMillis() - startQuery));
                     System.out.println("访问原始时间序列个数：" + cntP);
+                    System.out.println("-----------------------------------------------\n");
                     maxCntP = Math.max(maxCntP, cntP);
                     totalCntP += cntP;
                 }
-                System.out.println("最大访问原始时间序列：" + maxCntP);
-                System.out.println("总共访问原始时间序列：" + totalCntP);
-                System.out.println("精确查询总时间" + (System.currentTimeMillis() - startTime));
-//                for (int i = 0; i < 100000; i ++) {
-////                    CacheUtil.searchThreadPool.execute(new Search(false, 100));
-//                    new Search(false, 100).run();
-//                    System.out.println("查询完成");
+
+//                int numApproQuery = 100;
+//                for (int i = 0; i < numApproQuery; i ++) {
+//                    cntP = 0;
+//                    long startQuery = System.currentTimeMillis();
+//                    new Search(i, false, 100).run();
+//                    System.out.println("近似查询时间" + (System.currentTimeMillis() - startQuery));
+//                    System.out.println("访问原始时间序列个数：" + cntP);
+//                    System.out.println("-----------------------------------------------\n");
+//                    maxCntP = Math.max(maxCntP, cntP);
+//                    totalCntP += cntP;
 //                }
+
+                System.out.println("最大访问原始时间序列：" + maxCntP);
+                System.out.println("总共访问原始时间序列：" + totalCntP + " 总共返回原始时间序列：" + totalCntRes + " 比例：" + ((double)totalCntRes / totalCntP));
+                System.out.println("查询总时间" + (System.currentTimeMillis() - startTime));
+                System.out.println("读取原始时间序列总时间" + totalReadTime + " " + totalReadLockTime);
+//                System.out.println("近似距离:" + totalDis + " 平均距离" + totalDis / numApproQuery);
+
                 break;
             }
 

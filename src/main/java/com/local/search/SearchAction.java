@@ -6,6 +6,7 @@ import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.local.Main;
 import com.local.domain.Parameters;
+import com.local.domain.Version;
 import com.local.util.*;
 import com.local.version.VersionAction;
 import com.local.version.VersionUtil;
@@ -30,7 +31,8 @@ public class SearchAction {
             this.p = p;
         }
     }
-    public static byte[] searchOriTs(byte[] info, boolean isExact) {
+    public static synchronized byte[] searchOriTs(byte[] info, boolean isExact) { // todo
+//    public static byte[] searchOriTs(byte[] info, boolean isExact) {
         long t6 = System.currentTimeMillis(); // todo
         System.out.println("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);
 //        System.out.println();
@@ -41,7 +43,7 @@ public class SearchAction {
         long forTime = 0;
         long disTime = 0;
         long anaTime = 0;   // todo
-//        long t1 = System.currentTimeMillis(); // todo
+        long t1 = System.currentTimeMillis(); // todo
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -54,12 +56,11 @@ public class SearchAction {
 //        System.out.println("解析完成");
 //        System.out.println("解析时间：" + (System.currentTimeMillis() - t1));// todo
 
-        synchronized (SearchAction.class) { // todo
-            Main.cntP += aQuery.pList.size();
-        }
+
         long t5 = System.currentTimeMillis();   // todo
         List<OriTs> nearlyTsList = new ArrayList<>();
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
+//            System.out.println("进入for");
             long makeTimeStart = System.currentTimeMillis();    // todo
             Long p = aQuery.pList.get(i);
 //            System.out.println("p:" + p);
@@ -70,10 +71,17 @@ public class SearchAction {
             MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
             byte[] ts;
             makePTime += System.currentTimeMillis() - makeTimeStart;    // todo
-            long readLockTimeStart = System.currentTimeMillis();    // todo
+            long readLockTimeStart = System.currentTimeMillis();    //
+//            System.out.println("开始read");
             synchronized (reader) {
                 long t2 = System.currentTimeMillis();   // todo
-                ts = reader.readTs(offset);
+                if (i < Parameters.findOriTsNum) {  // new byte时间消耗很大，优先使用预先开好的空间，不足再新创
+                    ts = reader.readTs(offset, i);
+                }
+                else {
+                    ts = reader.readTsNewByte(offset);
+                }
+
                 readTime += (System.currentTimeMillis() - t2);   // todo
 //                System.out.print(offset + " ");
             }
@@ -93,7 +101,7 @@ public class SearchAction {
             disTime += System.currentTimeMillis() - disTimeStart; // todo
         }
         forTime = System.currentTimeMillis() - t5;
-
+//        System.out.println("for循环完成");
         long t3 = System.currentTimeMillis();   // todo
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
@@ -103,9 +111,7 @@ public class SearchAction {
         });
 //        System.out.println("排序时间：" + (System.currentTimeMillis() - t3));// todo
 //        System.out.println();
-        System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
-        +" 查询个数：" + aQuery.pList.size() + " 线程：" + Thread.currentThread().getName());// todo
+
         int cnt = 0;
         if (isExact) {
 //            long t4 = System.currentTimeMillis();// todo
@@ -129,7 +135,16 @@ public class SearchAction {
             byte[] aresExact = new byte[cnt * Parameters.aresExactSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
 //            System.out.println("计算距离 生成ares时间：" + (System.currentTimeMillis() - t4));// todo
-            System.out.println("查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + "\n");// todo
+
+            synchronized (SearchAction.class) { // todo
+                Main.cntP += aQuery.pList.size();
+                Main.totalReadTime += readTime;
+                Main.totalReadLockTime += readLockTime;
+                Main.totalCntRes += cnt;
+            }
+            System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
+                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
+                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n");// todo
             return aresExact;
         }
         else {
@@ -155,7 +170,15 @@ public class SearchAction {
             byte[] ares = new byte[cnt * Parameters.aresSize];  // aresExact: cnt个ares
             System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
             tmp = null;
-            System.out.println("查询原始时间序列总时间：" + (System.currentTimeMillis() - t6));// todo
+            synchronized (SearchAction.class) { // todo
+                Main.cntP += aQuery.pList.size();
+                Main.totalReadTime += readTime;
+                Main.totalReadLockTime += readLockTime;
+                Main.totalCntRes += cnt;
+            }
+            System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
+                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
+                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n");// todo
             return ares;
         }
     }
@@ -207,8 +230,6 @@ public class SearchAction {
         System.out.println("r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
         byte[] ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
-
-        VersionAction.unRefCurVersion();
         System.out.println("近似查询结果长度" + ares.length);
         return ares;
     }
@@ -229,7 +250,6 @@ public class SearchAction {
 
         byte[] ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
 
-        VersionAction.unRefCurVersion();
         System.out.println("近似查询结果长度" + ares.length);
         return new Pair<>(ares, sstableNum);
     }
@@ -239,6 +259,7 @@ public class SearchAction {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
         float[] paa = new float[Parameters.paaNum];
+        System.out.println("searchBytes " + Arrays.toString(searchTsBytes));
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
         System.out.println("saxT: "  + Arrays.toString(saxTData));
         System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
@@ -254,15 +275,17 @@ public class SearchAction {
         // 获取版本
         RTree<String, Rectangle> rTree;
         int amVersionID, stVersionID;
+        Version version;
         synchronized(VersionAction.class) {
-            Pair<Integer, Integer> verPair = CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName);
+            version = CacheUtil.curVersion;
+            Pair<Integer, Integer> verPair = version.getWorkerVersions().get(Parameters.hostName);
             if (verPair == null) {
                 throw new RuntimeException("当前版本为空");
             }
             amVersionID = verPair.getKey();    // 查询到来时该worker的版本号
             stVersionID = verPair.getValue();
-            rTree = CacheUtil.curVersion.getrTree();
-            VersionAction.refCurVersion();
+            rTree = version.getrTree();
+            VersionAction.refVersion(version);
         }
         System.out.println("近似查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
 
@@ -279,7 +302,7 @@ public class SearchAction {
         }
 
         // 释放版本
-        VersionAction.unRefCurVersion();
+        VersionAction.unRefVersion(version);
 
         return ares;
     }
@@ -303,15 +326,17 @@ public class SearchAction {
         // 获取版本
         RTree<String, Rectangle> rTree;
         int amVersionID, stVersionID;
+        Version version;
         synchronized(VersionAction.class) {
-            Pair<Integer, Integer> verPair = CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName);
+            version = CacheUtil.curVersion;
+            Pair<Integer, Integer> verPair = version.getWorkerVersions().get(Parameters.hostName);
             if (verPair == null) {
                 throw new RuntimeException("当前版本为空");
             }
             amVersionID = verPair.getKey();    // 查询到来时该worker的版本号
             stVersionID = verPair.getValue();
-            rTree = CacheUtil.curVersion.getrTree();
-            VersionAction.refCurVersion();
+            rTree = version.getrTree();
+            VersionAction.refVersion(version);
         }
         System.out.println("精确查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
 
@@ -366,7 +391,7 @@ public class SearchAction {
         System.out.println("精确查询结果长度" + exactRes.length);
 
         // 释放版本
-        VersionAction.unRefCurVersion();
+        VersionAction.unRefVersion(version);
 
         return exactRes;
     }

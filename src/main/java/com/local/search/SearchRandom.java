@@ -3,22 +3,18 @@ package com.local.search;
 import com.local.Main;
 import com.local.domain.Parameters;
 import com.local.util.CacheUtil;
-import com.local.util.DBUtil;
 import com.local.util.MappedFileReader;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 
-public class Search implements Runnable{
+public class SearchRandom implements Runnable{
     private final boolean isExact;
     private long startTime;
     private long endTime;
     private byte[] searchTsBytes;
     private final int k;
-    private final int num;
-    public Search(int num, boolean isExact, int k) {
-        this.num = num;
+    public SearchRandom(boolean isExact, int k) {
         this.isExact = isExact;
         this.k = k;
     }
@@ -26,24 +22,20 @@ public class Search implements Runnable{
         // 生成查询
         Random random = new Random();
         MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(random.nextInt(CacheUtil.mappedFileReaderMap.size()));
-        int tsOffset = num;
-        System.out.println("offset " + tsOffset);
+        int tsOffset = random.nextInt((int) (reader.getFileLength() / Parameters.tsSize));
+
         synchronized (reader) {
             searchTsBytes = reader.readTsNewByte(tsOffset);  // 查找文件中的随机一个
         }
-
-//
-//        startTime = random.nextLong() % (new Date().getTime() / 1000);
-//        endTime = random.nextLong() % (new Date().getTime() / 1000);
-//        if (startTime < 0) startTime = - startTime;
-//        if (endTime < 0) endTime = - endTime;
-//        if (startTime > endTime) {
-//            long tmp = startTime;
-//            startTime = endTime;
-//            endTime = tmp;
-//        }
-        startTime = 0;
-        endTime = new Date().getTime() / 1000;
+        startTime = random.nextLong() % (new Date().getTime() / 1000);
+        endTime = random.nextLong() % (new Date().getTime() / 1000);
+        if (startTime < 0) startTime = - startTime;
+        if (endTime < 0) endTime = - endTime;
+        if (startTime > endTime) {
+            long tmp = startTime;
+            startTime = endTime;
+            endTime = tmp;
+        }
     }
     @Override
     public void run() {
