@@ -31,11 +31,10 @@ public class SearchAction {
             this.p = p;
         }
     }
-    public static synchronized byte[] searchOriTs(byte[] info, boolean isExact) { // todo
-//    public static byte[] searchOriTs(byte[] info, boolean isExact) {
+//    public static synchronized byte[] searchOriTs(byte[] info, boolean isExact) { // todo
+    public static byte[] searchOriTs(byte[] info, boolean isExact) {
         long t6 = System.currentTimeMillis(); // todo
-        System.out.println("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);
-//        System.out.println();
+        PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
 
         long readTime = 0;   // todo
         long readLockTime = 0;   // todo
@@ -142,9 +141,9 @@ public class SearchAction {
                 Main.totalReadLockTime += readLockTime;
                 Main.totalCntRes += cnt;
             }
-            System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
+            PrintUtil.print("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
                     " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
-                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n");// todo
+                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n"); // todo
             return aresExact;
         }
         else {
@@ -176,9 +175,9 @@ public class SearchAction {
                 Main.totalReadLockTime += readLockTime;
                 Main.totalCntRes += cnt;
             }
-            System.out.println("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
+            PrintUtil.print("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
                     " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
-                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n");// todo
+                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n"); // todo
             return ares;
         }
     }
@@ -200,11 +199,6 @@ public class SearchAction {
 
         ArrayList<Long> sstableNumList = new ArrayList<>();
         for (Entry<String, Rectangle> result : results) {
-//            String[] str = result.value().split(":");
-//            if (SaxTUtil.compareSaxT(str[0].getBytes(StandardCharsets.ISO_8859_1), maxSaxT) <= 0 && SaxTUtil.compareSaxT(str[1].getBytes(StandardCharsets.ISO_8859_1), minSaxT) >= 0) {
-//                sstableNumList.add(Long.valueOf(str[2]));
-//            }
-
             String value = result.value();
             byte[] nodeMinSaxT = value.substring(0, Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
             byte[] nodeMaxSaxT = value.substring(Parameters.saxTSize, 2 * Parameters.saxTSize).getBytes(StandardCharsets.ISO_8859_1);
@@ -227,14 +221,14 @@ public class SearchAction {
             byte[] maxSaxT = SaxTUtil.makeMaxSaxT(saxTData, d);
             sstableNum = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
         }
-        System.out.println("r树结果: sstableNum：" + Arrays.toString(sstableNum));
+        PrintUtil.print("r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
         byte[] ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
-        System.out.println("近似查询结果长度" + ares.length);
+        PrintUtil.print("近似查询结果长度" + ares.length);
         return ares;
     }
 
-    // 近似查询,除了
+    // 近似查询,除了ares还返回sstableNum
     public static Pair<byte[], long[]> getAresAndSSTableFromDB(boolean isUseAm, long startTime, long endTime, byte[] saxTData, byte[] aQuery, int d,
                                                                RTree<String, Rectangle> rTree, int amVersionID, int stVersionID) {
         long[] sstableNum;
@@ -246,11 +240,11 @@ public class SearchAction {
             byte[] maxSaxT = SaxTUtil.makeMaxSaxT(saxTData, d);
             sstableNum = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
         }
-        System.out.println("近似r树结果: sstableNum：" + Arrays.toString(sstableNum));
+        PrintUtil.print("近似r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
         byte[] ares = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID, sstableNum);
 
-        System.out.println("近似查询结果长度" + ares.length);
+        PrintUtil.print("近似查询结果长度" + ares.length);
         return new Pair<>(ares, sstableNum);
     }
 
@@ -259,10 +253,10 @@ public class SearchAction {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         byte[] saxTData = new byte[Parameters.saxTSize];
         float[] paa = new float[Parameters.paaNum];
-        System.out.println("searchBytes " + Arrays.toString(searchTsBytes));
+        PrintUtil.print("searchBytes " + Arrays.toString(searchTsBytes));
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
-        System.out.println("saxT: "  + Arrays.toString(saxTData));
-        System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
+        PrintUtil.print("saxT: "  + Arrays.toString(saxTData));
+        PrintUtil.print("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
         byte[] aQuery;
         if (Parameters.hasTimeStamp > 0) {
            aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
@@ -287,7 +281,7 @@ public class SearchAction {
             rTree = version.getrTree();
             VersionAction.refVersion(version);
         }
-        System.out.println("近似查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
+        PrintUtil.print("近似查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
 
 
         // 近似查询
@@ -312,8 +306,8 @@ public class SearchAction {
         byte[] saxTData = new byte[Parameters.saxTSize];
         float[] paa = new float[Parameters.paaNum];
         DBUtil.dataBase.paa_saxt_from_ts(searchTsBytes, saxTData, paa);
-        System.out.println("saxT: "  + Arrays.toString(saxTData));
-        System.out.println("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
+        PrintUtil.print("saxT: "  + Arrays.toString(saxTData));
+        PrintUtil.print("saxT的浮点值: " + VersionUtil.saxT2Double(saxTData));
         byte[] aQuery;
         if (Parameters.hasTimeStamp > 0) {
             aQuery = SearchUtil.makeAQuery(searchTsBytes, startTime, endTime, k, paa, saxTData);
@@ -338,7 +332,7 @@ public class SearchAction {
             rTree = version.getrTree();
             VersionAction.refVersion(version);
         }
-        System.out.println("精确查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
+        PrintUtil.print("精确查询版本: amVersionID:" + amVersionID + " stVersionID:" + stVersionID);
 
         // 近似查询
         int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1
@@ -381,14 +375,13 @@ public class SearchAction {
         }
         long[] sstableNum = sstableNumList.stream().mapToLong(num -> num).toArray();
 
+        PrintUtil.print("精确查询 r树结果: sstableNum：" + Arrays.toString(sstableNum));
 
-        System.out.println("精确r树结果: sstableNum：" + Arrays.toString(sstableNum));
-
-        System.out.println(amVersionID  + " " + stVersionID + " " + Arrays.toString(sstableNum) + " " + Arrays.toString(approSSTableNum));
-        System.out.println("aQuery长度 " + aQuery.length + " " + "近似查询长度 " + approRes.length);
+        PrintUtil.print(amVersionID  + " " + stVersionID + " " + Arrays.toString(sstableNum) + " " + Arrays.toString(approSSTableNum));
+        PrintUtil.print("aQuery长度 " + aQuery.length + " " + "近似查询长度 " + approRes.length);
 
         exactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID, sstableNum, approRes, approSSTableNum);
-        System.out.println("精确查询结果长度" + exactRes.length);
+        PrintUtil.print("精确查询结果长度" + exactRes.length);
 
         // 释放版本
         VersionAction.unRefVersion(version);

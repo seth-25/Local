@@ -3,6 +3,7 @@ package com.local.insert;
 import com.local.Main;
 import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
+import com.local.util.PrintUtil;
 
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -11,6 +12,7 @@ public class Insert implements Runnable{
 
     private static int cntRead = 0;
     private static int cntInsert = 0;
+    private static long insertTime;
     /**
      * 读文件和发送sax并行
      */
@@ -50,7 +52,7 @@ public class Insert implements Runnable{
             if (tsReadBatch.getFileNum() == -1) {
                 System.out.println("读完所有文件,退出");
                 Main.hasInsert = true;
-                System.out.println("插入时间: " + (System.currentTimeMillis() - Main.insertTime));
+                System.out.println("插入时间: " + (System.currentTimeMillis() - insertTime));
                 return false;
             }
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
@@ -61,6 +63,7 @@ public class Insert implements Runnable{
     }
     @Override
     public void run() {
+        insertTime = System.currentTimeMillis();
         TsToSaxChannel tsToSaxChannel = new TsToSaxChannel(10);
         CacheUtil.insertThreadPool.execute(new Runnable() {
             @Override
@@ -74,7 +77,7 @@ public class Insert implements Runnable{
                 }
             }
         });
-        System.out.println("开始插入======================");
+        PrintUtil.print("开始插入======================");
         try {
             tsToSaxChannel.produce();
         } catch (InterruptedException e) {

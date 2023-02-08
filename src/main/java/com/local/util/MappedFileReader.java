@@ -24,7 +24,7 @@ public class MappedFileReader {
     private byte[] resArray;
     boolean isRes = false;
 
-    byte[][] tsArrays;
+    byte[][] tsArrays;  // 用于查询原始时间序列，返回批量的ts
     private int offset = 0;
 
     private int fileNum;
@@ -66,7 +66,7 @@ public class MappedFileReader {
 
     public int read() {
         if (count >= number) {  // 文件读取完毕
-            System.out.println("清空");
+            PrintUtil.print("清空读取文件的byte数组");
             resArray = null;
             array = null;
             return -1;

@@ -2,54 +2,69 @@ package com.local.search;
 
 import com.local.Main;
 import com.local.domain.Parameters;
-import com.local.util.CacheUtil;
-import com.local.util.DBUtil;
-import com.local.util.MappedFileReader;
+import com.local.util.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 
-public class Search implements Runnable{
+public class Search{
     private final boolean isExact;
+    private final byte[] startTimeBytes;
+    private final byte[] endTimeBytes;
     private long startTime;
     private long endTime;
-    private byte[] searchTsBytes;
+    private final byte[] searchTsBytes;
+
     private final int k;
-    private final int num;
-    public Search(int num, boolean isExact, int k) {
-        this.num = num;
+    private int offset = 0;
+    RandomAccessFile randomAccessFile;
+    public Search(boolean isExact, int k) {
         this.isExact = isExact;
         this.k = k;
+        try {
+            randomAccessFile = new RandomAccessFile(Parameters.FileSetting.queryFilePath, "r");//r: 只读模式 rw:读写模式
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        searchTsBytes = new byte[Parameters.timeSeriesDataSize];
+        startTimeBytes = new byte[Parameters.timeStampSize];
+        endTimeBytes = new byte[Parameters.timeStampSize];
     }
     public void getQuery() {
-        // 生成查询
-        Random random = new Random();
-        MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(random.nextInt(CacheUtil.mappedFileReaderMap.size()));
-        int tsOffset = num;
-        System.out.println("offset " + tsOffset);
-        synchronized (reader) {
-            searchTsBytes = reader.readTsNewByte(tsOffset);  // 查找文件中的随机一个
-        }
+        try {
+            if (Parameters.hasTimeStamp > 0) {  // 有时间戳
+                // 查询由1个ts和2个时间戳组成
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize));
+                randomAccessFile.read(searchTsBytes);
 
-//
-//        startTime = random.nextLong() % (new Date().getTime() / 1000);
-//        endTime = random.nextLong() % (new Date().getTime() / 1000);
-//        if (startTime < 0) startTime = - startTime;
-//        if (endTime < 0) endTime = - endTime;
-//        if (startTime > endTime) {
-//            long tmp = startTime;
-//            startTime = endTime;
-//            endTime = tmp;
-//        }
-        startTime = 0;
-        endTime = new Date().getTime() / 1000;
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize) + Parameters.timeSeriesDataSize);
+                randomAccessFile.read(startTimeBytes);
+                startTime = TsUtil.bytesToLong(startTimeBytes);
+
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
+                randomAccessFile.read(endTimeBytes);
+                endTime = TsUtil.bytesToLong(endTimeBytes);
+            }
+            else {
+                // 查询只有ts
+                randomAccessFile.seek((long) offset * Parameters.timeStampSize);
+                randomAccessFile.read(searchTsBytes);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        PrintUtil.print("offset " + offset);
+        PrintUtil.print(Arrays.toString(searchTsBytes));
+        offset ++ ;
     }
-    @Override
     public void run() {
         getQuery();
 
-        System.out.println("开始查询");
+        PrintUtil.print("开始查询==========================");
         if (isExact) {
             byte[] ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
         }
