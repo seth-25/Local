@@ -38,6 +38,7 @@ public class Parameters {
     }
 
 
+    public static final boolean isSearchMultithread = false; // 查询是否多线程
     public static final boolean isSuffix = true;
     public static final boolean debug = false;
 }

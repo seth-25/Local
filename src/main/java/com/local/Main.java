@@ -46,7 +46,8 @@ public class Main {
     public static long totalReadTime = 0;
     public static long totalReadLockTime = 0;
     public static double totalDis = 0;
-    public static long approCnt = 0;
+    public static double totalRecall = 0;
+    public static double totalError = 0;
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
@@ -109,6 +110,7 @@ public class Main {
                     System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
                             "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
                             "\t比例：" + ((double)totalCntRes / totalCntP));
+                    System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
                 }
                 break;
             }
@@ -121,6 +123,7 @@ public class Main {
         Thread.sleep(Long.MAX_VALUE);
         DBUtil.dataBase.close();
         CacheUtil.insertThreadPool.shutdown();
+//        CacheUtil.searchThreadPool.shutdown();
     }
 
 

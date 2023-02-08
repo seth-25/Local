@@ -35,7 +35,6 @@ public class SearchAction {
     public static byte[] searchOriTs(byte[] info, boolean isExact) {
         long searchOriTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
-
         long readTime = 0;   // todo
         long readLockTime = 0;   // todo
         long makePTime = 0;   // todo
@@ -68,11 +67,16 @@ public class SearchAction {
 //            System.out.println("开始read");
             synchronized (reader) {
                 long t2 = System.currentTimeMillis();   // todo
-                if (i < Parameters.findOriTsNum) {  // new byte时间消耗很大，优先使用预先开好的空间，不足再新创
-                    ts = reader.readTs(offset, i);
+                if (Parameters.isSearchMultithread) {
+                    ts = reader.readTsNewByte(offset);
                 }
                 else {
-                    ts = reader.readTsNewByte(offset);
+                    if (i < Parameters.findOriTsNum) {  // new byte时间消耗很大，优先使用预先开好的空间，不足再新创
+                        ts = reader.readTs(offset, i);
+                    }
+                    else {
+                        ts = reader.readTsNewByte(offset);
+                    }
                 }
 
                 readTime += (System.currentTimeMillis() - t2);   // todo
@@ -93,7 +97,6 @@ public class SearchAction {
             disTime += System.currentTimeMillis() - disTimeStart; // todo
         }
         forTime = System.currentTimeMillis() - forTimeStart;
-
         long sortTimeStart = System.currentTimeMillis();   // todo
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
@@ -116,7 +119,7 @@ public class SearchAction {
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-                if (dis < aQuery.topDist || cnt < aQuery.needNum) { // 距离<topDist都要传给db用于剪枝
+                if (cnt < aQuery.k && (dis < aQuery.topDist || cnt < aQuery.needNum)) { // 距离<topDist都要传给db用于剪枝
                     System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
                     System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
                     cnt++;
@@ -154,6 +157,7 @@ public class SearchAction {
                     System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
                     System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
                     System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 4, Parameters.pointerSize);
+
                     cnt++;
                 }
                 else {

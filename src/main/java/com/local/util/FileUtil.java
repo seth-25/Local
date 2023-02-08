@@ -52,86 +52,86 @@ public class FileUtil {
         }
     }
 
-    public static TimeSeries readTsFromFIle(String fileFolder, long readPosition) throws IOException {
-        File file = new File(fileFolder + "/" + "ts.dat");
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");//r: 只读模式 rw:读写模式
-        randomAccessFile.seek(readPosition);
-        byte[] tsDataBytes = new byte[Parameters.timeSeriesDataSize];
-        int readSize = randomAccessFile.read(tsDataBytes);
-        if (readSize <= 0) {
-            throw new RuntimeException("读取错误");
-        }
-        randomAccessFile.seek(readPosition + Parameters.timeSeriesDataSize);
-        byte[] timeStampBytes = new byte[Parameters.timeStampSize];
-        readSize = randomAccessFile.read(timeStampBytes);
-        if (readSize <= 0) {
-            throw new RuntimeException("读取错误");
-        }
-        randomAccessFile.close();
-
-        return new TimeSeries(tsDataBytes, timeStampBytes);
-    }
-
-
-
-    public static long writeFile(String fileFolder, TimeSeries timeSeries) throws IOException {
-        createFolder(fileFolder);
-//        File file = new File(fileFolder + "/" + TsUtil.computeHash(timeSeries));
-        File file = new File(fileFolder + "/" + "ts.dat");
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");//r: 只读模式 rw:读写模式
+//    public static TimeSeries readTsFromFIle(String fileFolder, long readPosition) throws IOException {
+//        File file = new File(fileFolder + "/" + "ts.dat");
+//        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");//r: 只读模式 rw:读写模式
+//        randomAccessFile.seek(readPosition);
+//        byte[] tsDataBytes = new byte[Parameters.timeSeriesDataSize];
+//        int readSize = randomAccessFile.read(tsDataBytes);
+//        if (readSize <= 0) {
+//            throw new RuntimeException("读取错误");
+//        }
+//        randomAccessFile.seek(readPosition + Parameters.timeSeriesDataSize);
+//        byte[] timeStampBytes = new byte[Parameters.timeStampSize];
+//        readSize = randomAccessFile.read(timeStampBytes);
+//        if (readSize <= 0) {
+//            throw new RuntimeException("读取错误");
+//        }
+//        randomAccessFile.close();
+//
+//        return new TimeSeries(tsDataBytes, timeStampBytes);
+//    }
 
 
-        long pos = randomAccessFile.length();
-            long t3 = System.currentTimeMillis();
-        randomAccessFile.seek(pos);      //移动文件记录指针的位置,
-        randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
-        randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
-        randomAccessFile.write(timeSeries.getTimeStamp());
 
-        randomAccessFile.close();
+//    public static long writeFile(String fileFolder, TimeSeries timeSeries) throws IOException {
+//        createFolder(fileFolder);
+////        File file = new File(fileFolder + "/" + TsUtil.computeHash(timeSeries));
+//        File file = new File(fileFolder + "/" + "ts.dat");
+//        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");//r: 只读模式 rw:读写模式
+//
+//
+//        long pos = randomAccessFile.length();
+//            long t3 = System.currentTimeMillis();
+//        randomAccessFile.seek(pos);      //移动文件记录指针的位置,
+//        randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
+//        randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
+//        randomAccessFile.write(timeSeries.getTimeStamp());
+//
+//        randomAccessFile.close();
+//
+//        return pos;
+//    }
 
-        return pos;
-    }
-
-    public static long writeTsLock(String fileFolder, TimeSeries timeSeries) {
-            long t1 = System.currentTimeMillis();
-        File folder = new File(fileFolder);
-        if (!folder.exists()) {
-            boolean flag = folder.mkdir();
-        }
-//        File file = new File(fileFolder + "/" + TsUtil.computeHash(timeSeries));
-        File file = new File(fileFolder + "/" + "ts.dat");
-        try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");//r: 只读模式 rw:读写模式
-            FileChannel channel = randomAccessFile.getChannel();
-            FileLock fileLock;
-            while (true) {
-                try {
-                    fileLock = channel.tryLock();
-                    if (fileLock != null) {
-                        break;
-                    }
-                } catch (Exception e) {
-                    Thread.sleep(0);    // 马上加入到可执行队列
-                }
-            }
-
-            long pos = randomAccessFile.length();
-
-            randomAccessFile.seek(pos);      //移动文件记录指针的位置,
-            randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
-            randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
-            randomAccessFile.write(timeSeries.getTimeStamp());
-
-            fileLock.release();
-            randomAccessFile.close();
-
-            return pos;
-        }
-        catch (Exception e) {
-            throw new RuntimeException("写文件异常");
-        }
-    }
+//    public static long writeTsLock(String fileFolder, TimeSeries timeSeries) {
+//            long t1 = System.currentTimeMillis();
+//        File folder = new File(fileFolder);
+//        if (!folder.exists()) {
+//            boolean flag = folder.mkdir();
+//        }
+////        File file = new File(fileFolder + "/" + TsUtil.computeHash(timeSeries));
+//        File file = new File(fileFolder + "/" + "ts.dat");
+//        try {
+//            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");//r: 只读模式 rw:读写模式
+//            FileChannel channel = randomAccessFile.getChannel();
+//            FileLock fileLock;
+//            while (true) {
+//                try {
+//                    fileLock = channel.tryLock();
+//                    if (fileLock != null) {
+//                        break;
+//                    }
+//                } catch (Exception e) {
+//                    Thread.sleep(0);    // 马上加入到可执行队列
+//                }
+//            }
+//
+//            long pos = randomAccessFile.length();
+//
+//            randomAccessFile.seek(pos);      //移动文件记录指针的位置,
+//            randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
+//            randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
+//            randomAccessFile.write(timeSeries.getTimeStamp());
+//
+//            fileLock.release();
+//            randomAccessFile.close();
+//
+//            return pos;
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException("写文件异常");
+//        }
+//    }
     public static RandomAccessFile writeTsInit(String fileFolder) {
         File folder = new File(fileFolder);
         if (!folder.exists()) {
@@ -145,16 +145,16 @@ public class FileUtil {
             throw new RuntimeException("写文件初始化错误" + e);
         }
     }
-    public static long writeTs(TimeSeries timeSeries, RandomAccessFile randomAccessFile) throws IOException {
-        long pos = randomAccessFile.length();
-//            long t3 = System.currentTimeMillis();
-        randomAccessFile.seek(pos);      //移动文件记录指针的位置,
-        randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
-        randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
-        randomAccessFile.write(timeSeries.getTimeStamp());
-//            Main.writeTime += System.currentTimeMillis() - t3;
-        return pos;
-    }
+//    public static long writeTs(TimeSeries timeSeries, RandomAccessFile randomAccessFile) throws IOException {
+//        long pos = randomAccessFile.length();
+////            long t3 = System.currentTimeMillis();
+//        randomAccessFile.seek(pos);      //移动文件记录指针的位置,
+//        randomAccessFile.write(timeSeries.getTimeSeriesData());        //调用了seek（start）方法，是指把文件的记录指针定位到start字节的位置。也就是说程序将从start字节开始写数据
+//        randomAccessFile.seek(pos + timeSeries.getTimeSeriesData().length);
+//        randomAccessFile.write(timeSeries.getTimeStamp());
+////            Main.writeTime += System.currentTimeMillis() - t3;
+//        return pos;
+//    }
 
     public static void writeTsFinish(RandomAccessFile randomAccessFile) {
         try {

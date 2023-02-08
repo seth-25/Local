@@ -33,7 +33,7 @@
 // 初始化时存入st
 #define init_st 1
 //近似查询是否排序后一起查，1不，0要
-#define cha 1
+#define cha 0
 
 #define Get_div 20
 

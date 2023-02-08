@@ -7,17 +7,17 @@ import com.local.util.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Random;
+import java.util.Comparator;
 
-public class Search{
+public class Search implements Runnable{
     private final boolean isExact;
     private final byte[] startTimeBytes;
     private final byte[] endTimeBytes;
     private long startTime;
     private long endTime;
-    private final byte[] searchTsBytes;
+    public static byte[] searchTsBytes = new byte[Parameters.timeSeriesDataSize];
 
     private final int k;
     private int offset = 0;
@@ -34,7 +34,7 @@ public class Search{
         startTimeBytes = new byte[Parameters.timeStampSize];
         endTimeBytes = new byte[Parameters.timeStampSize];
     }
-    public void getQuery() {
+    private void getQuery() {
         try {
             if (Parameters.hasTimeStamp > 0) {  // 有时间戳
                 // 查询由1个ts和2个时间戳组成
@@ -61,7 +61,83 @@ public class Search{
         PrintUtil.print(Arrays.toString(searchTsBytes));
         offset ++ ;
     }
-    public byte[] run() {
+    private void computeDis(byte[] ans) {
+        double dis = 0;
+        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+            byte[] floatBytes = new byte[4];
+            System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
+            dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+        }
+        Main.totalDis += dis / k;
+    }
+
+    static class Ts {
+        byte[] ts = new byte[Parameters.tsSize];    // 时间序列+时间戳(如果有)
+        Float dis;
+        public Ts(byte[] ts, float dis) {
+            this.ts = ts;
+            this.dis = dis;
+        }
+    }
+    private void computeRecallAndError(byte[] ans) {
+        ArrayList<Ts> approAnsList = new ArrayList<>();
+        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
+            System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] floatBytes = new byte[4];
+            System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
+            approAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
+        }
+
+        ArrayList<Ts> exactAnsList = new ArrayList<>();
+        byte[] exactAns = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
+        for (int i = 0; i < exactAns.length; i += Parameters.aresExactSize) {
+            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
+            System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] floatBytes = new byte[4];
+            System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
+            exactAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
+        }
+        approAnsList.sort(new Comparator<Ts>() {
+            @Override
+            public int compare(Ts o1, Ts o2) {
+                return o1.dis.compareTo(o2.dis);
+            }
+        });
+        exactAnsList.sort(new Comparator<Ts>() {
+            @Override
+            public int compare(Ts o1, Ts o2) {
+                return o1.dis.compareTo(o2.dis);
+            }
+        });
+
+        assert approAnsList.size() == k;
+        assert exactAnsList.size() == k;
+        System.out.println(approAnsList.size() + " " + exactAnsList.size());
+        int cnt = 0;
+        for (Ts approTs: approAnsList) {
+            for (Ts exactTs: exactAnsList) {
+                if (TsUtil.compareTs(approTs.ts, exactTs.ts)) {
+                    cnt ++;
+                    break;
+                }
+            }
+        }
+        System.out.println("Recall:" + ((double)cnt / k));
+        Main.totalRecall += ((double)cnt / k);
+
+        double error = 0;
+        for (int i = 0; i < k; i ++ ) {
+//            error += approAnsList.get(i).dis / exactAnsList.get(i).dis;
+            System.out.println(approAnsList.get(i).dis + " " + exactAnsList.get(i).dis);
+        }
+
+        System.out.println("Error:" + (error / k));
+        Main.totalError += error;
+
+    }
+    @Override
+    public void run() {
         getQuery();
         byte[] ans;
         PrintUtil.print("开始查询==========================");
@@ -77,14 +153,9 @@ public class Search{
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
             ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
             Main.searchTime += System.currentTimeMillis() - searchTimeStart;
-            double dis = 0;
-            for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
-                byte[] floatBytes = new byte[4];
-                System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
-                dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
-            }
-            Main.totalDis += dis / k;
+
+            computeDis(ans);
+            computeRecallAndError(ans);
         }
-        return ans;
     }
 }
