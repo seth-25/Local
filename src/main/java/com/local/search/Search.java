@@ -61,18 +61,22 @@ public class Search{
         PrintUtil.print(Arrays.toString(searchTsBytes));
         offset ++ ;
     }
-    public void run() {
+    public byte[] run() {
         getQuery();
-
+        byte[] ans;
         PrintUtil.print("开始查询==========================");
+
+        long searchTimeStart = System.currentTimeMillis();
         if (isExact) {
-            byte[] ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
+            ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
+            Main.searchTime += System.currentTimeMillis() - startTime;
         }
         else {
             // 返回若干个ares,ares的最后有一个4字节的id
             // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
-            byte[] ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
+            ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
+            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
             double dis = 0;
             for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
                 byte[] floatBytes = new byte[4];
@@ -81,5 +85,6 @@ public class Search{
             }
             Main.totalDis += dis / k;
         }
+        return ans;
     }
 }

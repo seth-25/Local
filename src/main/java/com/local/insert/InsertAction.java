@@ -32,7 +32,6 @@ public class InsertAction {
     public static byte[] getLeafTimeKeysBytes(byte[] tsBytes, int fileNum, long offset, boolean isSort) {
         return DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, isSort);
     }
-    static int c = 0;
 //    public static void putSaxes(ArrayList<LeafTimeKey> leafTimeKeys) {
 //        for (LeafTimeKey leafTimeKey : leafTimeKeys) {
 ////            System.out.println(Arrays.toString(sax.getLeafTimeKeys()));

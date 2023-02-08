@@ -24,6 +24,7 @@ public class Main {
         }
         long offset = reader.read();
         byte[] tsBytes = reader.getArray();
+        System.out.println("读文件: " + reader.getFileNum() + " 次数：" + 0 + " offset:" + offset + " 用于初始化");
         PrintUtil.print("ts长度" + tsBytes.length);
         byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
         PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
@@ -39,6 +40,7 @@ public class Main {
     }
 
     public static boolean hasInsert = false;
+    public static long searchTime = 0;
     public static long cntP ;
     public static long totalCntRes = 0;
     public static long totalReadTime = 0;
@@ -66,7 +68,6 @@ public class Main {
 
 //        insertTime = System.currentTimeMillis();
         CacheUtil.insertThreadPool.execute(new Insert());
-        long maxCntP = 0;
         long totalCntP = 0;
 
         while(true) {
@@ -76,47 +77,39 @@ public class Main {
 
                 if (isExact == 1) {
                     Search exactSearch = new Search(true, 100);
-                    long startTime = System.currentTimeMillis();
                     for (int i = 0; i < queryNum; i ++ ) {
-                        long startQuery = System.currentTimeMillis();
                         cntP = 0;
+                        long startQuery = System.currentTimeMillis();
                         exactSearch.run();
 
                         System.out.println("精确查询时间：" + (System.currentTimeMillis() - startQuery));
                         System.out.println("访问原始时间序列个数：" + cntP);
                         System.out.println("-----------------------------------------------");
-                        maxCntP = Math.max(maxCntP, cntP);
                         totalCntP += cntP;
                     }
-                    System.out.println("查询总时间：" + (System.currentTimeMillis() - startTime));
-                    System.out.println("读取原始时间序列总时间：" + totalReadTime + " " + totalReadLockTime);
-                    System.out.println("最大访问原始时间序列：" + maxCntP);
-                    System.out.println("总共访问原始时间序列：" + totalCntP + " 总共返回原始时间序列：" + totalCntRes + " 比例：" + ((double)totalCntRes / totalCntP));
+                    System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
+                    System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
+                            " 总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
+                            " 比例：" + ((double)totalCntRes / totalCntP));
                 }
                 else {
                     Search approximateSearch = new Search(false, 100);
-                    long startTime = System.currentTimeMillis();
                     for (int i = 0; i < queryNum; i ++) {
                         cntP = 0;
                         long startQuery = System.currentTimeMillis();
                         approximateSearch.run();
-                        System.out.println("近似查询时间:" + (System.currentTimeMillis() - startQuery));
-                        System.out.println("访问原始时间序列个数：" + cntP);
-                        System.out.println("-----------------------------------------------");
-                        maxCntP = Math.max(maxCntP, cntP);
+//                        System.out.println("近似查询时间:" + (System.currentTimeMillis() - startQuery));
+//                        System.out.println("访问原始时间序列个数：" + cntP);
+//                        System.out.println("-----------------------------------------------");
                         totalCntP += cntP;
                     }
 
-                    System.out.println("查询总时间：" + (System.currentTimeMillis() - startTime));
-                    System.out.println("读取原始时间序列总时间：" + totalReadTime + " " + totalReadLockTime);
-                    System.out.println("近似距离:" + totalDis + " 平均距离" + totalDis / queryNum);
-                    System.out.println("最大访问原始时间序列：" + maxCntP);
-                    System.out.println("总共访问原始时间序列：" + totalCntP + " 总共返回原始时间序列：" + totalCntRes + " 比例：" + ((double)totalCntRes / totalCntP));
+                    System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
+                    System.out.println("近似距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
+                    System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
+                            "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
+                            "\t比例：" + ((double)totalCntRes / totalCntP));
                 }
-
-
-
-
                 break;
             }
 

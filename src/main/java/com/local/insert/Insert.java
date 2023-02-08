@@ -12,7 +12,9 @@ public class Insert implements Runnable{
 
     private static int cntRead = 0;
     private static int cntInsert = 0;
-    private static long insertTime;
+    public static long insertTime;
+    public static long IOTime = 0;
+    public static long CPUTime = 0;
     /**
      * 读文件和发送sax并行
      */
@@ -26,11 +28,11 @@ public class Insert implements Runnable{
                 for (Map.Entry<Integer, MappedFileReader> entry: CacheUtil.mappedFileReaderMap.entrySet()) {
                     flag = false;
                     // 从文件读ts
-//                        long t = System.currentTimeMillis();
+                        long IOTimeStart = System.currentTimeMillis();
                     MappedFileReader reader = entry.getValue();
                     long offset = reader.read();
                     byte[] tsBytes = reader.getArray();
-//                        readTime += System.currentTimeMillis() - t;
+                        IOTime += System.currentTimeMillis() - IOTimeStart;
                     if (offset != -1) { // 这个文件没读完
                         flag = true;
                     }
@@ -41,23 +43,23 @@ public class Insert implements Runnable{
 
                     TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
                     super.put(tsReadBatch);
-
                 }
             }
             super.put(new TsReadBatch(null, -1, -1)); // 结束
         }
         public boolean consume() throws InterruptedException {
             TsReadBatch tsReadBatch = super.take();    // 阻塞
+                long CPUTimeStart = System.currentTimeMillis();
             System.out.println("插入次数：" + ++cntInsert);
             if (tsReadBatch.getFileNum() == -1) {
-                System.out.println("读完所有文件,退出");
+                System.out.println("读完所有文件,退出\n");
                 Main.hasInsert = true;
-                System.out.println("插入时间: " + (System.currentTimeMillis() - insertTime));
+                System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime + "\tCPU时间：" + CPUTime);
                 return false;
             }
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
-
+                CPUTime += System.currentTimeMillis() - CPUTimeStart;
             return true;
         }
     }

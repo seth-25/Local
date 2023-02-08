@@ -33,16 +33,16 @@ public class SearchAction {
     }
 //    public static synchronized byte[] searchOriTs(byte[] info, boolean isExact) { // todo
     public static byte[] searchOriTs(byte[] info, boolean isExact) {
-        long t6 = System.currentTimeMillis(); // todo
+        long searchOriTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
 
         long readTime = 0;   // todo
         long readLockTime = 0;   // todo
         long makePTime = 0;   // todo
-        long forTime = 0;
+        long forTime;
+        long sortTime;
         long disTime = 0;
-        long anaTime = 0;   // todo
-        long t1 = System.currentTimeMillis(); // todo
+
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
@@ -52,17 +52,11 @@ public class SearchAction {
         }
         aQuery.sortPList();
 
-//        System.out.println("解析完成");
-//        System.out.println("解析时间：" + (System.currentTimeMillis() - t1));// todo
-
-
-        long t5 = System.currentTimeMillis();   // todo
+        long forTimeStart = System.currentTimeMillis();   // todo
         List<OriTs> nearlyTsList = new ArrayList<>();
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
-//            System.out.println("进入for");
             long makeTimeStart = System.currentTimeMillis();    // todo
             Long p = aQuery.pList.get(i);
-//            System.out.println("p:" + p);
             int p_hash = (int) (p >> 56);   // 文件名
             long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
 //            System.out.println("p:" + p + " p_hash:" + p_hash + " offset:" + offset);
@@ -82,7 +76,6 @@ public class SearchAction {
                 }
 
                 readTime += (System.currentTimeMillis() - t2);   // todo
-//                System.out.print(offset + " ");
             }
             readLockTime += System.currentTimeMillis() - readLockTimeStart; // todo
 
@@ -99,15 +92,18 @@ public class SearchAction {
             }
             disTime += System.currentTimeMillis() - disTimeStart; // todo
         }
-        forTime = System.currentTimeMillis() - t5;
-//        System.out.println("for循环完成");
-        long t3 = System.currentTimeMillis();   // todo
+        forTime = System.currentTimeMillis() - forTimeStart;
+
+        long sortTimeStart = System.currentTimeMillis();   // todo
         nearlyTsList.sort(new Comparator<OriTs>() {
             @Override
             public int compare(OriTs o1, OriTs o2) {
                 return o1.dis.compareTo(o2.dis);
             }
         });
+        sortTime = System.currentTimeMillis() - sortTimeStart;
+
+
 //        System.out.println("排序时间：" + (System.currentTimeMillis() - t3));// todo
 //        System.out.println();
 
@@ -120,7 +116,6 @@ public class SearchAction {
             byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
-//                System.out.println("距离:" + dis);
                 if (dis < aQuery.topDist || cnt < aQuery.needNum) { // 距离<topDist都要传给db用于剪枝
                     System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
                     System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
@@ -142,8 +137,9 @@ public class SearchAction {
                 Main.totalCntRes += cnt;
             }
             PrintUtil.print("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
-                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n"); // todo
+                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + sortTime +
+                    " 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchOriTsTimeStart) +
+                    " 线程：" + Thread.currentThread().getName() + "\n"); // todo
             return aresExact;
         }
         else {
@@ -176,8 +172,9 @@ public class SearchAction {
                 Main.totalCntRes += cnt;
             }
             PrintUtil.print("makeP时间：" + makePTime + " 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + (System.currentTimeMillis() - t3)
-                    +" 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - t6) + " 线程：" + Thread.currentThread().getName() + "\n"); // todo
+                    " 计算距离时间：" + disTime + " for总时间：" + forTime + " 排序总时间：" + sortTime +
+                    " 查询个数：" + aQuery.pList.size() +  " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchOriTsTimeStart) +
+                    " 线程：" + Thread.currentThread().getName() + "\n"); // todo
             return ares;
         }
     }
