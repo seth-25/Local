@@ -78,7 +78,7 @@ typedef unsigned char cod;
 
 
 #define Ts_length 256
-#define Leaf_maxnum 512
+#define Leaf_maxnum 256
 #define Leaf_minnum Leaf_maxnum/2
 //最小
 #define Leaf_maxnum_rebalance 10

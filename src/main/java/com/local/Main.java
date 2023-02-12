@@ -26,6 +26,8 @@ public class Main {
         byte[] tsBytes = reader.getArray();
         System.out.println("读文件: " + reader.getFileNum() + " 次数：" + 0 + " offset:" + offset + " 用于初始化");
         PrintUtil.print("ts长度" + tsBytes.length);
+
+
         byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
         PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
 
@@ -90,8 +92,8 @@ public class Main {
                     }
                     System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
                     System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-                            " 总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
-                            " 比例：" + ((double)totalCntRes / totalCntP));
+                            "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
+                            "\t返回/访问比例：" + ((double)totalCntRes / totalCntP));
                 }
                 else {
                     Search approximateSearch = new Search(false, 100);
@@ -109,7 +111,7 @@ public class Main {
                     System.out.println("近似距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
                     System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
                             "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double)totalCntRes / queryNum) +
-                            "\t比例：" + ((double)totalCntRes / totalCntP));
+                            "\t返回/访问比例：" + ((double)totalCntRes / totalCntP));
                     System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
                 }
                 break;

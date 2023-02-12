@@ -142,7 +142,8 @@ public class SearchUtil {
 
     // info: ts 256*4，starttime 8， endtime 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void analysisSearchSend(byte[] info, SearchContent aQuery) {
-        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        byte[] intBytes = new byte[4];
+        byte[] longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(info, Parameters.timeSeriesDataSize, longBytes, 0, 8);
         aQuery.startTime = bytesToLong(longBytes);
@@ -157,6 +158,7 @@ public class SearchUtil {
         System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4, intBytes, 0, 4);
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
+            longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
@@ -176,6 +178,7 @@ public class SearchUtil {
         System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4, intBytes, 0, 4);
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
+            longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);

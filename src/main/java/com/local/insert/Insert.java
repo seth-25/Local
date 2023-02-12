@@ -5,6 +5,7 @@ import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -50,13 +51,13 @@ public class Insert implements Runnable{
         public boolean consume() throws InterruptedException {
             TsReadBatch tsReadBatch = super.take();    // 阻塞
                 long CPUTimeStart = System.currentTimeMillis();
-            System.out.println("插入次数：" + ++cntInsert);
             if (tsReadBatch.getFileNum() == -1) {
                 System.out.println("读完所有文件,退出\n");
                 Main.hasInsert = true;
                 System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime + "\tCPU时间：" + CPUTime);
                 return false;
             }
+            System.out.println("插入次数：" + ++cntInsert);
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
                 CPUTime += System.currentTimeMillis() - CPUTimeStart;

@@ -28,17 +28,17 @@ public class Parameters {
     // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐) 总共1040
     // ares_exact(没时间戳): ts 256*4, float dist 4, 总共1028
     public static final int aresExactSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
-    public static final int findOriTsNum = 20000; // 一次访问原始时间序列个数
+    public static final int findOriTsNum = 2000; // 一次访问原始时间序列个数
 
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量
         public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字节数
         public static final String inputPath = "./ts/"; // 存储ts的文件夹
-        public static final String queryFilePath = "./query/query.dat"; // 存储查询的ts的文件
+        public static final String queryFilePath = "./query/query.bin"; // 存储查询的ts的文件
     }
 
 
-    public static final boolean isSearchMultithread = false; // 查询是否多线程
+    public static final boolean isSearchMultithread = true; // 查询是否多线程
     public static final boolean isSuffix = true;
-    public static final boolean debug = false;
+    public static final boolean debug = true;
 }

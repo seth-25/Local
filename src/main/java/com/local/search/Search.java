@@ -38,20 +38,20 @@ public class Search implements Runnable{
         try {
             if (Parameters.hasTimeStamp > 0) {  // 有时间戳
                 // 查询由1个ts和2个时间戳组成
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize));
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize));
                 randomAccessFile.read(searchTsBytes);
 
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize) + Parameters.timeSeriesDataSize);
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize);
                 randomAccessFile.read(startTimeBytes);
                 startTime = TsUtil.bytesToLong(startTimeBytes);
 
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeStampSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
                 randomAccessFile.read(endTimeBytes);
                 endTime = TsUtil.bytesToLong(endTimeBytes);
             }
             else {
                 // 查询只有ts
-                randomAccessFile.seek((long) offset * Parameters.timeStampSize);
+                randomAccessFile.seek((long) offset * Parameters.timeSeriesDataSize);
                 randomAccessFile.read(searchTsBytes);
             }
         } catch (IOException e) {
@@ -93,9 +93,9 @@ public class Search implements Runnable{
         byte[] exactAns = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
         for (int i = 0; i < exactAns.length; i += Parameters.aresExactSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
             byte[] floatBytes = new byte[4];
-            System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
+            System.arraycopy(exactAns, i + Parameters.tsSize, floatBytes, 0, 4);
             exactAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
         }
         approAnsList.sort(new Comparator<Ts>() {
@@ -113,7 +113,6 @@ public class Search implements Runnable{
 
         assert approAnsList.size() == k;
         assert exactAnsList.size() == k;
-        System.out.println(approAnsList.size() + " " + exactAnsList.size());
         int cnt = 0;
         for (Ts approTs: approAnsList) {
             for (Ts exactTs: exactAnsList) {
@@ -128,8 +127,13 @@ public class Search implements Runnable{
 
         double error = 0;
         for (int i = 0; i < k; i ++ ) {
-//            error += approAnsList.get(i).dis / exactAnsList.get(i).dis;
-            System.out.println(approAnsList.get(i).dis + " " + exactAnsList.get(i).dis);
+            System.out.println("近似距离" + approAnsList.get(i).dis + "\t精确距离" + exactAnsList.get(i).dis);
+            if (exactAnsList.get(i).dis == 0) {
+                System.out.println("exact query dis = 0, ignore error");
+                return;
+            }
+            error += approAnsList.get(i).dis / exactAnsList.get(i).dis;
+
         }
 
         System.out.println("Error:" + (error / k));
@@ -145,7 +149,7 @@ public class Search implements Runnable{
         long searchTimeStart = System.currentTimeMillis();
         if (isExact) {
             ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
-            Main.searchTime += System.currentTimeMillis() - startTime;
+            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
         }
         else {
             // 返回若干个ares,ares的最后有一个4字节的id

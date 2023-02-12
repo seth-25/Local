@@ -1734,6 +1734,17 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
     }
   }
 
+#if cha==0
+  res_heap->Lock();
+  res_heap->subUse();
+  res_heap->isfinish();
+  free(res_leafkeys);
+  free(res_p);
+  free(info);
+  res_heap->Unlock();
+  return;
+#endif
+
   bool isdel = false;
   bool isover = false;
 
