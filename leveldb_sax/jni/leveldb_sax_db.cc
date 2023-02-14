@@ -5,7 +5,7 @@
 #include "leveldb_sax_db.h"
 #include "threadPool_2.h"
 #include "leveldb/db.h"
-
+#include "db/query_heap.h"
 
 static leveldb::DB* db;
 static leveldb::WriteOptions writeOptions;
@@ -188,6 +188,27 @@ JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_Get_1exact
   return newArr;
 }
 
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push
+    (JNIEnv *env, jobject, jbyteArray ares_b, jbyteArray heap_b) {
+  leveldb::query_heap* heap1;
+  ares ares1;
+  env->GetByteArrayRegion(ares_b, 0, sizeof(ares), (jbyte*)&ares1);
+  env->GetByteArrayRegion(heap_b, 0, sizeof(void*), (jbyte*)&heap1);
+
+  return heap1->push2(ares1);
+
+}
+
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push_1exact
+    (JNIEnv *env, jobject, jbyteArray ares_exact_b, jbyteArray heap_b) {
+  leveldb::query_heap_exact* heap1;
+  ares_exact ares1;
+  env->GetByteArrayRegion(ares_exact_b, 0, sizeof(ares), (jbyte*)&ares1);
+  env->GetByteArrayRegion(heap_b, 0, sizeof(void*), (jbyte*)&heap1);
+
+  return heap1->push2(ares1);
+
+}
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_unref_1am
     (JNIEnv *, jobject, jint id) {

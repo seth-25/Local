@@ -3,7 +3,6 @@ package com.local.search;
 import com.local.domain.Parameters;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -128,6 +127,7 @@ public class SearchUtil {
         public long startTime;
         public long endTime;
         public int k;
+        public byte[] heap = new byte[8];
         public int needNum;
         public float topDist;
         List<Long> pList = new ArrayList<>();
@@ -166,7 +166,7 @@ public class SearchUtil {
         }
     }
     // info: ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p*n 8*n
-    public static void analysisSearchSendHasNotTime(byte[] info, SearchContent aQuery) {
+    public static void analysisSearchSendNoTime(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4], longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(info, Parameters.timeSeriesDataSize, intBytes, 0, 4);
@@ -185,4 +185,67 @@ public class SearchUtil {
             aQuery.pBytesList.add(longBytes);
         }
     }
+
+    // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    public static void analysisSearchSendHeap(byte[] info, SearchContent aQuery) {
+        byte[] intBytes = new byte[4];
+        byte[] longBytes = new byte[8];
+        System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize, longBytes, 0, 8);
+        aQuery.startTime = bytesToLong(longBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8, longBytes, 0, 8);
+        aQuery.endTime = bytesToLong(longBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8, aQuery.heap, 0, 8);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8, intBytes, 0, 4);
+        aQuery.k = bytesToInt(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8 + 4, intBytes, 0, 4);
+        aQuery.needNum = bytesToInt(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8 + 4 + 4, intBytes, 0, 4);
+        aQuery.topDist = bytesToFloat(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8 + 4 + 4 + 4, intBytes, 0, 4);
+
+        int numSearch = bytesToInt(intBytes);
+        for (int i = 0; i < numSearch; i ++ ) {
+            longBytes = new byte[8];
+            System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
+            Long p = bytesToLong(longBytes);
+            aQuery.pList.add(p);
+            aQuery.pBytesList.add(longBytes);
+        }
+    }
+    // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    public static void analysisSearchSendNoTimeHeap(byte[] info, SearchContent aQuery) {
+        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize, aQuery.heap, 0, 8);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8, intBytes, 0, 4);
+        aQuery.k = bytesToInt(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 4, intBytes, 0, 4);
+        aQuery.needNum = bytesToInt(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 4 + 4, intBytes, 0, 4);
+        aQuery.topDist = bytesToFloat(intBytes);
+
+        System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 4 + 4 + 4, intBytes, 0, 4);
+        int numSearch = bytesToInt(intBytes);
+
+        for (int i = 0; i < numSearch; i ++ ) {
+            longBytes = new byte[8];
+            System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
+            Long p = bytesToLong(longBytes);
+            aQuery.pList.add(p);
+            aQuery.pBytesList.add(longBytes);
+        }
+    }
+
 }

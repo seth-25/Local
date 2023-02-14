@@ -48,6 +48,8 @@ class query_heap_rep {
     return false;
   }
 
+  virtual float push2(T& T_) = 0;
+
   void get(vector<T>& res) {
     res.reserve(res_heap.size());
     while (!res_heap.empty()) {
@@ -140,6 +142,16 @@ class query_heap : public query_heap_rep<ares> {
   query_heap(int k, int tableNum)
       : query_heap_rep(k,tableNum) {}
 
+  float push2(ares& t) override {
+    if (res_heap.size() < k) {
+      res_heap.push(t);
+    } else {
+      res_heap.pop();
+      res_heap.push(t);
+    }
+    return res_heap.top().rep.dist;
+  }
+
   float top() const override {
     if (res_heap.empty()) return MAXFLOAT;
     return res_heap.top().rep.dist;
@@ -160,6 +172,16 @@ class query_heap_exact : public query_heap_rep<ares_exact> {
 
   inline bool is_in_set(void* p) {
     return p_set.count(p);
+  }
+
+  float push2(ares_exact& t) override {
+    if (res_heap.size() < k) {
+      res_heap.push(t);
+    } else {
+      res_heap.pop();
+      res_heap.push(t);
+    }
+    return res_heap.top().dist;
   }
 
   float top() const override {

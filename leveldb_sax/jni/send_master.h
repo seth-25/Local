@@ -91,6 +91,38 @@ static void find_tskey_exact(char* a, size_t size_, char*& out, size_t& size_out
 }
 
 
+static void find_tskey_ap(char* a, size_t size_, const void* gs_jvm) {
+
+  //获取环境
+  JNIEnv *env;
+  assert(gs_jvm!= nullptr);
+  ((JavaVM*)gs_jvm)->AttachCurrentThread((void **)&env, NULL);
+//
+  jclass cls = env->FindClass("leveldb_sax/db_send");
+  jmethodID mid = env->GetStaticMethodID(cls, "find_tskey_ap", "([B)V");
+
+  jbyteArray newArr = env->NewByteArray(size_);
+  env->SetByteArrayRegion(newArr, 0, size_, (jbyte*)a);
+  env->CallStaticObjectMethod(cls, mid, newArr);
+  env->DeleteLocalRef(newArr);
+}
+
+static void find_tskey_exact_ap(char* a, size_t size_, const void* gs_jvm) {
+  //获取环境
+  JNIEnv *env;
+  assert(gs_jvm!= nullptr);
+  ((JavaVM*)gs_jvm)->AttachCurrentThread((void **)&env, NULL);
+//
+  jclass cls = env->FindClass("leveldb_sax/db_send");
+  jmethodID mid = env->GetStaticMethodID(cls, "find_tskey_exact_ap", "([B)V");
+
+  jbyteArray newArr = env->NewByteArray(size_);
+  env->SetByteArrayRegion(newArr, 0, size_, (jbyte*)a);
+  env->CallStaticObjectMethod(cls, mid, newArr);
+  env->DeleteLocalRef(newArr);
+}
+
+
 
 
 

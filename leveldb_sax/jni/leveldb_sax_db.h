@@ -100,6 +100,22 @@ JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_Get_1exact
 
 /*
  * Class:     leveldb_sax_db
+ * Method:    heap_push
+ * Signature: ([B[B)F
+ */
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push
+    (JNIEnv *, jobject, jbyteArray, jbyteArray);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    heap_push_exact
+ * Signature: ([B[B)F
+ */
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push_1exact
+    (JNIEnv *, jobject, jbyteArray, jbyteArray);
+
+/*
+ * Class:     leveldb_sax_db
  * Method:    unref_am
  * Signature: (I)V
  */

@@ -1363,7 +1363,6 @@ Status DBImpl::Get(const aquery& aquery1,
                    bool is_use_am, int am_version_id, int st_version_id, const vector<uint64_t>& st_number,
                    vector<ares>& results, int& res_amid) {
 
-
   out("开始查询=========================");
   saxt_print(aquery1.asaxt);
   out("k:"+to_string(aquery1.k));
@@ -1439,6 +1438,9 @@ Status DBImpl::Get(const aquery& aquery1,
       char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
       char* add_info = info;
       charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+#if isap
+      charcpy(add_info, &res_heap, sizeof(void*));
+#endif
       charcpy(add_info, &aquery1.k, sizeof(int));
       bool isover = false;
       for(int ii =0; ii <div; ii++) {
@@ -1458,6 +1460,9 @@ Status DBImpl::Get(const aquery& aquery1,
             break;
           }
         }
+#if isap
+        find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+#else
         char* out;
         size_t out_size;
         find_tskey(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
@@ -1467,6 +1472,7 @@ Status DBImpl::Get(const aquery& aquery1,
           if (!res_heap->push(ares_out[j])) break;
         }
         free(out);
+#endif
         if(isover) break;
       }
       res_heap->get(results);
@@ -1524,6 +1530,9 @@ Status DBImpl::Get(const aquery& aquery1,
   char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
   char* add_info = info;
   charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+#if isap
+  charcpy(add_info, &res_heap, sizeof(void*));
+#endif
   charcpy(add_info, &aquery1.k, sizeof(int));
   bool isover = false;
   for(int ii =0; ii <div; ii++) {
@@ -1543,6 +1552,9 @@ Status DBImpl::Get(const aquery& aquery1,
         break;
       }
     }
+#if isap
+    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+#else
     char* out;
     size_t out_size;
     find_tskey(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
@@ -1552,6 +1564,7 @@ Status DBImpl::Get(const aquery& aquery1,
       if (!res_heap->push(ares_out[j])) break;
     }
     free(out);
+#endif
     if(isover) break;
   }
   res_heap->get(results);
@@ -2129,6 +2142,7 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
 void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
                     uint64_t st_number, Version* this_ver) {
 
+
   LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum);
   int res_leafkeys_num;
   auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
@@ -2288,6 +2302,16 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
     }
   }
 
+#if cha==0
+  res_heap->Lock();
+  res_heap->subUse();
+  res_heap->isfinish();
+  free(res_leafkeys);
+  free(res_p);
+  free(info);
+  res_heap->Unlock();
+  return;
+#endif
 
   bool isdel = false;
   bool isover = false;
@@ -2768,6 +2792,9 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
   char* add_info = info;
   charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+#if isap
+  charcpy(add_info, &res_heap, sizeof(void*));
+#endif
   charcpy(add_info, &aquery1.k, sizeof(int));
   bool isover = false;
   for(int i=0;i<div;i++) {
@@ -2786,6 +2813,9 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
         break;
       }
     }
+#if isap
+    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+#else
     char* out;
     size_t out_size;
     find_tskey_exact(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
@@ -2795,6 +2825,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
       if (!res_heap->push(ares_out[j])) break;
     }
     free(out);
+#endif
     if(isover) break;
   }
 

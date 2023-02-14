@@ -49,7 +49,7 @@ public class db {
     // ares_exact(有时间戳): ts 256*4, float dist 4
     public native byte[] Get_exact(byte[] aquery, int am_version_id, int st_version_id, long[] st_number, byte[] appro_res, long[] appro_st_number);
 
-    // c++返回topdis, 更新topdis
+    // 向堆push ts，ares里只含一个ts，push后c返回topdis, 更新topdis
     public native float heap_push(byte[] ares, byte[] heap);
     public native float heap_push_exact(byte[] ares_exact, byte[] heap);
     public native void unref_am(int version_id);

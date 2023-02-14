@@ -19,7 +19,7 @@
 #define isax_globals_h
 
 
-#define daxiao 0 // 0为16字节， 1为8字节
+#define daxiao 1 // 0为16字节， 1为8字节
 // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 #define istime 0
 // 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
@@ -34,6 +34,8 @@
 #define init_st 1
 //近似查询是否排序后一起查，1不，0要
 #define cha 0
+//是否一个一个传
+#define isap 1
 
 #define Get_div 20
 
@@ -78,7 +80,7 @@ typedef unsigned char cod;
 
 
 #define Ts_length 256
-#define Leaf_maxnum 256
+#define Leaf_maxnum 2048
 #define Leaf_minnum Leaf_maxnum/2
 //最小
 #define Leaf_maxnum_rebalance 10
@@ -229,7 +231,7 @@ static const size_t send_size2_add = sizeof(uint64_t) + sizeof(saxt_only)*2 + si
 
 static const size_t sizeinfo_pos = sizeof(aquery_rep) + sizeof(int)*2 + sizeof(float);
 
-static const size_t to_find_size_leafkey = sizeof(aquery_rep) + sizeof(int)*3 + sizeof(float);
+static const size_t to_find_size_leafkey = sizeof(aquery_rep) + sizeof(int)*3 + sizeof(float) + sizeof(void*);
 
 static inline int compare_saxt(const void* a, const void* b) {
   if (*(saxt_only*)a < *(saxt_only*)b) return -1;
