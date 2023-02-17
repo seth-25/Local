@@ -109,18 +109,6 @@ public class SearchUtil {
         return aQuery;
     }
 
-//    public static byte[] makeAQuery(byte[] ts, long startTime, long endTime, int k, float[] paa, byte[] saxData) {
-//        byte[] aQuery = new byte[1088];
-//        System.arraycopy(ts, 0, aQuery, 0, Parameters.timeSeriesDataSize);
-//        System.arraycopy(longToBytes(startTime), 0, aQuery, Parameters.timeSeriesDataSize, Parameters.timeStampSize);
-//        System.arraycopy(longToBytes(endTime), 0, aQuery, Parameters.timeSeriesDataSize + 8, Parameters.timeStampSize);
-//        System.arraycopy(intToBytes(k), 0, aQuery, Parameters.timeSeriesDataSize + 16, 4);
-//        for (int i = 0; i < 8; i ++ ) {
-//            System.arraycopy(floatToBytes(paa[i]), 0, aQuery, Parameters.timeSeriesDataSize + 20 + 4 * i, 4);
-//        }
-//        System.arraycopy(saxData, 0, aQuery, Parameters.timeSeriesDataSize + 52, Parameters.saxDataSize);
-//        return aQuery;
-//    }
 
     static public class SearchContent {
         public byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
@@ -131,7 +119,6 @@ public class SearchUtil {
         public int needNum;
         public float topDist;
         List<Long> pList = new ArrayList<>();
-        List<byte[]> pBytesList = new ArrayList<>();
         /**
          * 排序，同一个文件挨着搜
          */
@@ -158,16 +145,14 @@ public class SearchUtil {
         System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4, intBytes, 0, 4);
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
-            longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
-            aQuery.pBytesList.add(longBytes);
         }
     }
     // info: ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p*n 8*n
     public static void analysisSearchSendNoTime(byte[] info, SearchContent aQuery) {
-        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        byte[] intBytes = new byte[4];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(info, Parameters.timeSeriesDataSize, intBytes, 0, 4);
         aQuery.k = bytesToInt(intBytes);
@@ -178,11 +163,10 @@ public class SearchUtil {
         System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4, intBytes, 0, 4);
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
-            longBytes = new byte[8];
+            byte[] longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
-            aQuery.pBytesList.add(longBytes);
         }
     }
 
@@ -213,16 +197,14 @@ public class SearchUtil {
 
         int numSearch = bytesToInt(intBytes);
         for (int i = 0; i < numSearch; i ++ ) {
-            longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 8 + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
-            aQuery.pBytesList.add(longBytes);
         }
     }
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void analysisSearchSendNoTimeHeap(byte[] info, SearchContent aQuery) {
-        byte[] intBytes = new byte[4], longBytes = new byte[8];
+        byte[] intBytes = new byte[4], longBytes = new byte[8];;
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
 
         System.arraycopy(info, Parameters.timeSeriesDataSize, aQuery.heap, 0, 8);
@@ -240,11 +222,9 @@ public class SearchUtil {
         int numSearch = bytesToInt(intBytes);
 
         for (int i = 0; i < numSearch; i ++ ) {
-            longBytes = new byte[8];
             System.arraycopy(info, Parameters.timeSeriesDataSize + 8 + 4 + 4 + 4 + 4 + 8 * i, longBytes, 0, 8);
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
-            aQuery.pBytesList.add(longBytes);
         }
     }
 

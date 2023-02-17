@@ -13,7 +13,6 @@ public class db_send {
 
         //第一个字节为1，发送versionid 4字节， 删除的个数n1 4字节，(number 8字节，saxt_smallest 8字节，saxt_biggest 8字节，startTime 8字节，endTime 8字节) * n1
         //增加的个数n2 4字节，(number 8字节，saxt_smallest 8字节，saxt_biggest 8字节，startTime 8字节，endTime 8字节) * n2
-
         VersionAction.changeVersion(edit, Parameters.hostName);
         VersionAction.checkWorkerVersion();
     }
@@ -25,7 +24,8 @@ public class db_send {
     // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
     // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
     public static byte[] find_tskey(byte[] info) {
-        return SearchAction.searchOriTs(info, false);
+//        return SearchAction.searchOriTs(info, false);
+        return null;
     }
 
     // 发送 info
@@ -35,7 +35,8 @@ public class db_send {
     // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // ares_exact(没时间戳): ts 256*4, float dist 4
     public static byte[] find_tskey_exact(byte[] info) {
-        return SearchAction.searchOriTs(info, true);
+//        return SearchAction.searchOriTs(info, true);
+        return null;
     }
 
 

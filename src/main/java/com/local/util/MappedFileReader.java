@@ -20,11 +20,15 @@ public class MappedFileReader {
 
 
     private int arraySize;
-    private byte[] array;
+    private byte[] array1;
+    private byte[] array2;
     private byte[] resArray;
-    boolean isRes = false;
-
+    private byte[] tsArray;
     byte[][] tsArrays;  // 用于查询原始时间序列，返回批量的ts
+    private boolean isRes = false;
+    private boolean isOne = true;
+
+
     private int offset = 0;
 
     private int fileNum;
@@ -56,8 +60,10 @@ public class MappedFileReader {
             preLength += regionSize;// 下一片区域的开始
         }
         this.arraySize = arraySize;
-        this.array = new byte[arraySize];
-        this.tsArrays = new byte[Parameters.findOriTsNum][Parameters.tsSize];   // new byte时间消耗很大，预先开好空间
+        this.array1 = new byte[arraySize];
+        this.array2 = new byte[arraySize];
+//        this.tsArrays = new byte[Parameters.findOriTsNum][Parameters.tsSize];   // new byte时间消耗很大，预先开好空间
+        this.tsArray = new byte[Parameters.tsSize];
 
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
 
@@ -68,7 +74,8 @@ public class MappedFileReader {
         if (count >= number) {  // 文件读取完毕
             PrintUtil.print("清空读取文件的byte数组");
             resArray = null;
-            array = null;
+            array1 = null;
+            array2 = null;
             return -1;
         }
 
@@ -80,13 +87,27 @@ public class MappedFileReader {
         if (limit - position > arraySize) {
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            mappedBufArray[count].get(array);
+            if (isOne) {
+                System.out.println("==array1== " + array1);
+                mappedBufArray[count].get(array1);
+            }
+            else {
+                System.out.println("==array2== " + array2);
+                mappedBufArray[count].get(array2);
+            }
         }
         else if (limit - position == arraySize){ // 本内存文件映射最后一次读取数据
 //            System.out.println("下一个映射");
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            mappedBufArray[count].get(array);
+            if (isOne) {
+                System.out.println("==array1== " + array1);
+                mappedBufArray[count].get(array1);
+            }
+            else {
+                System.out.println("==array2== " + array2);
+                mappedBufArray[count].get(array2);
+            }
             if (count < number) {
                 count++; // 转换到下一个内存文件映射
             }
@@ -108,18 +129,27 @@ public class MappedFileReader {
 
 
     public byte[] readTs(long offset, int num) {
-//        System.out.println("读取offset: " + offset);
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-//        System.out.println("实际位置" + offset * Parameters.tsSize + " " + fileLength + " read成功 " + oneTsArray.length + " " + Thread.currentThread().getName());
         readTsByteBuf.flip();
         readTsByteBuf.get(tsArrays[num]);
-//        System.out.println("写入成功");
         readTsByteBuf.clear();
         return tsArrays[num];
+    }
+
+    public byte[] readTs(long offset) {
+        try {
+            fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        readTsByteBuf.flip();
+        readTsByteBuf.get(tsArray);
+        readTsByteBuf.clear();
+        return tsArray;
     }
 
     public byte[] readTsNewByte(long offset) {
@@ -137,13 +167,25 @@ public class MappedFileReader {
 
     public void close() throws IOException {
         fileIn.close();
-        array = null;
+        array1 = null;
+        array2 = null;
         resArray = null;
     }
 
     public byte[] getArray() {
-        if (!isRes) return array;
-        else return resArray;
+        if (!isRes) {
+            if (isOne) {
+                isOne = false;
+                return array1;
+            }
+            else {
+                isOne = true;
+                return array2;
+            }
+        }
+        else {
+            return resArray;
+        }
     }
 
     public long getFileLength() {

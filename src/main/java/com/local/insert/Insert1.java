@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class Insert implements Runnable{
+public class Insert1 implements Runnable{
 
     private static int cntRead = 0;
     private static int cntInsert = 0;

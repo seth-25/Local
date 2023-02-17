@@ -985,9 +985,9 @@ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
       compact->compaction->num_input_files(0), compact->compaction->level(),
       compact->compaction->num_input_files(1), compact->compaction->level() + 1,
       static_cast<long long>(compact->total_bytes));
-  printf("Compacted %d@%d + %d@%d files => %lld bytes\n",compact->compaction->num_input_files(0), compact->compaction->level(),
-         compact->compaction->num_input_files(1), compact->compaction->level() + 1,
-         static_cast<long long>(compact->total_bytes));
+//  printf("Compacted %d@%d + %d@%d files => %lld bytes\n",compact->compaction->num_input_files(0), compact->compaction->level(),
+//         compact->compaction->num_input_files(1), compact->compaction->level() + 1,
+//         static_cast<long long>(compact->total_bytes));
   // Add compaction outputs
   VersionEdit* edit = compact->compaction->edit();
   compact->compaction->AddInputDeletions(edit);
@@ -1451,21 +1451,24 @@ Status DBImpl::Get(const aquery& aquery1,
         float topdist = res_heap->top();
         charcpy(tmpinfo, &need, sizeof(int));
         charcpy(tmpinfo, &topdist, sizeof(float));
-        charcpy(tmpinfo, &num_one, sizeof(int));
+        char* numinfo = tmpinfo;
+        tmpinfo += sizeof(int);
+        int real_num = 0;
         for(int j= ii *num_per;j< ii *num_per+num_one;j++){
           if (res_heap->to_sort_dist_p[j].first <= topdist)
-            charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*));
+            charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*)), real_num++;
           else {
             isover = true;
             break;
           }
         }
+        charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-        find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+        find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
 #else
         char* out;
         size_t out_size;
-        find_tskey(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
+        find_tskey(info, to_find_size_leafkey + sizeof(void*) * real_num, out, out_size, db_jvm);
         ares* ares_out = (ares*) out;
         //push
         for (int j=0;j<out_size;j++) {
@@ -1543,21 +1546,24 @@ Status DBImpl::Get(const aquery& aquery1,
     float topdist = res_heap->top();
     charcpy(tmpinfo, &need, sizeof(int));
     charcpy(tmpinfo, &topdist, sizeof(float));
-    charcpy(tmpinfo, &num_one, sizeof(int));
+    char* numinfo = tmpinfo;
+    tmpinfo += sizeof(int);
+    int real_num = 0;
     for(int j= ii *num_per;j< ii *num_per+num_one;j++){
       if (res_heap->to_sort_dist_p[j].first <= topdist)
-        charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*));
+        charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*)), real_num++;
       else {
         isover = true;
         break;
       }
     }
+    charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
 #else
     char* out;
     size_t out_size;
-    find_tskey(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
+    find_tskey(info, to_find_size_leafkey + sizeof(void*) * real_num, out, out_size, db_jvm);
     ares* ares_out = (ares*) out;
     //push
     for (int j=0;j<out_size;j++) {
@@ -2788,7 +2794,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
 
   int div = Get_div;
   int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
-
+//  cout<<"size"<<res_heap->to_sort_dist_p.size()<<endl;
   char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
   char* add_info = info;
   charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
@@ -2804,21 +2810,25 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
     float topdist = res_heap->top();
     charcpy(tmpinfo, &need, sizeof(int));
     charcpy(tmpinfo, &topdist, sizeof(float));
-    charcpy(tmpinfo, &num_one, sizeof(int));
+    char* numinfo = tmpinfo;
+    tmpinfo += sizeof(int);
+    int real_num = 0;
     for(int j=i*num_per;j<i*num_per+num_one;j++){
+//      cout<<"j:"<<j<<" "<<res_heap->to_sort_dist_p[j].first<<" "<<res_heap->to_sort_dist_p[j].second<<endl;
       if (res_heap->to_sort_dist_p[j].first <= topdist)
-      charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*));
+      charcpy(tmpinfo, &res_heap->to_sort_dist_p[j].second, sizeof(void*)), real_num++;
       else {
         isover = true;
         break;
       }
     }
+    charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * num_one, db_jvm);
+    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
 #else
     char* out;
     size_t out_size;
-    find_tskey_exact(info, to_find_size_leafkey + sizeof(void*) * num_one, out, out_size, db_jvm);
+    find_tskey_exact(info, to_find_size_leafkey + sizeof(void*) * real_num, out, out_size, db_jvm);
     ares_exact* ares_out = (ares_exact*) out;
     //push
     for (int j=0;j<out_size;j++) {

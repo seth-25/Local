@@ -34,9 +34,10 @@
 #define init_st 1
 //近似查询是否排序后一起查，1不，0要
 #define cha 0
-//是否一个一个传
+//是否java直接调用堆，0不是，1是
 #define isap 1
 
+// 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
 #define Get_div 20
 
 ///// TYPES /////
@@ -95,10 +96,10 @@ typedef unsigned char cod;
 // 压缩im的线程数，一般与表数量一致
 #define pool_size init_num/Table_maxnum
 
-//精确查询一个表需要多线程的
+// 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
 #define get_exact_multiThread_file_size 500*1024*1024
 
-#define pool_get_size 16
+#define pool_get_size 32
 
 
 //超过这个重构叶结点

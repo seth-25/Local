@@ -164,6 +164,7 @@ class query_heap_exact : public query_heap_rep<ares_exact> {
       : query_heap_rep(k,tableNum) {}
 
   void init(const vector<ares>& appro_res) {
+
     for(auto item: appro_res) {
       res_heap.push(item.rep);
       p_set.insert(item.p);

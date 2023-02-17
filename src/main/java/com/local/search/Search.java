@@ -68,6 +68,28 @@ public class Search implements Runnable{
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
+        Main.oneDis = dis / k;
+        Main.totalDis += dis / k;
+    }
+
+    private void computeExactDis(byte[] ans) {
+        double dis = 0;
+        double oldDis = 0;
+        for (int i = 0; i < ans.length; i += Parameters.aresExactSize) {
+            byte[] floatBytes = new byte[4];
+            System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
+            dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+
+
+            System.out.println(SearchUtil.bytesToFloat(floatBytes));
+            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
+                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
+            }
+            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+
+
+        }
+        Main.oneDis = dis / k;
         Main.totalDis += dis / k;
     }
 
@@ -148,13 +170,17 @@ public class Search implements Runnable{
 
         long searchTimeStart = System.currentTimeMillis();
         if (isExact) {
+            // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
+            // ares_exact(有时间戳): ts 256*4, float dist 4
+            // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
             ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
             Main.searchTime += System.currentTimeMillis() - searchTimeStart;
+            computeExactDis(ans);
         }
         else {
-            // 返回若干个ares,ares的最后有一个4字节的id
             // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
+            // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
             ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
             Main.searchTime += System.currentTimeMillis() - searchTimeStart;
 
