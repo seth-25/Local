@@ -44,10 +44,12 @@ public class db_send {
     // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void find_tskey_ap(byte[] info) {
-        SearchAction.searchOriTsPushHeap(info, false);
+//        SearchAction.searchOriTsPushHeap(info, false);
+        SearchAction.searchOriTsQueue(info, false);
     }
 
     public static void find_tskey_exact_ap(byte[] info) {
-        SearchAction.searchOriTsPushHeap(info, true);
+//        SearchAction.searchOriTsPushHeap(info, true);
+        SearchAction.searchOriTsQueue(info, true);
     }
 }

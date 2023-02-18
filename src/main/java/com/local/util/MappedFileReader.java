@@ -37,6 +37,7 @@ public class MappedFileReader {
     private boolean isOne = true;
 
     private AsynchronousFileChannel asynchronousFileChannel;
+    private List<Long> pList = new ArrayList<>();
     private List<ByteBuffer> byteBufferList = new ArrayList<>();
     private List<Future<Integer>> operationList = new ArrayList<>();
 
@@ -133,7 +134,21 @@ public class MappedFileReader {
         }
         return oldOffset;
     }
-
+    public byte[] getArray() {
+        if (!isRes) {
+            if (isOne) {
+                isOne = false;
+                return array1;
+            }
+            else {
+                isOne = true;
+                return array2;
+            }
+        }
+        else {
+            return resArray;
+        }
+    }
 
     public byte[] readTs(long offset, int num) {
         try {
@@ -172,16 +187,33 @@ public class MappedFileReader {
         return oneTs;
     }
 
-    public byte[][] readTsQueue(int num, ArrayList<Long> offsetList) {
+    public List<Long> getPList() {
+        return pList;
+    }
+    public void clearPList() {
+        pList.clear();
+    }
+    public byte[][] readTsQueue() {
+//        byte[][] tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];
+        int num = pList.size();
+//        for (int i = 0; i < num; i ++ ) {
+//            long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
+//            try {
+//                fileChannel.read(readTsByteBuf,  offset * Parameters.tsSize);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            readTsByteBuf.flip();
+//            readTsByteBuf.get(tsArrays[i]);
+//            readTsByteBuf.clear();
+//        }
         for (int i = 0; i < num; i ++ ) {
-            long offset = offsetList.get(i);
+            long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
             ByteBuffer byteBuf = byteBufferList.get(i);
-            Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset);;
+            Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset* Parameters.tsSize);;
             operationList.add(operation);
         }
         for (int i = 0; i < num; i ++ ) {
-            long t = System.currentTimeMillis();
-
             ByteBuffer byteBuf = byteBufferList.get(i);
             Future<Integer> operation = operationList.get(i);
             while (!operation.isDone()) ;
@@ -190,30 +222,8 @@ public class MappedFileReader {
             byteBuf.clear();
         }
         operationList.clear();
+
         return tsArrays;
-    }
-
-    public void close() throws IOException {
-        fileIn.close();
-        array1 = null;
-        array2 = null;
-        resArray = null;
-    }
-
-    public byte[] getArray() {
-        if (!isRes) {
-            if (isOne) {
-                isOne = false;
-                return array1;
-            }
-            else {
-                isOne = true;
-                return array2;
-            }
-        }
-        else {
-            return resArray;
-        }
     }
 
     public long getFileLength() {
@@ -226,5 +236,12 @@ public class MappedFileReader {
 
     public int getFileNum() {
         return fileNum;
+    }
+
+    public void close() throws IOException {
+        fileIn.close();
+        array1 = null;
+        array2 = null;
+        resArray = null;
     }
 }
