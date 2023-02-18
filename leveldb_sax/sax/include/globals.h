@@ -232,7 +232,12 @@ static const size_t send_size2_add = sizeof(uint64_t) + sizeof(saxt_only)*2 + si
 
 static const size_t sizeinfo_pos = sizeof(aquery_rep) + sizeof(int)*2 + sizeof(float);
 
+#if isap
 static const size_t to_find_size_leafkey = sizeof(aquery_rep) + sizeof(int)*3 + sizeof(float) + sizeof(void*);
+#else
+static const size_t to_find_size_leafkey = sizeof(aquery_rep) + sizeof(int)*3 + sizeof(float);
+#endif
+
 
 static inline int compare_saxt(const void* a, const void* b) {
   if (*(saxt_only*)a < *(saxt_only*)b) return -1;

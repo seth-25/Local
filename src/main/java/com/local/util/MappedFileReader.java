@@ -6,35 +6,46 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
 
 
 public class MappedFileReader {
     private MappedByteBuffer[] mappedBufArray;
     private int count = 0;
-    private int number;
+    private final int number;
     private FileInputStream fileIn;
     private FileChannel fileChannel;
-    private long fileLength;
+    private final long fileLength;
     private ByteBuffer readTsByteBuf;
 
 
-    private int arraySize;
+    private final int arraySize;
     private byte[] array1;
     private byte[] array2;
     private byte[] resArray;
-    private byte[] tsArray;
-    byte[][] tsArrays;  // 用于查询原始时间序列，返回批量的ts
+    private byte[] tsArray; // 用于查询原始时间序列，返回单个ts
+    byte[][] tsArrays;
+
     private boolean isRes = false;
     private boolean isOne = true;
 
+    private AsynchronousFileChannel asynchronousFileChannel;
+    private List<ByteBuffer> byteBufferList = new ArrayList<>();
+    private List<Future<Integer>> operationList = new ArrayList<>();
 
     private int offset = 0;
 
-    private int fileNum;
+    private final int fileNum;
 
-    public MappedFileReader(String fileName, int arraySize, int fileNum) throws IOException {
-        this.fileIn = new FileInputStream(fileName);
+    public MappedFileReader(String filePath, int arraySize, int fileNum) throws IOException {
+        this.fileIn = new FileInputStream(filePath);
         this.fileChannel = fileIn.getChannel();
         this.fileLength = fileChannel.size();
 
@@ -62,11 +73,19 @@ public class MappedFileReader {
         this.arraySize = arraySize;
         this.array1 = new byte[arraySize];
         this.array2 = new byte[arraySize];
-//        this.tsArrays = new byte[Parameters.findOriTsNum][Parameters.tsSize];   // new byte时间消耗很大，预先开好空间
-        this.tsArray = new byte[Parameters.tsSize];
 
+
+        // 随机读写
+        this.tsArray = new byte[Parameters.tsSize];
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
 
+        Path path = Paths.get(filePath);
+        asynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.READ);
+        for (int i = 0; i < Parameters.FileSetting.queueSize; i ++ ) {
+            byteBufferList.add(ByteBuffer.allocate(Parameters.tsSize));
+        }
+        //        this.tsArrays = new byte[Parameters.findOriTsNum][Parameters.tsSize];   // new byte时间消耗很大，预先开好空间
+        this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];
         this.fileNum = fileNum;
     }
 
@@ -87,27 +106,15 @@ public class MappedFileReader {
         if (limit - position > arraySize) {
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            if (isOne) {
-                System.out.println("==array1== " + array1);
-                mappedBufArray[count].get(array1);
-            }
-            else {
-                System.out.println("==array2== " + array2);
-                mappedBufArray[count].get(array2);
-            }
+            if (isOne) mappedBufArray[count].get(array1);
+            else mappedBufArray[count].get(array2);
         }
         else if (limit - position == arraySize){ // 本内存文件映射最后一次读取数据
 //            System.out.println("下一个映射");
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            if (isOne) {
-                System.out.println("==array1== " + array1);
-                mappedBufArray[count].get(array1);
-            }
-            else {
-                System.out.println("==array2== " + array2);
-                mappedBufArray[count].get(array2);
-            }
+            if (isOne) mappedBufArray[count].get(array1);
+            else mappedBufArray[count].get(array2);
             if (count < number) {
                 count++; // 转换到下一个内存文件映射
             }
@@ -163,6 +170,27 @@ public class MappedFileReader {
         readTsByteBuf.get(oneTs);
         readTsByteBuf.clear();
         return oneTs;
+    }
+
+    public byte[][] readTsQueue(int num, ArrayList<Long> offsetList) {
+        for (int i = 0; i < num; i ++ ) {
+            long offset = offsetList.get(i);
+            ByteBuffer byteBuf = byteBufferList.get(i);
+            Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset);;
+            operationList.add(operation);
+        }
+        for (int i = 0; i < num; i ++ ) {
+            long t = System.currentTimeMillis();
+
+            ByteBuffer byteBuf = byteBufferList.get(i);
+            Future<Integer> operation = operationList.get(i);
+            while (!operation.isDone()) ;
+            byteBuf.flip();
+            byteBuf.get(tsArrays[i]);
+            byteBuf.clear();
+        }
+        operationList.clear();
+        return tsArrays;
     }
 
     public void close() throws IOException {

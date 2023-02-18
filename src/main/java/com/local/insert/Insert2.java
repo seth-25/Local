@@ -6,11 +6,10 @@ import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class Insert1 implements Runnable{
+public class Insert2 implements Runnable{
 
     private static int cntRead = 0;
     private static int cntInsert = 0;
@@ -40,10 +39,12 @@ public class Insert1 implements Runnable{
                         continue;
                     }
                     byte[] tsBytes = reader.getArray();
+                    byte[] newTsBytes = new byte[Parameters.FileSetting.readSize];
+                    System.arraycopy(tsBytes, 0, newTsBytes, 0, tsBytes.length);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
                     System.out.println("读文件: " + reader.getFileNum() + " 次数：" + ++cntRead + " offset:" + offset);
-                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
+                    TsReadBatch tsReadBatch = new TsReadBatch(newTsBytes, reader.getFileNum(), offset);
                     System.out.println("put " + cntRead + " " + tsBytes);
                     super.put(tsReadBatch);
 
@@ -62,12 +63,6 @@ public class Insert1 implements Runnable{
                 return false;
             }
             System.out.println("插入次数：" + ++cntInsert);
-            System.out.println(tsReadBatch.getTsBytes() + " ");
-            for (int i = 0; i < 100; i ++ ) {
-                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
-            }
-            System.out.println();
-
 
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);

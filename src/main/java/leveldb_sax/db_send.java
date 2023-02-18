@@ -24,8 +24,8 @@ public class db_send {
     // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
     // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
     public static byte[] find_tskey(byte[] info) {
-//        return SearchAction.searchOriTs(info, false);
-        return null;
+        return SearchAction.searchOriTs(info, false);
+//        return null;
     }
 
     // 发送 info
@@ -35,8 +35,8 @@ public class db_send {
     // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // ares_exact(没时间戳): ts 256*4, float dist 4
     public static byte[] find_tskey_exact(byte[] info) {
-//        return SearchAction.searchOriTs(info, true);
-        return null;
+        return SearchAction.searchOriTs(info, true);
+//        return null;
     }
 
 

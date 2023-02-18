@@ -1,14 +1,11 @@
 package com.local.insert;
 
 import com.local.Main;
-import com.local.domain.Parameters;
 import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class Insert implements Runnable{
 
@@ -20,15 +17,28 @@ public class Insert implements Runnable{
     /**
      * 读文件和发送sax并行
      */
-    static class TsToSaxChannel extends ArrayBlockingQueue<TsReadBatch> {
+    static class TsToSaxChannel {
+        private final int capacity;
+        private int cnt;
+        private TsReadBatch buffer;
         public TsToSaxChannel(int capacity) {
-            super(capacity);
+            this.capacity = capacity;
+            this.cnt = 0;
+        }
+        private synchronized void put(TsReadBatch tsReadBatch) throws InterruptedException {
+            while (cnt >= capacity) {
+                wait();
+            }
+            buffer = tsReadBatch;
+            cnt ++;
+            notifyAll();
         }
         public void produce() throws InterruptedException {
             boolean flag = true;
             while(flag) {
                 for (Map.Entry<Integer, MappedFileReader> entry: CacheUtil.mappedFileReaderMap.entrySet()) {
                     flag = false;
+
                     // 从文件读ts
                     long IOTimeStart = System.currentTimeMillis();
                     MappedFileReader reader = entry.getValue();
@@ -40,20 +50,23 @@ public class Insert implements Runnable{
                         continue;
                     }
                     byte[] tsBytes = reader.getArray();
+                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
-                    System.out.println("读文件: " + reader.getFileNum() + " 次数：" + ++cntRead + " offset:" + offset);
-                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
-                    System.out.println("put " + cntRead + " " + tsBytes);
-                    super.put(tsReadBatch);
-
-                    System.out.println("put finish " + cntRead + " " + super.size());
+                    put(tsReadBatch);
+                    System.out.println("读文件: " + reader.getFileNum() + " 次数：" + ++cntRead + " offset:" + offset );
                 }
             }
-            super.put(new TsReadBatch(null, -1, -1)); // 结束
+            put(new TsReadBatch(null, -1, -1)); // 结束
         }
         public boolean consume() throws InterruptedException {
-            TsReadBatch tsReadBatch = super.take();    // 阻塞
+            TsReadBatch tsReadBatch;
+            synchronized (this) {
+                while(cnt <= 0) {
+                    wait();
+                }
+                tsReadBatch = buffer;
+            }
             long CPUTimeStart = System.currentTimeMillis();
             if (tsReadBatch.getFileNum() == -1) {
                 System.out.println("读完所有文件,退出\n");
@@ -62,16 +75,19 @@ public class Insert implements Runnable{
                 return false;
             }
             System.out.println("插入次数：" + ++cntInsert);
-            System.out.println(tsReadBatch.getTsBytes() + " ");
-            for (int i = 0; i < 100; i ++ ) {
-                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
-            }
-            System.out.println();
-
+//            for (int i = 0; i < 100; i ++ ) {
+//                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
+//            }
+//            System.out.println();
 
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
             CPUTime += System.currentTimeMillis() - CPUTimeStart;
+
+            synchronized (this) {
+                cnt --;
+                notifyAll();
+            }
             return true;
         }
     }
@@ -97,6 +113,5 @@ public class Insert implements Runnable{
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
     }
 }
