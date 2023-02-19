@@ -69,28 +69,22 @@ public class Search implements Runnable{
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
         Main.oneDis = dis / k;
-        Main.totalDis += dis / k;
     }
 
     private void computeExactDis(byte[] ans) {
         double dis = 0;
-        double oldDis = 0;
+//        double oldDis = 0;
         for (int i = 0; i < ans.length; i += Parameters.aresExactSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
-
-
-            System.out.println(SearchUtil.bytesToFloat(floatBytes));
-            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
-                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
-            }
-            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
-
-
+//            System.out.println(SearchUtil.bytesToFloat(floatBytes));
+//            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
+//                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
+//            }
+//            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
         Main.oneDis = dis / k;
-        Main.totalDis += dis / k;
     }
 
     static class Ts {
@@ -102,6 +96,7 @@ public class Search implements Runnable{
         }
     }
     private void computeRecallAndError(byte[] ans) {
+        Main.isRecord = false;  // 计算召回率和错误率时不要记录io时间和访问次数
         ArrayList<Ts> approAnsList = new ArrayList<>();
         for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
@@ -112,7 +107,9 @@ public class Search implements Runnable{
         }
 
         ArrayList<Ts> exactAnsList = new ArrayList<>();
+
         byte[] exactAns = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
+
         for (int i = 0; i < exactAns.length; i += Parameters.aresExactSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
@@ -149,18 +146,20 @@ public class Search implements Runnable{
 
         double error = 0;
         for (int i = 0; i < k; i ++ ) {
-            System.out.println("近似距离" + approAnsList.get(i).dis + "\t精确距离" + exactAnsList.get(i).dis);
+//            System.out.println("近似距离" + approAnsList.get(i).dis + "\t精确距离" + exactAnsList.get(i).dis);
             if (exactAnsList.get(i).dis == 0) {
-                System.out.println("exact query dis = 0, ignore error");
-                return;
+                System.out.println("exact query dis = 0, unable to calculate error");
+                Main.totalError = Double.NaN;
+                Main.isRecord = true;
+                return ;
             }
             error += approAnsList.get(i).dis / exactAnsList.get(i).dis;
-
         }
 
         System.out.println("Error:" + (error / k));
-        Main.totalError += error;
+        Main.totalError += (error / k);
 
+        Main.isRecord = true;
     }
     @Override
     public void run() {
@@ -183,6 +182,7 @@ public class Search implements Runnable{
             // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
             ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
             Main.searchTime += System.currentTimeMillis() - searchTimeStart;
+
 
             computeDis(ans);
             computeRecallAndError(ans);

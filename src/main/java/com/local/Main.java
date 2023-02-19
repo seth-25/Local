@@ -42,13 +42,15 @@ public class Main {
     }
 
     public static boolean hasInsert = false;
+    public static boolean isRecord = true;
+
+
     public static long searchTime = 0;
     public static long cntP = 0;
     public static long cntRes = 0;
     public static long totalReadTime = 0;
     public static long totalReadLockTime = 0;
     public static double oneDis = 0;
-    public static double totalDis = 0;
     public static double totalRecall = 0;
     public static double totalError = 0;
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -72,10 +74,16 @@ public class Main {
 
         Thread.sleep(5000);
 
-//        insertTime = System.currentTimeMillis();
+        /**
+         * Insert
+         */
         CacheUtil.insertThreadPool.execute(new Insert());
-        long totalCntP = 0, totalCntRes = 0;
 
+        /**
+         * Search
+         */
+        long totalCntP = 0, totalCntRes = 0;
+        double totalDis = 0;
         while(true) {
 //            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
             if (hasInsert) {    // 插入完成后再查询
@@ -91,14 +99,13 @@ public class Main {
                         System.out.println("精确查询时间：" + (System.currentTimeMillis() - startQuery));
                         System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
                         System.out.println("-----------------------------------------------");
-                        totalCntP += cntP;  totalCntRes += cntRes;
+                        totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis;
                     }
                     System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
                     System.out.println("精确查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
                     System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
                             "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
                             "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
-
                 }
                 else {
                     Search approximateSearch = new Search(false, 100);
@@ -109,9 +116,8 @@ public class Main {
                         System.out.println("近似查询时间:" + (System.currentTimeMillis() - startQuery));
                         System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
                         System.out.println("-----------------------------------------------");
-                        totalCntP += cntP; totalCntRes += cntRes;
+                        totalCntP += cntP; totalCntRes += cntRes;   totalDis += oneDis;
                     }
-
                     System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
                     System.out.println("近似查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
                     System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +

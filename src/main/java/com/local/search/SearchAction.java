@@ -181,7 +181,7 @@ public class SearchAction {
         }
     }
 
-    public static void searchOriTsPushHeap(byte[] info, boolean isExact) {
+    public static void searchOriTsHeap(byte[] info, boolean isExact) {
         long searchOriTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
         long readTime = 0;   // todo
@@ -307,7 +307,7 @@ public class SearchAction {
     }
     static byte[] aresAppro = new byte[Parameters.aresSize];
     static byte[] aresExact = new byte[Parameters.aresExactSize];
-    public static void searchOriTsQueue(byte[] info, boolean isExact) {
+    public static void searchOriTsHeapQueue(byte[] info, boolean isExact) {
         long searchOriTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
         long readTime = 0;   // todo
@@ -361,11 +361,13 @@ public class SearchAction {
             cnt += pushHeap(tsArrays, ares, pList, aQuery, isExact);
             reader.clearPList();
         }
-        synchronized (SearchAction.class) { // todo
-            Main.cntP += aQuery.pList.size();
-            Main.totalReadTime += readTime;
-            Main.totalReadLockTime += readLockTime;
-            Main.cntRes += cnt;
+        if (Main.isRecord) {
+            synchronized (SearchAction.class) { // todo
+                Main.cntP += aQuery.pList.size();
+                Main.totalReadTime += readTime;
+                Main.totalReadLockTime += readLockTime;
+                Main.cntRes += cnt;
+            }
         }
 
         PrintUtil.print(" 读取时间：" + readTime + " readLockTime：" + readLockTime +
