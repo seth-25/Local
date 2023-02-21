@@ -651,7 +651,7 @@ void DBImpl::CompactMemTable(std::pair<MemTable*, int> aim) {
     RemoveObsoleteFiles();
     VersionSet::LevelSummaryStorage tmp;
     out("im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp));
-    cout<<"im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp)<<endl;
+//    cout<<"im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp)<<endl;
   } else {
     RecordBackgroundError(s);
   }

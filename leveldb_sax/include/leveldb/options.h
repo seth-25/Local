@@ -113,8 +113,8 @@ struct LEVELDB_EXPORT Options {
   // compactions and hence longer latency/performance hiccups.
   // Another reason to increase this parameter might be when you are
   // initially populating a large database.
-  // 表的大小限制，超过后压缩合并成多个，设大一点，设为160m
-  size_t max_file_size = 500 * 1024 * 1024;
+  // 表的大小限制，超过后压缩合并成多个
+  size_t max_file_size = 50 * 1024 * 1024;
 
   // Compress blocks using the specified compression algorithm.  This
   // parameter can be changed dynamically.

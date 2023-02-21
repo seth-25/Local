@@ -31,7 +31,7 @@ static const int kL0_CompactionTrigger = 8;//4
 static const int kL0_SlowdownWritesTrigger = 16;//8
 
 // Maximum number of level-0 files.  We stop writes at this point.
-static const int kL0_StopWritesTrigger = 12;
+static const int kL0_StopWritesTrigger = 24;
 
 // Maximum level to which a new compacted memtable is pushed if it
 // does not create overlap.  We try to push to level 2 to avoid the

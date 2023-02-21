@@ -927,7 +927,7 @@ void Table::ST_finder_exact::start() {
 #endif
 
   if(isbig) {
-    cout<<"join"<<endl;
+//    cout<<"join"<<endl;
     delete tmp_pool;
   }
 }

@@ -78,7 +78,7 @@ public class Search implements Runnable{
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
-//            System.out.println(SearchUtil.bytesToFloat(floatBytes));
+            System.out.println(SearchUtil.bytesToFloat(floatBytes));
 //            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
 //                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
 //            }

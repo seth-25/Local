@@ -16,7 +16,6 @@ public class Main {
     public static void init() {
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
-        int saxtNum = Parameters.FileSetting.readTsNum;
 
         MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(0);
         if (reader == null) {
@@ -33,16 +32,19 @@ public class Main {
         for (int i = 0; i < Parameters.initNum; i ++ ) {
             long offset = reader.read();
             byte[] tsBytes = reader.getArray();
-            System.out.println("读文件: " + reader.getFileNum() + " 次数：" + 0 + " offset:" + offset + " 用于初始化");
+            System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             PrintUtil.print("ts长度" + tsBytes.length);
             byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
             System.arraycopy(leafTimeKeysBytes, 0, initBytes, i * initSize, initSize);
             PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
         }
         DBUtil.dataBase.leaftimekey_sort(initBytes);
-        DBUtil.dataBase.init(initBytes, saxtNum);
-        PrintUtil.print("初始化成功==========================");
+        DBUtil.dataBase.init(initBytes, Parameters.FileSetting.readTsNum * Parameters.initNum);
 
+
+
+
+        PrintUtil.print("初始化成功==========================");
     }
 
     public static boolean hasInsert = false;
@@ -61,7 +63,7 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
 //        int isExact = scan.nextInt();
-        int isExact = 1;
+        int isExact = 0;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
         int queryNum = 100;
@@ -105,11 +107,6 @@ public class Main {
                         System.out.println("-----------------------------------------------");
                         totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis;
                     }
-                    System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
-                    System.out.println("精确查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
-                    System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-                            "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
-                            "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
                 }
                 else {
                     Search approximateSearch = new Search(false, 100);
@@ -122,13 +119,14 @@ public class Main {
                         System.out.println("-----------------------------------------------");
                         totalCntP += cntP; totalCntRes += cntRes;   totalDis += oneDis;
                     }
-                    System.out.println("查询总时间：" + Main.searchTime + "\t读取原始时间序列总时间：" + totalReadTime);
-                    System.out.println("近似查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
-                    System.out.println("总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-                            "\t总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
-                            "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
                     System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
                 }
+                System.out.println("查询总时间：" + Main.searchTime + "\t平均时间" + Main.searchTime/queryNum);
+                System.out.println("读取原始时间序列总时间：" + totalReadTime + "\t平均时间" + totalReadTime/queryNum);
+                System.out.println("精确查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
+                System.out.println("总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
+                        "\t总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
+                        "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
                 break;
             }
 

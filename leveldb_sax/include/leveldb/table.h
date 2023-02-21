@@ -170,7 +170,7 @@ class LEVELDB_EXPORT Table {
     }
 
     ST_finder_exact(ST_finder_exact* finder){
-      cout<<"ll"<<endl;
+//      cout<<"ll"<<endl;
       gs_jvm = finder->gs_jvm;
       rep_ = finder->rep_;
       isbig = finder->isbig;
