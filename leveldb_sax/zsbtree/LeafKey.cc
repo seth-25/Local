@@ -24,8 +24,9 @@ LeafKey::LeafKey(saxt_only saxt_, void* p): asaxt(saxt_), p(p){}
 bool LeafKey::operator<(const LeafKey& leafKey) const {
   return asaxt < leafKey.asaxt;
 }
-
+//static int x1 = 0;
 bool LeafKey::operator>(const LeafKey& leafKey) const {
+//  printf("%d\n",++x1);
   return asaxt > leafKey.asaxt;
 }
 

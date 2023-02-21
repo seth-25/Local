@@ -9,8 +9,8 @@
 Leaf::Leaf(int num, cod co_d, saxt_only lsaxt, saxt_only rsaxt, LeafKey *leafKeys) {
     this->num = num;
     this->co_d = co_d;
-    lsaxt = lsaxt;
-    rsaxt = rsaxt;
+    this->lsaxt = lsaxt;
+    this->rsaxt = rsaxt;
     memcpy(this->leafKeys, leafKeys, sizeof(LeafKey) * num);
 }
 

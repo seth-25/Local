@@ -4,25 +4,25 @@
 
 #include "STpos.h"
 
-
-STpos::STpos(unsigned short size, size_t offset) {
+STpos::STpos(unsigned int size, size_t offset) {
   pos = size;
-  pos |= offset << 16;
+  pos |= offset << 20;
 }
 
-unsigned short STpos::GetSize() {
-  return *(unsigned short*)(&pos);
+unsigned int STpos::GetSize() {
+  return pos & 0x3ffff;
 }
 
 size_t STpos::GetOffset() {
-  return (unsigned long long)pos >> (unsigned short)16;
+//  printf("stpos %zu", pos);
+  return (unsigned long long)pos >> (unsigned int)20;
 }
 
 STpos::STpos() {}
 
-void STpos::Set(unsigned short size, size_t offset) {
+void STpos::Set(unsigned int size, size_t offset) {
     pos = size;
-    pos |= offset << 16;
+    pos |= offset << 20;
 }
 
 void* STpos::Get() {

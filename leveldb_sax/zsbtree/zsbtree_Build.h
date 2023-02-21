@@ -167,6 +167,8 @@ static vector<pair<int, int>> get_drange_rebalance(vector<int> &memNum_period){
     }
   }
   reverse(res.begin(), res.end());
+  free(f);
+  free(g);
   return res;
 }
 

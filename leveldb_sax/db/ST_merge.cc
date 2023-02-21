@@ -20,18 +20,21 @@ ST_merge::ST_merge(VersionSet* ver, Compaction* c) : cache(ver->table_cache_), v
     for (auto & file : files) {
       Cache::Handle* handle = nullptr;
       Status s = cache->FindTable(file->number, file->file_size, &handle);
-      out("afile");
-      out(file->number);
-      out(file->file_size);
+      out2("afile");
+      out2(file->number);
+      out2(file->file_size);
       saxt_print(file->smallest.user_key().data());
       saxt_print(file->largest.user_key().data());
       if (s.ok()) {
         out("ok");
         Table* t = reinterpret_cast<TableAndFile*>(cache->cache_->Value(handle))->table;
+//        out2("afile");
+//        out2(file->number);
+//        out2(file->file_size);
         Table::ST_Iter* stIter = new Table::ST_Iter(t);
         st_iters.insert(stIter);
         vec_size++;
-        assert(vec_size<=30);
+        assert(vec_size<=100);
         handles[stIter] = handle;
 //        cache->cache_->Release(handle);
         //更新时间
@@ -44,7 +47,7 @@ ST_merge::ST_merge(VersionSet* ver, Compaction* c) : cache(ver->table_cache_), v
   c->endTime = tmpend;
 //  out("st_iters");
 
-
+//  cout<<"vec:"<<vec_size<<endl;
 
   int i = 0;
   for(auto item: st_iters) {
@@ -86,6 +89,8 @@ bool ST_merge::next(LeafKey& leafKey) {
       if (leafKey > vec[i].first) leafKey = vec[i].first, res = i;
     }
     if (!vec[res].second->next(vec[res].first)) {
+      out2("要删除"+ to_string(res));
+      out2(vec_size);
       del(vec[res].second);
       vec_size--;
       for(int i=res;i<vec_size;i++) {

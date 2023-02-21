@@ -23,7 +23,7 @@ MemTable::MemTable(mems_todel* memsTodel) :refs_(0),startTime(starttime_init),en
 
 MemTable::MemTable(ts_time starttime, ts_time endtime, mems_todel* memsTodel) :refs_(0),startTime(starttime),endTime(endtime),memsTodel(memsTodel){}
 
-MemTable::~MemTable() { assert(refs_ == 0);}
+MemTable::~MemTable() { assert(refs_ == 0); }
 
 
 //待改

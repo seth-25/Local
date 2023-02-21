@@ -83,6 +83,7 @@ inline void split_nonleafkey(newVector<NonLeafKey> &leafKeys, vector<NonLeafKey>
   leaf->num = tmpnum1;
   leaf->setRsaxt(leaf->nonLeafKeys[tmpnum1-1].rsaxt);
   leaf->co_d = get_co_d_from_saxt(leaf->lsaxt, leaf->rsaxt, leaf->co_d);
+  nonLeafKey = nonLeafKeys.data()+nonLeafKeys.size()-2;
   nonLeafKey->num = tmpnum1;
   nonLeafKey->co_d = leaf->co_d;
   nonLeafKey->setRsaxt(leaf->rsaxt);

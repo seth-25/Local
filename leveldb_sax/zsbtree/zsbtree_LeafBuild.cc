@@ -65,8 +65,9 @@ inline void add_nonleafkey(newVector<LeafKey> &leafKeys, vector<NonLeafKey> &non
 inline void split_nonleafkey(newVector<LeafKey> &leafKeys, vector<NonLeafKey> &nonLeafKeys, int id, int allnum,
                              int num, cod co_d, saxt_only rsaxt) {
 
-  NonLeafKey *nonLeafKey = nonLeafKeys.data()+nonLeafKeys.size()-1;
+  NonLeafKey *nonLeafKey = nonLeafKeys.data() + nonLeafKeys.size() - 1;
   Leaf *leaf = (Leaf *)(nonLeafKey->p);
+//  if(nonLeafKey->p == nullptr) exit(1);
   int tmpnum1 = allnum / 2;
   int tmpnum2 = allnum - tmpnum1;
   //添加后一个点
@@ -79,6 +80,7 @@ inline void split_nonleafkey(newVector<LeafKey> &leafKeys, vector<NonLeafKey> &n
   leaf->num = tmpnum1;
   leaf->setRsaxt(leaf->leafKeys[tmpnum1-1].asaxt);
   leaf->co_d = get_co_d_from_saxt(leaf->lsaxt, leaf->rsaxt, leaf->co_d);
+  nonLeafKey = nonLeafKeys.data() + nonLeafKeys.size() - 2;
   nonLeafKey->num = tmpnum1;
   nonLeafKey->co_d = leaf->co_d;
   nonLeafKey->setRsaxt(leaf->rsaxt);

@@ -22,7 +22,7 @@ public:
     int num;
 
     cod co_d;
-    void* p;
+    void* p = nullptr;
     saxt_only lsaxt;
     saxt_only rsaxt;
 };

@@ -32,7 +32,7 @@ std::chrono::steady_clock::time_point t2;
 void test_init(vector<LeafTimeKey>& leafKeys){
 
 
-  db->Init(leafKeys.data(), leafKeys.size());
+  db->Init(leafKeys.data(), 1e6);
   over("init");
 }
 
@@ -41,10 +41,10 @@ void test_put(vector<LeafTimeKey>& leafKeys){
   leveldb::WriteOptions writeOptions;
   int k=0;
   int amem1 = 1e6;
-  for(int i=0;i<1e6*10;i++) {
-    for (int j=0;j<2;j++) {
-      db->Put(writeOptions, leafKeys[(i + Table_maxnum*j) % amem1]);
-    }
+  for(int i=0;i<5e7;i++) {
+
+    db->Put(writeOptions, leafKeys[i]);
+
   }
 
   over("put");
@@ -109,36 +109,36 @@ void test_st_compaction_0(vector<LeafTimeKey>& leafKeys){
   over("st_compaction_0");
 }
 
-void test_get_am(vector<LeafTimeKey>& leafKeys){
-  // 145 235
-  saxt_only key = leafKeys[40000].leafKey.asaxt;
-  saxt_print(key);
-  aquery_rep aqueryRep;
-  aquery aquery1;
-  aquery1.asaxt = key;
-  aquery1.k = 64;
-  vector<uint64_t> st_numbers;
-  vector<ares> res;
-  db->Get(aquery1, true, 1, 1, st_numbers, res);
-
+//void test_get_am(vector<LeafTimeKey>& leafKeys){
+//  // 145 235
+//  saxt_only key = leafKeys[40000].leafKey.asaxt;
+//  saxt_print(key);
+//  aquery_rep aqueryRep;
+//  aquery aquery1;
+//  aquery1.asaxt = key;
+//  aquery1.k = 64;
+//  vector<uint64_t> st_numbers;
+//  vector<ares> res;
+//  db->Get(aquery1, true, 1, 1, st_numbers, res);
+//
 
 //  out("size:"+to_string(res.size()));
-  over("get_am");
-}
+//  over("get_am");
+//}
 
-void test_get_st(vector<LeafTimeKey>& leafKeys){
-  saxt_only key = leafKeys[40000].leafKey.asaxt;
-  saxt_print(key);
-  aquery_rep aqueryRep;
-  aquery aquery1;
-  aquery1.asaxt = key;
-  aquery1.k = 64;
-  vector<uint64_t> st_numbers;
-  st_numbers.push_back(4);
-  vector<ares> res;
-  db->Get(aquery1, false, 1, 2, st_numbers, res);
-  over("get_st");
-}
+//void test_get_st(vector<LeafTimeKey>& leafKeys){
+//  saxt_only key = leafKeys[40000].leafKey.asaxt;
+//  saxt_print(key);
+//  aquery_rep aqueryRep;
+//  aquery aquery1;
+//  aquery1.asaxt = key;
+//  aquery1.k = 64;
+//  vector<uint64_t> st_numbers;
+//  st_numbers.push_back(4);
+//  vector<ares> res;
+//  db->Get(aquery1, false, 1, 2, st_numbers, res);
+//  over("get_st");
+//}
 
 int main(){
 
@@ -147,15 +147,16 @@ int main(){
   // 6 1.28 + 0.36
   // 5 0.92 + 0.38
   // 4 0.54
-
+  char a[8];
   vector<LeafTimeKey> leafKeys;
-  leafKeys.reserve(1e6);
-  char * filename = "../../data/saxt6.bin";
+  leafKeys.reserve(5e7);
+//  char * filename = "/home/hh/DDBS/Local/saxt100.bin";
+  char * filename = "../saxt100.bin";
   FILE * data_file;
   data_file = fopen (filename,"r");
-  for(int i=0; i < 1e6; i ++) {
+  for(int i=0; i < 5e7; i ++) {
     leafKeys.emplace_back();
-    fread(&leafKeys.back().leafKey.p, sizeof(LeafKey) , 1, data_file);
+    fread(leafKeys.back().leafKey.asaxt.asaxt, sizeof(saxt_only) , 1, data_file);
   }
   fclose (data_file);
 
@@ -177,11 +178,14 @@ int main(){
   string dir = "./testdb";
 
   options.create_if_missing = true;
+  cout << "open db" << endl;
   leveldb::Status status = leveldb::DB::Open(options, dir, nullptr, &db);
 
   assert(status.ok());
+  cout << "init db" << endl;
   test_init(leafKeys);
-  sleep(2);
+  sleep(1);
+  cout<<"00000000000"<<endl;
   //一组测试
   t1 = std::chrono::steady_clock::now();
   test_put(leafKeys);
@@ -197,7 +201,7 @@ int main(){
 //  test_get_am(leafKeys_input[0]);
 //  test_get_st(leafKeys);
 ////
-  sleep(10);
+  sleep(2);
   out("finished");
   delete db;
 }

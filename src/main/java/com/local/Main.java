@@ -22,21 +22,25 @@ public class Main {
         if (reader == null) {
             throw new RuntimeException("ts文件夹下没有文件");
         }
-        long offset = reader.read();
-        byte[] tsBytes = reader.getArray();
-        System.out.println("读文件: " + reader.getFileNum() + " 次数：" + 0 + " offset:" + offset + " 用于初始化");
-        PrintUtil.print("ts长度" + tsBytes.length);
-
-
-        byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset, true);
-        PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
 
         CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
         CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
         VersionAction.initVersion();
 
         DBUtil.dataBase.open("db");
-        DBUtil.dataBase.init(leafTimeKeysBytes, saxtNum);
+        int initSize = Parameters.FileSetting.readTsNum * Parameters.LeafTimeKeysSize;
+        byte[] initBytes = new byte[initSize * Parameters.initNum];
+        for (int i = 0; i < Parameters.initNum; i ++ ) {
+            long offset = reader.read();
+            byte[] tsBytes = reader.getArray();
+            System.out.println("读文件: " + reader.getFileNum() + " 次数：" + 0 + " offset:" + offset + " 用于初始化");
+            PrintUtil.print("ts长度" + tsBytes.length);
+            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
+            System.arraycopy(leafTimeKeysBytes, 0, initBytes, i * initSize, initSize);
+            PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
+        }
+        DBUtil.dataBase.leaftimekey_sort(initBytes);
+        DBUtil.dataBase.init(initBytes, saxtNum);
         PrintUtil.print("初始化成功==========================");
 
     }
@@ -56,11 +60,11 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
-        int isExact = scan.nextInt();
-//        int isExact = 1;
+//        int isExact = scan.nextInt();
+        int isExact = 1;
         System.out.println("Number of queries: ");
-        int queryNum = scan.nextInt();
-//        int queryNum = 1;
+//        int queryNum = scan.nextInt();
+        int queryNum = 100;
 
         FileUtil.createFolder(Parameters.FileSetting.inputPath);
         ArrayList<File> files = FileUtil.getAllFile(Parameters.FileSetting.inputPath);

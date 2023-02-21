@@ -65,6 +65,8 @@ Status Table::Open(const Options& options, RandomAccessFile* file,
   STpos* sTpos = (STpos*)&real_rootkey->p;
   size_t stNonLeaf_size = sTpos->GetSize();
   Slice stNonLeaf_input;
+  out(stNonLeaf_size);
+  out(sTpos->GetOffset());
   //开了空间的
   STNonLeaf* stNonLeaf = new STNonLeaf(real_rootkey->num, real_rootkey->co_d, stNonLeaf_size);
   stNonLeaf->Setprefix(real_rootkey->lsaxt);
@@ -97,6 +99,9 @@ Status Table::Open(const Options& options, RandomAccessFile* file,
   stNonLeaf->Setrep(stNonLeaf_input.data());
 #endif  // HAVE_SNAPPY
   stNonLeaf->Setisleaf();
+  out("isleaf");
+  out((int)stNonLeaf->isleaf);
+  out((int)stNonLeaf->num);
   if (s.ok()) {
     // We've successfully read the footer and the index block: we're
     // ready to serve requests.
@@ -716,37 +721,49 @@ STNonLeaf* Table::ST_finder::getSTNonLeaf(STNonLeaf& nonLeaf, int i) {
 }
 
 
-Table::ST_Iter::ST_Iter(Table* table) :rep_(table->rep_),top(0),leaftop(0),stLeaf(sizeof(Leaf)) {
-  st_nonleaf_stack.reserve(10);
+Table::ST_Iter::ST_Iter(Table* table) :rep_(table->rep_),top(0),leaftop(0) {
+  st_nonleaf_stack.reserve(30);
   st_nonleaf_stack.push_back(rep_->stNonLeaf);
-//  out("root");
-//  saxt_print(rep_->stNonLeaf->prefix);
-//  saxt_print(rep_->rsaxt);
-
+  out("root");
+  out(rep_->stNonLeaf->num);
+  out((int)rep_->stNonLeaf->co_d);
+  out((int)rep_->stNonLeaf->isleaf);
+  saxt_print(rep_->stNonLeaf->prefix);
+  saxt_print(rep_->rsaxt);
+  stLeaf = new STLeaf(sizeof(Leaf));
   memset(nonleaftops, -1, sizeof nonleaftops);
   LeafKey l;
   next(l);
   leaftop--;
 }
 
+static long long xx1 = 0;
 bool Table::ST_Iter::next(LeafKey& res) {
-//  out("next");
-//  out(leaftop);
-//  out(stLeaf.num);
-  while(++leaftop >= stLeaf.num) {
+//  if(++xx1 % 100000) {
+////      out2("next");
+////      out2(leaftop);
+////      out2(stLeaf->num);
+//      if(stLeaf->num > 3000) exit(1);
+//  }
+
+
+  while(++leaftop >= stLeaf->num) {
+    out2("NUM:");
+    out2((int)stLeaf->num);
     while (top >= 0) {
-//      out("top"+to_string(top));
-//      out(st_nonleaf_stack[top]->isleaf);
-//      out(st_nonleaf_stack[top]->num);
+      out2("top"+to_string(top));
+      out2(st_nonleaf_stack[top]->isleaf);
+      out2(st_nonleaf_stack[top]->num);
       if (st_nonleaf_stack[top]->isleaf) {
         if (++nonleaftops[top] < st_nonleaf_stack[top]->num) {
           //只换叶节点
-//          out("叶");
+          out2("叶");
           if(!getSTLeaf()) continue;
-          res.Set1(stLeaf.prefix);
+          res.Set1(stLeaf->prefix);
 //          res.setAsaxt(stLeaf.prefix);
-//          out("有stleaf");
-//          out((int)stLeaf.co_d);
+          out2("有stleaf");
+          out2((int)stLeaf->co_d);
+          out2((int)stLeaf->num);
 //          saxt_print(stLeaf.prefix);
 //          saxt_print((saxt)stLeaf.Get_rep(0), stLeaf.prefix, stLeaf.co_d);
 //          saxt_print((saxt)stLeaf.Get_rep(stLeaf.num-1), stLeaf.prefix, stLeaf.co_d);
@@ -756,10 +773,10 @@ bool Table::ST_Iter::next(LeafKey& res) {
         }
       } else {
         if (++nonleaftops[top] < st_nonleaf_stack[top]->num) {
-//          out("非叶");
+          out2("非叶");
           getSTNonLeaf();
-//          out("STNonLeaf");
-//          out((int)st_nonleaf_stack[top]->co_d);
+          out2("STNonLeaf");
+          out2((int)st_nonleaf_stack[top]->co_d);
 //          saxt_print(st_nonleaf_stack[top]->prefix);
         } else {
           top--;
@@ -768,15 +785,16 @@ bool Table::ST_Iter::next(LeafKey& res) {
     }
     if (top < 0) {
       //遍历完了
-//      out("cuole");
+//      out2("cuole");
       return false;
     }
   }
+
 //  out("leaf");
 //  out((int)stLeaf.co_size);
 //  leafkey_print(stLeaf.Get_rep(leaftop));
 //  res.Set1(stLeaf.prefix, stLeaf.co_size);
-  res.Set2(stLeaf.Get_rep(leaftop), stLeaf.noco_size);
+  res.Set2(stLeaf->Get_rep(leaftop), stLeaf->noco_size);
 //  res.Set(stLeaf.prefix, stLeaf.Get_rep(leaftop), stLeaf.co_size, stLeaf.noco_size);
 
 //  out("next");
@@ -797,18 +815,18 @@ bool Table::ST_Iter::getSTLeaf() {
   Slice slice;
   STpos sTpos = nonLeaf.Get_pos(i);
   size_t stLeaf_size = sTpos.GetSize();
-//  out((int)nonLeaf.co_d);
-//  out((int)nonLeaf.Get_co_d(i));
-  stLeaf.Set(nonLeaf.Getnum(i), nonLeaf.Get_co_d(i));
-  stLeaf.Setprefix(nonLeaf.prefix, nonLeaf.Get_lsaxt(i), sizeof(saxt_only) - nonLeaf.co_size);
-  if (stLeaf.ismmap) stLeaf.Setnewroom(sizeof(Leaf));
+  out2((int)nonLeaf.co_d);
+  out2((int)nonLeaf.Get_co_d(i));
+  stLeaf->Set(nonLeaf.Getnum(i), nonLeaf.Get_co_d(i));
+  stLeaf->Setprefix(nonLeaf.prefix, nonLeaf.Get_lsaxt(i), sizeof(saxt_only) - nonLeaf.co_size);
+  if (stLeaf->ismmap) stLeaf->Setnewroom(sizeof(Leaf));
   rep_->file->Read(sTpos.GetOffset(), stLeaf_size + 1,
-                   &slice, stLeaf.rep);
+                   &slice, stLeaf->rep);
 
 #if HAVE_SNAPPY
   switch (slice.data()[stLeaf_size]) {
     case kNoCompression:
-      stLeaf.Setrep(slice.data());
+      stLeaf->Setrep(slice.data());
       break;
     case kSnappyCompression:
       size_t ulength = 0;
@@ -822,7 +840,7 @@ bool Table::ST_Iter::getSTLeaf() {
         out("corrupted compressed block contents");
         exit(3);
       }
-      stLeaf.Setrep1(ubuf);
+      stLeaf->Setrep1(ubuf);
       break;
   }
 #else
@@ -838,6 +856,9 @@ void Table::ST_Iter::getSTNonLeaf() {
   Slice slice;
   STpos sTpos = nonLeaf.Get_pos(i);
   size_t stNonLeaf_size = sTpos.GetSize();
+  out2((int)nonLeaf.co_d);
+  out2((int)nonLeaf.Get_co_d(i));
+  out2((int)nonLeaf.Getnum(i));
   top++;
   if (top < st_nonleaf_stack.size()){
     if (st_nonleaf_stack[top]->ismmap) st_nonleaf_stack[top]->Setnewroom(sizeof(NonLeaf));
@@ -883,10 +904,11 @@ void Table::ST_Iter::getSTNonLeaf() {
 
 Table::ST_Iter::~ST_Iter() {
   for(int i=1;i<st_nonleaf_stack.size();i++) delete st_nonleaf_stack[i];
+  delete stLeaf;
 }
 
 void Table::ST_Iter::setPrefix(LeafKey& res) {
-  res.Set1(stLeaf.prefix);
+  res.Set1(stLeaf->prefix);
 }
 
 void Table::ST_finder_exact::start() {
@@ -904,6 +926,10 @@ void Table::ST_finder_exact::start() {
   heap->mutex_saxt_num.unlock();
 #endif
 
+  if(isbig) {
+    cout<<"join"<<endl;
+    delete tmp_pool;
+  }
 }
 
 void Table::ST_finder_exact::leaf_todo(STLeaf& leaf) {
@@ -1051,14 +1077,14 @@ void Table::ST_finder_exact::root_dfs(STNonLeaf& nonLeaf) {
         if (need || !co_d) {
           STNonLeaf* stNonLeaf = getSTNonLeaf(nonLeaf, i);
           ST_finder_exact* finderExact = new ST_finder_exact(this);
-          pool_get->enqueue(&ST_finder_exact_multi, finderExact, stNonLeaf);
+          tmp_pool->enqueue(&ST_finder_exact_multi, finderExact, stNonLeaf);
 
         } else {
           nonLeaf.SetSaxt(saxtOnly, nonLeaf.Get_lsaxt(i));
           if (minidist_paa_to_saxt(aquery1->paa, saxtOnly.asaxt + Bit_cardinality - co_d, co_d) <= topdist) {
             STNonLeaf* stNonLeaf = getSTNonLeaf(nonLeaf, i);
             ST_finder_exact* finderExact = new ST_finder_exact(this);
-            pool_get->enqueue(&ST_finder_exact_multi, finderExact, stNonLeaf);
+            tmp_pool->enqueue(&ST_finder_exact_multi, finderExact, stNonLeaf);
           }
         }
       }
@@ -1201,6 +1227,7 @@ STNonLeaf* Table::ST_finder_exact::getSTNonLeaf(STNonLeaf& nonLeaf, int i) {
 //  saxt_print(stNonLeaf->Get_rsaxt(1), stNonLeaf->prefix, stNonLeaf->co_d);
   return stNonLeaf;
 }
+
 
 void Table::ST_finder_exact_appro::leaf_todo(STLeaf& leaf) {
   heap->Lock();
@@ -1353,19 +1380,20 @@ void Table::ST_finder_exact_appro::root_dfs(STNonLeaf& nonLeaf) {
         if (need || !co_d) {
           STNonLeaf* stNonLeaf = getSTNonLeaf(nonLeaf, i);
           auto* finderExact = new ST_finder_exact_appro(this);
-          pool_get->enqueue(&ST_finder_exact_appro_multi, finderExact, stNonLeaf);
+          tmp_pool->enqueue(&ST_finder_exact_appro_multi, finderExact, stNonLeaf);
 
         } else {
           nonLeaf.SetSaxt(saxtOnly, nonLeaf.Get_lsaxt(i));
           if (minidist_paa_to_saxt(aquery1->paa, saxtOnly.asaxt + Bit_cardinality - co_d, co_d) <= topdist) {
             STNonLeaf* stNonLeaf = getSTNonLeaf(nonLeaf, i);
             auto* finderExact = new ST_finder_exact_appro(this);
-            pool_get->enqueue(&ST_finder_exact_appro_multi, finderExact, stNonLeaf);
+            tmp_pool->enqueue(&ST_finder_exact_appro_multi, finderExact, stNonLeaf);
           }
         }
       }
     }
   }
 }
+
 
 }  // namespace leveldb

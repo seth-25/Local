@@ -12,6 +12,8 @@ void ST_Conmpaction::doleaf(NonLeafKey* nonLeafKey) {
 }
 
 void ST_Conmpaction::dononleaf(NonLeafKey* nonLeafKey, bool isleaf) {
+  out("存");
+  out(isleaf);
   tableBuilder->AddNonLeaf(nonLeafKey, isleaf);
 }
 

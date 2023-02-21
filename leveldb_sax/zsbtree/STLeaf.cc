@@ -12,7 +12,7 @@ STLeaf::STLeaf(int num, cod co_d, size_t size): num(num), co_d(co_d), ismmap(fal
 }
 
 STLeaf::~STLeaf() {
-  if (!ismmap) delete rep;
+  if (!ismmap) delete[] rep;
 }
 
 char* STLeaf::Get_rep(int i) { return rep + i * noco_size; }
@@ -28,7 +28,7 @@ void STLeaf::Set(int num, cod co_d) {
 }
 void STLeaf::Setrep(const char* newrep) {
   if (newrep!=rep){
-    if (!ismmap) delete rep;
+    if (!ismmap) delete[] rep;
     ismmap = true;
     rep = const_cast<char*>(newrep);
   }
@@ -50,7 +50,7 @@ void STLeaf::Setprefix(saxt_only prefix1) {
 
 void STLeaf::Setrep1(const char* newrep) {
   if (!ismmap)
-    delete rep;
+    delete[] rep;
   ismmap = false;
   rep = const_cast<char*>(newrep);
 }

@@ -651,6 +651,7 @@ void DBImpl::CompactMemTable(std::pair<MemTable*, int> aim) {
     RemoveObsoleteFiles();
     VersionSet::LevelSummaryStorage tmp;
     out("im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp));
+    cout<<"im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp)<<endl;
   } else {
     RecordBackgroundError(s);
   }
@@ -819,7 +820,8 @@ void DBImpl::BackgroundCompaction() {
   Status status;
   if (c == nullptr) {
     // Nothing to do
-  } else if (!is_manual && c->IsTrivialMove()) {
+  }
+  else if (!is_manual && c->IsTrivialMove()) {
     //下一层没有与这个文件范围重叠的，直接移动
     // Move file to next level
     assert(c->num_input_files(0) == 1);
@@ -992,7 +994,8 @@ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
   VersionEdit* edit = compact->compaction->edit();
   compact->compaction->AddInputDeletions(edit);
   const int level = compact->compaction->level();
-
+//  cout<<"输入"<<compact->compaction->num_input_files(0)+compact->compaction->num_input_files(1)<<endl;
+//  cout<<"输出"<<compact->outputs.size()<<endl;
   for (auto & out : compact->outputs) {
     out("压缩合并输出一个文件");
     out(out.number);
@@ -1060,6 +1063,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   assert(versions_->NumLevelFiles(compact->compaction->level()) > 0);
   assert(compact->builder == nullptr);
   assert(compact->outfile == nullptr);
+//  cout<<"压缩合并"<<compact->compaction->num_input_files(0)+compact->compaction->num_input_files(1)<<endl;
+
   if (snapshots_.empty()) {
     compact->smallest_snapshot = versions_->LastSequence();
   } else {
@@ -1189,6 +1194,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     // Close output file if it is big enough
     if (!tocompact_flag && compact->builder->FileSize() >=
         compact->compaction->MaxOutputFileSize()) {
+//      cout<<"max_size"<<compact->compaction->MaxOutputFileSize()<<endl;
       oldKey = leafKey;
       tocompact_flag = true;
       InternalKey ikey(Slice((char*)leafKey.asaxt.asaxt, sizeof(saxt_only)), 0, static_cast<ValueType>(0));
@@ -1212,6 +1218,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     Slice key = ikey.Encode();
     compact->current_output()->largest.DecodeFrom(key);
     zsbtreeBuild->finish();
+    out((int)zsbtreeBuild->nonleafkeys.size());
     compact->builder->AddRootKey(zsbtreeBuild->GetRootKey());
     assert(zsbtreeBuild->GetRootKey()->rsaxt == saxt_only(compact->current_output()->largest.user_key().data()));
     delete zsbtreeBuild;
@@ -1229,6 +1236,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   for (size_t i = 0; i < compact->outputs.size(); i++) {
     stats.bytes_written += compact->outputs[i].file_size;
   }
+
   mutex_.Lock();
 //  out("改变version");
   stats_[compact->compaction->level() + 1].Add(stats);
@@ -1241,7 +1249,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   }
   VersionSet::LevelSummaryStorage tmp;
   Log(options_.info_log, "compacted to: %s", versions_->LevelSummary(&tmp));
-  out("compacted to: "+ (string)versions_->LevelSummary(&tmp));
+//  string a = "compacted to: "+ (string)versions_->LevelSummary(&tmp);
+//  cout<<a<<endl;
 
 //  exit(1);
   return status;
@@ -1362,7 +1371,7 @@ Status DBImpl::Get(const ReadOptions& options, const saxt& key, const int memId)
 Status DBImpl::Get(const aquery& aquery1,
                    bool is_use_am, int am_version_id, int st_version_id, const vector<uint64_t>& st_number,
                    vector<ares>& results, int& res_amid) {
-
+//  cout<<"近似"<<endl;
   out("开始查询=========================");
   saxt_print(aquery1.asaxt);
   out("k:"+to_string(aquery1.k));
@@ -1413,7 +1422,7 @@ Status DBImpl::Get(const aquery& aquery1,
       }
 
       res_heap->Lock();
-      ;
+
 
       pool_get->enqueue(&DBImpl::BGWork_Get_am, this, aquery1, res_heap,
                         this_mem);
@@ -1487,7 +1496,7 @@ Status DBImpl::Get(const aquery& aquery1,
       res_heap->Unlock();
       if (isdel) delete res_heap;
 #endif
-
+      free(info);
       return Status();
     } else {
       out("时间范围没对上");
@@ -1582,6 +1591,7 @@ Status DBImpl::Get(const aquery& aquery1,
   res_heap->Unlock();
   if (isdel) delete res_heap;
 #endif
+  free(info);
   return Status();
 }
 
@@ -2299,6 +2309,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
       }
       res_heap->subUse();
       res_heap->isfinish();
+      versions_->table_cache_->cache_->Release(file_handle);
       free(res_leafkeys);
       free(res_p);
       free(info);
@@ -2312,6 +2323,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   res_heap->Lock();
   res_heap->subUse();
   res_heap->isfinish();
+  versions_->table_cache_->cache_->Release(file_handle);
   free(res_leafkeys);
   free(res_p);
   free(info);
@@ -2721,7 +2733,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
                          const vector<ares>& appro_res, vector<ares_exact>& results,
                          int appro_am_id, const vector<uint64_t> &appro_st_number) {
 
-
+//  cout<<"精确"<<endl;
   out("开始查询精确=========================");
   saxt_print(aquery1.asaxt);
   out("k:"+to_string(aquery1.k));
@@ -2755,7 +2767,8 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   }
 
   //创建堆
-  query_heap_exact*res_heap = new query_heap_exact(aquery1.k, st_number.size()+to_find_mems.size());
+  query_heap_exact* res_heap = new query_heap_exact(aquery1.k, st_number.size()+to_find_mems.size());
+//  cout<<"size："<<st_number.size()+to_find_mems.size()<<endl;
   res_heap->vv1 = this_mem_version;
   res_heap->v1_mutex = &mutex_Mem;
   if (!st_number.empty()) {
@@ -2851,7 +2864,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   if (isdel) delete res_heap;
 
 
-
+  free(info);
   return Status();
 }
 
@@ -2896,17 +2909,19 @@ void DBImpl::Get_am_exact(const aquery& aquery1, query_heap_exact* res_heap,
   }
 
   res_heap->Lock();
-  bool isdel = res_heap->subOver();
+  res_heap->subOver();
   res_heap->Unlock();
 
-  if (isdel) delete res_heap;
+//  if (isdel) delete res_heap;
 
 }
-
+static int x1 = 0;
 void DBImpl::Get_st_exact(const aquery& aquery1, query_heap_exact* res_heap,
                     uint64_t st_number, Version* this_ver, bool isappro) {
 
   out1("get_st_exact", st_number);
+//  cout<<"get_st_exact:"+st_number<<endl;
+//  cout<<"jia"<<++x1<<endl;
   uint64_t filesize = this_ver->GetSize(st_number);
   Cache::Handle* file_handle = nullptr;
   Table* t = versions_->table_cache_->Get(st_number, filesize, file_handle);
@@ -2922,16 +2937,20 @@ void DBImpl::Get_st_exact(const aquery& aquery1, query_heap_exact* res_heap,
 
     Finder.start();
 
+
+
   }
 
 
   res_heap->Lock();
-  bool isdel = res_heap->subOver();
+  res_heap->subOver();
   res_heap->Unlock();
 
+//  cout<<"get_st_exact_zhong:"+st_number<<endl;
   versions_->table_cache_->cache_->Release(file_handle);
-  if (isdel) delete res_heap;
-
+//  if (isdel) delete res_heap;
+//  cout<<"get_st_exact_wan:"+st_number<<endl;
+//  cout<<"jian"<<--x1<<endl;
   out1("get_st_exact_finish", st_number);
 }
 
@@ -3254,7 +3273,6 @@ Status DBImpl::Write(const WriteOptions& options,LeafTimeKey& key, int memId) {
     //有空的线程
     vector<LeafTimeKey>* w = &writers_vec[towrite[memId]][memId];
     w->push_back(key);
-    delete_mems(memsTodel.get());
     if (w->size()>=8100) {
       int id = w->size();
 //      out(to_string(memId)+"进入"+to_string(id));
@@ -3401,6 +3419,8 @@ Status DBImpl::MakeRoomForWrite(bool force, int memId) {
 //      out("todoput");
       break;
     } else {
+
+      delete_mems(memsTodel.get());
 //      out("makeroom_to_st");
       //上锁，因为im是共享的,目前只有一个，只要表满了，就进入一个共享了
       MutexLock l(&mutex_);

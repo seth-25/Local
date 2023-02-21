@@ -50,6 +50,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_leaftimekey_1sort
   sort(leafTimeKeys, leafTimeKeys + leaftimekeysnum);
 
   env->SetByteArrayRegion(leafs, 0, size, (jbyte*)leafTimeKeys);
+  free(leafTimeKeys);
 }
 
 
@@ -130,6 +131,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_put
 //  pool->enqueue(std::bind(&leveldb::DB::Put, db, writeOptions, key));
   int num = size / sizeof(LeafTimeKey);
   for(int i=0;i<num;i++) db->Put(writeOptions, key[i]);
+  free(key);
 }
 
 JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_Get

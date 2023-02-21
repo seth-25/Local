@@ -7,6 +7,7 @@
 
 STNonLeaf::STNonLeaf(int num, cod co_d, size_t size) {
   this->num = num;
+  assert(co_d <=8);
   this->co_d = co_d;
   co_size = co_d * sizeof(saxt_type);
   lkey_size = sizeof(saxt_only) - co_size;
@@ -27,6 +28,7 @@ STNonLeaf::STNonLeaf(size_t size) {
 }
 
 void STNonLeaf::Set(int num, cod co_d, size_t size) {
+  assert(co_d <=8);
   this->num = num;
   this->co_d = co_d;
   co_size = co_d * sizeof(saxt_type);
@@ -41,7 +43,7 @@ void STNonLeaf::Setrep(const char* newrep) {
 
   if (newrep!=rep){
     if (!ismmap)
-      delete rep;
+      delete[] rep;
     ismmap = true;
     rep = const_cast<char*>(newrep);
   }
@@ -50,7 +52,7 @@ void STNonLeaf::Setrep(const char* newrep) {
 void STNonLeaf::Setisleaf() { isleaf = *(bool*)(rep + size - 1); }
 
 STNonLeaf::~STNonLeaf() {
-  if (!ismmap) delete rep;
+  if (!ismmap) delete[] rep;
 }
 
 cod STNonLeaf::Get_co_d(int i) {
@@ -82,7 +84,7 @@ void STNonLeaf::Setprefix(saxt_only prefix1) {
 
 void STNonLeaf::Setrep1(const char* newrep) {
   if (!ismmap)
-    delete rep;
+    delete[] rep;
   ismmap = false;
   rep = const_cast<char*>(newrep);
 }

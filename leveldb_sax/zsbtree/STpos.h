@@ -11,13 +11,13 @@ class STpos {
 
   STpos();
 
-  STpos(unsigned short size, size_t offset);
+  STpos(unsigned int size, size_t offset);
 
-  void Set(unsigned short size, size_t offset);
+  void Set(unsigned int size, size_t offset);
 
   void* Get();
 
-  unsigned short GetSize();
+  unsigned int GetSize();
 
   size_t GetOffset();
 

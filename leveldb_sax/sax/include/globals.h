@@ -19,7 +19,7 @@
 #define isax_globals_h
 
 
-#define daxiao 1 // 0为16字节， 1为8字节
+#define daxiao 0 // 0为16字节， 1为8字节
 // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 #define istime 0
 // 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
@@ -44,9 +44,11 @@
 #if isprint
 #define out(a) std::cout<<a<<std::endl
 #define out1(a,b) std::cout<<a<<" "<<to_string(b)<<std::endl
+#define out2(a) std::cout<<a<<std::endl
 #else
 #define out(a) //std::cout<<a<<std::endl
 #define out1(a,b) //std::cout<<a<<" "<<to_string(b)<<std::endl
+#define out2(a) //std::cout<<a<<std::endl
 #endif
 //这里基数256变为512则用short
 //typedef unsigned short sax_type;
@@ -88,16 +90,16 @@ typedef unsigned char cod;
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 1000000
+#define init_num 2000000
 
 //一个memtable存的数量
-#define Table_maxnum 500000
+#define Table_maxnum 1000000
 
 // 压缩im的线程数，一般与表数量一致
 #define pool_size init_num/Table_maxnum
 
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
-#define get_exact_multiThread_file_size 500*1024*1024
+#define get_exact_multiThread_file_size 400*1024*1024
 
 #define pool_get_size 32
 

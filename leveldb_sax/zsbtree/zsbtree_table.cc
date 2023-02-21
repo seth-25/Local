@@ -112,6 +112,7 @@ zsbtree_table::zsbtree_table(zsbtree_table& im) {
   CopyTree_dfs(root, im.root);
 //  test_dfs(root);
   iscopy = true;
+
 }
 
 zsbtree_table::zsbtree_table(zsbtree_table_mem table_mem) {

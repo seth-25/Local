@@ -81,10 +81,11 @@ void Zsbtree_Build::finish() {
   }
   for (int i=0;i<nonleafkeys.size() - 1;i++) {
     newVector<NonLeafKey>& nonleafkeys_dep = nonleafkeys[i];
-//    out("i");
-//    out(i);
-//    out(nonleafkeys_dep.size_add());
-//    out(nonleafkeys.size() - 1);
+    out("i");
+    out(i);
+    out(nonleafkeys_dep.size_add());
+    out(nonleafkeys[i+1].size_add());
+    out(nonleafkeys.size() - 1);
     if (!i) doleaf(nonleafkeys_dep.back_add());
     else dononleaf(nonleafkeys_dep.back_add(), i == 1);
     if (i && i == nonleafkeys.size() - 2 && nonleafkeys_dep.size_add() == 1) {

@@ -164,9 +164,13 @@ class LEVELDB_EXPORT Table {
       charcpy(add_info, &aquery1->k, sizeof(int));
       tmp_distp.reserve(Leaf_rebuildnum);
       tmp_distp.resize(Leaf_rebuildnum);
+      if(isbig) {
+        tmp_pool = new ThreadPool(18);
+      }
     }
 
     ST_finder_exact(ST_finder_exact* finder){
+      cout<<"ll"<<endl;
       gs_jvm = finder->gs_jvm;
       rep_ = finder->rep_;
       isbig = finder->isbig;
@@ -183,6 +187,9 @@ class LEVELDB_EXPORT Table {
 
     void start();
 
+
+
+
     void nonLeaf_dfs(STNonLeaf& nonLeaf);
    protected:
 
@@ -194,7 +201,7 @@ class LEVELDB_EXPORT Table {
 
 
     vector<pair<float, void*>> tmp_distp;
-
+    ThreadPool* tmp_pool;
     bool isbig;
     ThreadPool* pool_get;
     aquery* aquery1;
@@ -245,8 +252,8 @@ class LEVELDB_EXPORT Table {
     //指定当前的位置
     int top;
     //指定当前nonleaf的nonleafkey位置
-    int nonleaftops[10];
-    STLeaf stLeaf;
+    int nonleaftops[30];
+    STLeaf *stLeaf;
     int leaftop;
   };
 
@@ -255,6 +262,7 @@ class LEVELDB_EXPORT Table {
 
 static void ST_finder_exact_multi(Table::ST_finder_exact* finder, STNonLeaf* todoSTNonLeaf) {
   finder->nonLeaf_dfs(*todoSTNonLeaf);
+
   //这是malloc的
   delete finder;
   delete todoSTNonLeaf;
