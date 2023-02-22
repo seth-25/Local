@@ -1,6 +1,7 @@
 package com.local.insert;
 
 import com.local.Main;
+import com.local.domain.Parameters;
 import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
@@ -72,22 +73,21 @@ public class Insert implements Runnable{
                 }
                 tsReadBatch = buffer;
             }
-            long CPUTimeStart = System.currentTimeMillis();
+
             if (tsReadBatch.getFileNum() == -1) {
                 System.out.println("读完所有文件,退出\n");
                 Main.hasInsert = true;
-                System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime + "\tCPU时间：" + CPUTime);
+                System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime);
                 return false;
             }
             System.out.println("插入次数：" + ++cntInsert);
-//            for (int i = 0; i < 100; i ++ ) {
-//                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
-//            }
-//            System.out.println();
+            for (int i = 0; i < 100; i ++ ) {
+                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
+            }
+            System.out.println();
 
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
-            CPUTime += System.currentTimeMillis() - CPUTimeStart;
 
             synchronized (this) {
                 cnt --;
@@ -100,18 +100,21 @@ public class Insert implements Runnable{
     public void run() {
         insertTime = System.currentTimeMillis();
         TsToSaxChannel tsToSaxChannel = new TsToSaxChannel(1);
-        CacheUtil.insertThreadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    try {
-                        if (!tsToSaxChannel.consume()) break;
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
+        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+            CacheUtil.insertThreadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    while(true) {
+                        try {
+                            if (!tsToSaxChannel.consume()) break;
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
+
         PrintUtil.print("开始插入======================");
         try {
             tsToSaxChannel.produce();
