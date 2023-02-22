@@ -14,24 +14,28 @@ public class Insert implements Runnable{
     private static int cntInsert = 0;
     public static long insertTime;
     public static long IOTime = 0;
-    public static long CPUTime = 0;
     /**
      * 读文件和发送sax并行
      */
     static class TsToSaxChannel {
         private final int capacity;
-        private int cnt;
-        private TsReadBatch buffer;
+        private int cnt, cntGet;
+        private TsReadBatch[] buffer;
+        private int head, tail;
         public TsToSaxChannel(int capacity) {
             this.capacity = capacity;
             this.cnt = 0;
+            this.cntGet = 0;
+            this.buffer = new TsReadBatch[capacity];
         }
         private synchronized void put(TsReadBatch tsReadBatch) throws InterruptedException {
             while (cnt >= capacity) {
                 wait();
             }
-            buffer = tsReadBatch;
-            cnt ++;
+            buffer[tail] = tsReadBatch;
+            tail = (tail + 1) % capacity;
+            cnt ++ ;
+            cntGet ++ ;
             notifyAll();
         }
         public void produce() throws InterruptedException {
@@ -63,34 +67,36 @@ public class Insert implements Runnable{
 //                    }
                 }
             }
-            put(new TsReadBatch(null, -1, -1)); // 结束
+            for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+                put(new TsReadBatch(null, -1, -1)); // 结束consume
+            }
+
         }
         public boolean consume() throws InterruptedException {
             TsReadBatch tsReadBatch;
             synchronized (this) {
-                while(cnt <= 0) {
+                while(cntGet <= 0) {
                     wait();
                 }
-                tsReadBatch = buffer;
+                tsReadBatch = buffer[head];
+                head = (head + 1) % capacity;
+                cntGet -- ; // 获取完tsReadBatch就-1，防止不同consume获取同个tsReadBatch
             }
 
             if (tsReadBatch.getFileNum() == -1) {
-                System.out.println("读完所有文件,退出\n");
-                Main.hasInsert = true;
-                System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime);
                 return false;
             }
             System.out.println("插入次数：" + ++cntInsert);
-            for (int i = 0; i < 100; i ++ ) {
-                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
-            }
-            System.out.println();
+//            for (int i = 0; i < 100; i ++ ) {
+//                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
+//            }
+//            System.out.println();
 
             byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
             InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
 
             synchronized (this) {
-                cnt --;
+                cnt --; // insert完才-1，防止tsBytes被覆盖
                 notifyAll();
             }
             return true;
@@ -99,7 +105,10 @@ public class Insert implements Runnable{
     @Override
     public void run() {
         insertTime = System.currentTimeMillis();
-        TsToSaxChannel tsToSaxChannel = new TsToSaxChannel(1);
+
+        // 不同的consumer可能同时结束，除了consumer占用的tsBytes，还要再预留consumer个tsBytes，共2*insertNumThread个
+        // 先read再put，wait条件是等于capacity，所以至多同时存在capacity+1个tsBytes，故capacity设成2 * insertNumThread - 1
+        TsToSaxChannel tsToSaxChannel = new TsToSaxChannel(2 * Parameters.insertNumThread - 1);
         for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
             CacheUtil.insertThreadPool.execute(new Runnable() {
                 @Override
@@ -121,5 +130,11 @@ public class Insert implements Runnable{
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+
+        System.out.println("读完所有文件,退出\n");
+        Main.hasInsert = true;
+        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime);
+        CacheUtil.insertThreadPool.shutdown();
     }
 }

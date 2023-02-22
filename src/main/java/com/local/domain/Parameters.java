@@ -29,11 +29,11 @@ public class Parameters {
     public static final int aresExactSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
 
 
-    public static final int initNum = 1;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
-    public static final int insertNumThread = 1;
+    public static final int initNum = 2;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
+    public static final int insertNumThread = 2;    // 插入的线程
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量
-        public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字节数
+        public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字 节数
         public static final String inputPath = "../ts/"; // 存储ts的文件夹
         public static final String queryFilePath = "../query/query.bin"; // 存储查询的ts的文件
         public static final int queueSize = 32; // 随机读写队列长度

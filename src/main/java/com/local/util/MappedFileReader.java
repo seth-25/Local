@@ -127,7 +127,7 @@ public class MappedFileReader {
     public byte[] getArray() {
         if (!isRes) {
             int t = arrayNum;
-            arrayNum = (arrayNum + 1) % Parameters.insertNumThread;
+            arrayNum = (arrayNum + 1) % (2 * Parameters.insertNumThread);
             return array[t];
         }
         else {

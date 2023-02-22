@@ -90,10 +90,10 @@ typedef unsigned char cod;
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 1000000
+#define init_num 2000000
 
 //一个memtable存的数量
-#define Table_maxnum 500000
+#define Table_maxnum 1000000
 
 // 压缩im的线程数，一般与表数量一致
 #define pool_size init_num/Table_maxnum
