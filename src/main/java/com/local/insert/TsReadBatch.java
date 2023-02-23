@@ -2,13 +2,15 @@ package com.local.insert;
 
 import com.local.util.MappedFileReader;
 
+import java.nio.ByteBuffer;
+
 class TsReadBatch {
-    private final byte[] tsBytes;
+    private final ByteBuffer tsBuffer;
     private final int fileNum;
     private final long offset;
     private MappedFileReader reader;
-    public TsReadBatch(byte[] tsBytes, int fileNum, long offset, MappedFileReader reader) {
-        this.tsBytes = tsBytes;
+    public TsReadBatch(ByteBuffer tsBuffer, int fileNum, long offset, MappedFileReader reader) {
+        this.tsBuffer = tsBuffer;
         this.fileNum = fileNum;
         this.offset = offset;
         this.reader = reader;
@@ -18,8 +20,8 @@ class TsReadBatch {
         return fileNum;
     }
 
-    public byte[] getTsBytes() {
-        return tsBytes;
+    public ByteBuffer getTsBuffer() {
+        return tsBuffer;
     }
 
     public long getOffset() {

@@ -5,6 +5,7 @@ import com.local.util.DBUtil;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +18,7 @@ public class db {
         System.loadLibrary("leveldbj");
     }
     //sax
-    public native byte[] leaftimekey_from_tskey(byte[] tskeys, int hash, long offset, boolean issort);
+    public native byte[] leaftimekey_from_tskey(ByteBuffer tsBuffer, int hash, long offset, boolean issort);
     public native void leaftimekey_sort(byte[] leaftimekeys);
 
     public native void saxt_from_ts(byte[] ts, byte[] saxt);

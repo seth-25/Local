@@ -6,6 +6,7 @@ import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -48,15 +49,16 @@ public class Insert implements Runnable{
                     // 从文件读ts
                     long IOTimeStart = System.currentTimeMillis();
                     MappedFileReader reader = entry.getValue();
-                    long offset = reader.read();
-                    if (offset != -1) { // 这个文件没读完
+                    long offset = reader.getOffset();
+                    ByteBuffer tsBuffer = reader.read();
+                    if (tsBuffer != null) { // 这个文件没读完
                         flag = true;
                     }
                     else {  // 读完了跳过
                         continue;
                     }
-                    byte[] tsBytes = reader.getArray();
-                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset, reader);
+//                    byte[] tsBytes = reader.getArray();
+                    TsReadBatch tsReadBatch = new TsReadBatch(tsBuffer, reader.getFileNum(), offset, reader);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
                     put(tsReadBatch);
@@ -96,12 +98,12 @@ public class Insert implements Runnable{
 //            }
 //            System.out.println();
 
-            byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBytes(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
-            InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
+//            byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBuffer(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
+//            InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
 
             synchronized (this) {
                 cnt --; // insert完才-1，防止tsBytes被覆盖
-                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
+//                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
             }
             return true;

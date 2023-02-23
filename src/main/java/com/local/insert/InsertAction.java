@@ -4,6 +4,7 @@ import com.local.domain.Parameters;
 import com.local.domain.LeafTimeKey;
 import com.local.util.*;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 public class InsertAction {
@@ -26,11 +27,11 @@ public class InsertAction {
 //        return leafTimeKeys;
 //    }
 
-    public static byte[] getLeafTimeKeysBytes(byte[] tsBytes, int fileNum, long offset) {
-        return DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, false);
+    public static byte[] getLeafTimeKeysBytes(ByteBuffer tsBuffer, int fileNum, long offset) {
+        return DBUtil.dataBase.leaftimekey_from_tskey(tsBuffer, fileNum, offset, false);
     }
-    public static byte[] getLeafTimeKeysBytes(byte[] tsBytes, int fileNum, long offset, boolean isSort) {
-        return DBUtil.dataBase.leaftimekey_from_tskey(tsBytes, fileNum, offset, isSort);
+    public static byte[] getLeafTimeKeysBytes(ByteBuffer tsBuffer, int fileNum, long offset, boolean isSort) {
+        return DBUtil.dataBase.leaftimekey_from_tskey(tsBuffer, fileNum, offset, isSort);
     }
 //    public static void putSaxes(ArrayList<LeafTimeKey> leafTimeKeys) {
 //        for (LeafTimeKey leafTimeKey : leafTimeKeys) {

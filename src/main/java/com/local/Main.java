@@ -8,6 +8,7 @@ import com.local.util.*;
 import com.local.version.VersionAction;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 
@@ -30,12 +31,13 @@ public class Main {
         int initSize = Parameters.FileSetting.readTsNum * Parameters.LeafTimeKeysSize;
         byte[] initBytes = new byte[initSize * Parameters.initNum];
         for (int i = 0; i < Parameters.initNum; i ++ ) {
-            long offset = reader.read();
-            byte[] tsBytes = reader.getArray();
-            reader.arraysListOffer(tsBytes);
+            long offset = reader.getOffset();
+            ByteBuffer tsBuffer = reader.read();
+//            byte[] tsBytes = reader.getArray();
+//            reader.arraysListOffer(tsBytes);
             System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
-            PrintUtil.print("ts长度" + tsBytes.length);
-            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);
+            PrintUtil.print("ts长度" + tsBuffer);
+            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBuffer, reader.getFileNum(), offset);
             System.arraycopy(leafTimeKeysBytes, 0, initBytes, i * initSize, initSize);
             PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
         }
