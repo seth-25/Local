@@ -91,7 +91,7 @@ public class VersionAction {
 
             VersionUtil.analysisVersionBytes(versionBytes, ver1);
 
-            PrintUtil.print("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件"
+            PrintUtil.print("\t需要更新版本1 copy:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件"
                     + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
             newVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
 
@@ -119,7 +119,7 @@ public class VersionAction {
         else if (versionBytes[0] == 1) {
             VersionUtil.Version2Content ver2 = new VersionUtil.Version2Content();
             VersionUtil.analysisVersionBytes(versionBytes, ver2);
-            PrintUtil.print("\t需要更新版本2:" + " 外" + ver2.outVer + " 文件" + ver2.addFileNums + " " + ver2.delFileNums);
+            PrintUtil.print("\t需要更新版本2 copy:" + " 外" + ver2.outVer + " 文件" + ver2.addFileNums + " " + ver2.delFileNums);
 
             newVersion.updateVersion(workerHostName, ver2.outVer);
 
@@ -140,7 +140,8 @@ public class VersionAction {
             refWorkerVersions(newVersion.getWorkerVersions());
             unRefVersion(CacheUtil.curVersion);
             CacheUtil.curVersion = newVersion; // 新版本覆盖旧版本
-
+            PrintUtil.print("\t更新完成 ");
+            PrintUtil.printWorkerVersion();
         } else {
             throw new RuntimeException("版本错误");
         }
@@ -198,6 +199,7 @@ public class VersionAction {
             CacheUtil.curVersion.setRef(1);
 
             refWorkerVersions(CacheUtil.curVersion.getWorkerVersions());
+            PrintUtil.print("\t更新完成 ");
             PrintUtil.printWorkerVersion();
 
         } else {
@@ -215,7 +217,8 @@ public class VersionAction {
             createNewVerFromOldVer(versionBytes, workerHostName);
         }
         else {
-            PrintUtil.print("开始更新版本 ref=0 大版本ref错误");
+//            PrintUtil.print("开始更新版本 ref=0 大版本ref错误");
+            System.out.println("开始更新版本 ref=0 大版本ref错误");
             throw new RuntimeException("大版本ref错误");
         }
     }

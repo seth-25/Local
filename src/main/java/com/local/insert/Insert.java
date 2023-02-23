@@ -61,9 +61,12 @@ public class Insert implements Runnable{
 
                     put(tsReadBatch);
                     System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
-//                  ++cntRead
+
+//                    ++cntRead;
 //                    if (cntRead == 500) {   // todo todo
-//                        put(new TsReadBatch(null, -1, -1)); // 结束
+//                        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+//                            put(new TsReadBatch(null, -1, -1, reader)); // 结束
+//                        }
 //                        return ;
 //                    }
                 }

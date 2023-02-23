@@ -90,10 +90,10 @@ typedef unsigned char cod;
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 1000000
+#define init_num 4000000
 
 //一个memtable存的数量
-#define Table_maxnum 500000
+#define Table_maxnum 2000000
 
 // 压缩im的线程数，一般与表数量一致
 #define pool_size init_num/Table_maxnum
@@ -102,12 +102,12 @@ typedef unsigned char cod;
 #define get_exact_multiThread_file_size 1000*1024*1024
 
 #define pool_get_size 32
-#define pool_compaction_size 2
+#define pool_compaction_size 8
 
 
 //超过这个重构叶结点
 static const int Leaf_rebuildnum = Leaf_maxnum * 2;
-
+static const int compaction_buffer_size = Leaf_rebuildnum * 2;
 //static int cardinality = 256;
 //static int bit_cardinality = 8;
 //static int segments = 8;

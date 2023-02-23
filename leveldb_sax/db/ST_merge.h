@@ -16,13 +16,14 @@ namespace leveldb{
 
 //多线程合并
 class ST_merge_one {
+
  public:
   ST_merge_one(TableCache* cache_);
 
 
   void start();
 
-  inline bool next(LeafKey* leafKey, int &add_size) {
+  inline bool next(LeafKey*& leafKeys, int &add_size) {
     mutex_q.Lock();
 //    cout<<"主线程获取"+to_string(size_)+":"<<(void*)this<<endl;
     if(!size_ && !isover) cv_q.Wait();
@@ -30,17 +31,9 @@ class ST_merge_one {
       mutex_q.Unlock();
       return false;
     }
-
-    if(hh + size_ <= Leaf_rebuildnum ) {
-      memcpy(leafKey, q + hh, sizeof(LeafKey) * size_);
-      hh = (hh + size_) % Leaf_rebuildnum;
-    } else {
-      int size1 = Leaf_rebuildnum - hh;
-      memcpy(leafKey, q + hh, sizeof(LeafKey) * size1);
-      memcpy(leafKey + size1, q, sizeof(LeafKey) * (size_ - size1));
-    }
+    leafKeys = key_buffer[to_write];
     add_size = size_;
-    hh = (hh + size_) % Leaf_rebuildnum;
+    to_write = 1 - to_write;
     size_ = 0;
     cv_q.Signal();
     mutex_q.Unlock();
@@ -61,16 +54,18 @@ class ST_merge_one {
 
   vector<Table::ST_Iter*> st_iters;
 
-  PII vec[100];
+
+  vector<PII> vec;
   unsigned short vec_size;
 //  priority_queue<PII, vector<PII>, greater<PII> > heap;
 
   //要release
   unordered_map<Table::ST_Iter*, Cache::Handle*> handles;
+
+  
+  LeafKey key_buffer[2][compaction_buffer_size];
+  int to_write;
   //要delete
-  LeafKey q[Leaf_rebuildnum];
-  int hh;
-  int tt;
   int size_;
   bool isover;
   port::Mutex mutex_q;
@@ -86,19 +81,15 @@ class ST_merge {
 
  private:
 
+#define get_buffer_merge(i) key_buffer[i][hh_size_buffer[i].first]
+
   typedef pair<saxt_only , Table::ST_Iter*> PII_saxt;
   typedef pair<int, int> PII;
 
   inline bool next1(int i) {
     auto& hh_size = hh_size_buffer[i];
-    if (hh_size.first < hh_size.second) {
-      vec_key[i] = key_buffer[i][hh_size.first++];
-    } else {
-      if(next2(i, hh_size)) {
-        vec_key[i] = key_buffer[i][hh_size.first++];
-      } else return false;
-    }
-    return true;
+    hh_size.first++;
+    return !(hh_size.first >= hh_size.second && !next2(i, hh_size));
   }
 
   inline bool next2(int i, PII &hh_size) {
@@ -110,9 +101,9 @@ class ST_merge {
 
 
   ThreadPool* pool_compaction;
-  LeafKey vec_key[pool_compaction_size];
+//  LeafKey vec_key[pool_compaction_size];
 
-  LeafKey key_buffer[pool_compaction_size][Leaf_rebuildnum];
+  LeafKey* key_buffer[pool_compaction_size];
   PII hh_size_buffer[pool_compaction_size];
 
 

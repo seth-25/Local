@@ -92,13 +92,13 @@ ST_merge::ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaciton_)
 
 bool ST_merge::next(LeafKey& leafKey) {
 //  out("进入next");
-
+  //dwad
 //
   if (vec_size) {
     int res = 0;
-    leafKey = vec_key[0];
+    leafKey = get_buffer_merge(0);
     for (int i=1;i<vec_size;i++) {
-      if (leafKey > vec_key[i]) leafKey = vec_key[i], res = i;
+      if (leafKey > get_buffer_merge(i)) leafKey = get_buffer_merge(i), res = i;
     }
     if (!next1(res)) {
       out2("要删除"+ to_string(res));
@@ -106,10 +106,9 @@ bool ST_merge::next(LeafKey& leafKey) {
       delete vec_[res];
       vec_size--;
       for(int i=res;i<vec_size;i++) {
-        vec_key[i] = vec_key[i+1];
         vec_[i] = vec_[i+1];
         hh_size_buffer[i] = hh_size_buffer[i + 1];
-        memcpy(key_buffer[i], key_buffer[i+1], sizeof(leafKey) * hh_size_buffer[i].second);
+        key_buffer[i] = key_buffer[i+1];
       }
     }
 
@@ -120,16 +119,20 @@ bool ST_merge::next(LeafKey& leafKey) {
 }
 
 
-ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), hh(0), tt(0), size_(0), cv_q(&mutex_q), isover(false){}
+ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), size_(0), cv_q(&mutex_q), isover(false), to_write(0){
+
+}
 
 void ST_merge_one::del(Table::ST_Iter* it) {
   cache->cache_->Release(handles[it]);
   handles.erase(it);
   delete it;
 }
-void ST_merge_one::start() {
 
+void ST_merge_one::start() {
   vec_size = st_iters.size();
+  vec.reserve(vec_size);
+
   for(int i = 0;i<vec_size;i++) {
     st_iters[i]->setPrefix(vec[i].first);
     if (st_iters[i]->next(vec[i].first)) {
@@ -152,10 +155,11 @@ void ST_merge_one::start() {
   while(next1(tmpkey)) {
     mutex_q.Lock();
 //    cout<<"非线程加：" + to_string(size_)+":"<<(void*)this<<endl;
-    if(size_==Leaf_rebuildnum) cv_q.Wait();
-    q[tt++] = tmpkey;
-    if(tt == Leaf_rebuildnum) tt = 0;
-    size_++;
+    if(size_==compaction_buffer_size) {
+      cv_q.Wait();
+      assert(size_ == 0);
+    }
+    key_buffer[to_write][size_++] = tmpkey;
     cv_q.Signal();
     mutex_q.Unlock();
   }

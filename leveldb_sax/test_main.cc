@@ -41,7 +41,7 @@ void test_put(vector<LeafTimeKey>& leafKeys){
   leveldb::WriteOptions writeOptions;
   int k=0;
   int amem1 = 1e6;
-  for(int i=0;i<4;i++) {
+  for(int i=0;i<10;i++) {
     for(int j=0;j<1e6;j++)
     db->Put(writeOptions, leafKeys[j]);
 
