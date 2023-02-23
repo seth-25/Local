@@ -32,6 +32,7 @@ public class Main {
         for (int i = 0; i < Parameters.initNum; i ++ ) {
             long offset = reader.read();
             byte[] tsBytes = reader.getArray();
+            reader.arraysListOffer(tsBytes);
             System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             PrintUtil.print("ts长度" + tsBytes.length);
             byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBytes, reader.getFileNum(), offset);

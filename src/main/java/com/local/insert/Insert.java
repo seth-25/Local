@@ -6,7 +6,8 @@ import com.local.util.CacheUtil;
 import com.local.util.MappedFileReader;
 import com.local.util.PrintUtil;
 
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Insert implements Runnable{
 
@@ -20,7 +21,7 @@ public class Insert implements Runnable{
     static class TsToSaxChannel {
         private final int capacity;
         private int cnt, cntGet;
-        private TsReadBatch[] buffer;
+        private final TsReadBatch[] buffer;
         private int head, tail;
         public TsToSaxChannel(int capacity) {
             this.capacity = capacity;
@@ -55,7 +56,7 @@ public class Insert implements Runnable{
                         continue;
                     }
                     byte[] tsBytes = reader.getArray();
-                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset);
+                    TsReadBatch tsReadBatch = new TsReadBatch(tsBytes, reader.getFileNum(), offset, reader);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
                     put(tsReadBatch);
@@ -68,7 +69,7 @@ public class Insert implements Runnable{
                 }
             }
             for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
-                put(new TsReadBatch(null, -1, -1)); // 结束consume
+                put(new TsReadBatch(null, -1, -1, null)); // 结束consume
             }
 
         }
@@ -97,6 +98,7 @@ public class Insert implements Runnable{
 
             synchronized (this) {
                 cnt --; // insert完才-1，防止tsBytes被覆盖
+                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
             }
             return true;

@@ -1,13 +1,17 @@
 package com.local.insert;
 
+import com.local.util.MappedFileReader;
+
 class TsReadBatch {
     private final byte[] tsBytes;
     private final int fileNum;
     private final long offset;
-    public TsReadBatch(byte[] tsBytes, int fileNum, long offset) {
+    private MappedFileReader reader;
+    public TsReadBatch(byte[] tsBytes, int fileNum, long offset, MappedFileReader reader) {
         this.tsBytes = tsBytes;
         this.fileNum = fileNum;
         this.offset = offset;
+        this.reader = reader;
     }
 
     public int getFileNum() {
@@ -20,5 +24,9 @@ class TsReadBatch {
 
     public long getOffset() {
         return offset;
+    }
+
+    public MappedFileReader getReader() {
+        return reader;
     }
 }

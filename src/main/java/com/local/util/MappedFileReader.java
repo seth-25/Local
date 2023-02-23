@@ -13,6 +13,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 
 
@@ -27,8 +29,9 @@ public class MappedFileReader {
 
 
     private final int arraySize;
-    private byte[][] array; // 用于读取时间序列进行插入
-    private int arrayNum;
+    private byte[] array;
+    private byte[][] arrays; // 用于读取时间序列进行插入
+    private Queue<byte[]> arraysList = new ConcurrentLinkedQueue<>();   // 用于指定使用哪个array
     private byte[] resArray;
     private byte[] tsArray; // 用于查询原始时间序列，返回单个ts
     byte[][] tsArrays;
@@ -66,8 +69,10 @@ public class MappedFileReader {
         }
         // 顺序读
         this.arraySize = arraySize;
-        this.array = new byte[2 * Parameters.insertNumThread][arraySize];
-        this.arrayNum = 0;
+        this.arrays = new byte[2 * Parameters.insertNumThread][arraySize];
+        for (int i = 0; i < 2 * Parameters.insertNumThread; i ++ ) {
+            arraysList.offer(arrays[i]);
+        }
 
 
         // 随机读
@@ -84,10 +89,11 @@ public class MappedFileReader {
     }
 
     public int read() {
+        array = arraysList.poll();
         if (count >= number) {  // 文件读取完毕
             PrintUtil.print("清空读取文件的byte数组");
             resArray = null;
-            array = null;
+            arrays = null;
             return -1;
         }
 
@@ -99,13 +105,13 @@ public class MappedFileReader {
         if (limit - position > arraySize) {
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            mappedBufArray[count].get(array[arrayNum]);
+            mappedBufArray[count].get(array);
         }
         else if (limit - position == arraySize){ // 本内存文件映射最后一次读取数据
 //            System.out.println("下一个映射");
             isRes = false;
             offset  += arraySize / Parameters.tsSize;
-            mappedBufArray[count].get(array[arrayNum]);
+            mappedBufArray[count].get(array);
             if (count < number) {
                 count++; // 转换到下一个内存文件映射
             }
@@ -121,20 +127,22 @@ public class MappedFileReader {
             if (count < number) {
                 count++; // 转换到下一个内存文件映射
             }
+            array = resArray;
         }
         return oldOffset;
     }
+
     public byte[] getArray() {
         if (!isRes) {
-            int t = arrayNum;
-            arrayNum = (arrayNum + 1) % (2 * Parameters.insertNumThread);
-            return array[t];
+            return array;
         }
         else {
             return resArray;
         }
     }
-
+    public void arraysListOffer(byte[] array) {
+        arraysList.offer(array);
+    }
     public byte[] readTs(long offset, int num) {
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
@@ -214,7 +222,7 @@ public class MappedFileReader {
 
     public void close() throws IOException {
         fileIn.close();
-        array = null;
+        arrays = null;
         resArray = null;
     }
 }

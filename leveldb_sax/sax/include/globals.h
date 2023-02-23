@@ -35,7 +35,7 @@
 //近似查询是否排序后一起查，1不，0要
 #define cha 0
 //是否java直接调用堆，0不是，1是
-#define isap 1
+#define isap 0
 
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
 #define Get_div 20
