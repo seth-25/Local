@@ -41,9 +41,9 @@ void test_put(vector<LeafTimeKey>& leafKeys){
   leveldb::WriteOptions writeOptions;
   int k=0;
   int amem1 = 1e6;
-  for(int i=0;i<5e7;i++) {
-
-    db->Put(writeOptions, leafKeys[i]);
+  for(int i=0;i<4;i++) {
+    for(int j=0;j<1e6;j++)
+    db->Put(writeOptions, leafKeys[j]);
 
   }
 
@@ -149,14 +149,14 @@ int main(){
   // 4 0.54
   char a[8];
   vector<LeafTimeKey> leafKeys;
-  leafKeys.reserve(5e7);
+  leafKeys.reserve(1e6);
 //  char * filename = "/home/hh/DDBS/Local/saxt100.bin";
-  char * filename = "../saxt100.bin";
+  char * filename = "../../saxt.bin";
   FILE * data_file;
   data_file = fopen (filename,"r");
-  for(int i=0; i < 5e7; i ++) {
+  for(int i=0; i < 1e6; i ++) {
     leafKeys.emplace_back();
-    fread(leafKeys.back().leafKey.asaxt.asaxt, sizeof(saxt_only) , 1, data_file);
+    fread(&leafKeys.back(), sizeof(LeafTimeKey) , 1, data_file);
   }
   fclose (data_file);
 
@@ -201,7 +201,7 @@ int main(){
 //  test_get_am(leafKeys_input[0]);
 //  test_get_st(leafKeys);
 ////
-  sleep(2);
+  sleep(10);
   out("finished");
   delete db;
 }

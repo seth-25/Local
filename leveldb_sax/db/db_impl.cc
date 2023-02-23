@@ -160,6 +160,7 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname, const void
                                &internal_comparator_)) {
   pool = new ThreadPool(pool_size);
   pool_get = new ThreadPool(pool_get_size);
+  pool_compaction = new ThreadPool(pool_compaction_size);
 }
 
 DBImpl::~DBImpl() {
@@ -1073,7 +1074,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 
   out("Merge");
 //  Iterator* input = versions_->MakeInputIterator(compact->compaction);
-  ST_merge stMerge(versions_, compact->compaction);
+  ST_merge stMerge(versions_, compact->compaction, pool_compaction);
   out("Merge Create finish");
   // Release mutex while we're actually doing the compaction work
   mutex_.Unlock();
