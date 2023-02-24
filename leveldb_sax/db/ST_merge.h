@@ -36,7 +36,8 @@ class ST_merge_one {
     to_write = 1 - to_write;
     size_ = 0;
     cv_q.Signal();
-    mutex_q.Unlock();
+
+
     return true;
   }
 

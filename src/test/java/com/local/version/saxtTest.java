@@ -18,7 +18,7 @@ public class saxtTest {
 
         File file = new File("./ts/10.bin");
         MappedFileReader reader = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, 0);
-        byte[] searchTsBytes = reader.readTs(1, 0);
+        byte[] searchTsBytes = reader.readTs(1);
 
         System.out.println(Arrays.toString(searchTsBytes));
         byte[] saxTData = new byte[Parameters.saxTSize];

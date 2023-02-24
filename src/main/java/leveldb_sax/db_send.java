@@ -5,6 +5,8 @@ import com.local.domain.Parameters;
 import com.local.search.SearchAction;
 import com.local.version.VersionAction;
 
+import java.nio.ByteBuffer;
+
 public class db_send {
 
     //javap -verbose db_send.class
@@ -40,14 +42,28 @@ public class db_send {
     }
 
 
+    public static void find_tskey_ap_buffer(ByteBuffer info) {
+//        SearchAction.searchOriTsHeap(info, false);
+//        SearchAction.searchOriTsHeapQueue(info, false);
+    }
+
+    public static void find_tskey_exact_ap_buffer(ByteBuffer info) {
+//        SearchAction.searchOriTsHeap(info, true);
+//        SearchAction.searchOriTsHeapQueue(info, true);
+    }
+
+
     // 发送 info
     // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    @Deprecated
     public static void find_tskey_ap(byte[] info) {
 //        SearchAction.searchOriTsHeap(info, false);
         SearchAction.searchOriTsHeapQueue(info, false);
     }
 
+
+    @Deprecated
     public static void find_tskey_exact_ap(byte[] info) {
 //        SearchAction.searchOriTsHeap(info, true);
         SearchAction.searchOriTsHeapQueue(info, true);

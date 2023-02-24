@@ -94,11 +94,12 @@ class LEVELDB_EXPORT DB {
   // a status for which Status::IsNotFound() returns true.
   //
   // May return some other Status on an error.
-  virtual Status Get(const aquery &aquery1, bool is_use_am, int am_version_id, int st_version_id, const vector<uint64_t> &st_number, vector<ares>& results, int& res_amid) = 0;
+  virtual Status Get(const aquery &aquery1, bool is_use_am, int am_version_id,
+                     int st_version_id, jniVector<uint64_t>& st_number, jniVector<ares>& results, int& res_am, jniInfo jniInfo_) = 0;
 
   virtual Status Get_exact(const aquery &aquery1, int am_version_id, int st_version_id,
-                           const vector<uint64_t> &st_number, const vector<ares> &appro_res,
-                           vector<ares_exact>& results, int appro_am_id, const vector<uint64_t> &appro_st_number) = 0;
+                           jniVector<uint64_t> &st_number, jniVector<ares> &appro_res,
+                           jniVector<ares_exact>& results, int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_) = 0;
   //返回什么暂时不确定
   //近似，会得到一个叶子结点
   //查am

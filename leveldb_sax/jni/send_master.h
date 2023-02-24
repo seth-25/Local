@@ -12,6 +12,7 @@
 #include <cassert>
 #include "globals.h"
 #include <cstdlib>
+#include "newVector.h"
 
 
 static inline void charcpy(char*& tmp_p, const void* obj, const size_t size_) {
@@ -120,6 +121,31 @@ static void find_tskey_exact_ap(char* a, size_t size_, const void* gs_jvm) {
   env->SetByteArrayRegion(newArr, 0, size_, (jbyte*)a);
   env->CallStaticObjectMethod(cls, mid, newArr);
   env->DeleteLocalRef(newArr);
+}
+
+static void find_tskey_ap_buffer(jniInfo jniInfo_, const void* gs_jvm) {
+
+  //获取环境
+  JNIEnv *env;
+  assert(gs_jvm!= nullptr);
+  ((JavaVM*)gs_jvm)->AttachCurrentThread((void **)&env, NULL);
+//
+  jclass cls = env->FindClass("leveldb_sax/db_send");
+  jmethodID mid = env->GetStaticMethodID(cls, "find_tskey_ap_buffer", "(Ljava/nio/ByteBuffer;)V");
+
+  env->CallStaticObjectMethod(cls, mid, (jobject)jniInfo_.bytebuffer_p);
+
+}
+
+static void find_tskey_exact_ap_buffer(jniInfo jniInfo_, const void* gs_jvm) {
+  //获取环境
+  JNIEnv *env;
+  assert(gs_jvm!= nullptr);
+  ((JavaVM*)gs_jvm)->AttachCurrentThread((void **)&env, NULL);
+//
+  jclass cls = env->FindClass("leveldb_sax/db_send");
+  jmethodID mid = env->GetStaticMethodID(cls, "find_tskey_exact_ap_buffer", "(Ljava/nio/ByteBuffer;)V");
+  env->CallStaticObjectMethod(cls, mid, (jobject)jniInfo_.bytebuffer_p);
 }
 
 

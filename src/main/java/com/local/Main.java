@@ -2,8 +2,8 @@ package com.local;
 
 import com.local.domain.Parameters;
 import com.local.insert.Insert;
-import com.local.insert.InsertAction;
 import com.local.search.Search;
+import com.local.search.SearchBuffer;
 import com.local.util.*;
 import com.local.version.VersionAction;
 
@@ -18,7 +18,7 @@ public class Main {
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
 
-        MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(0);
+        MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(0);
         if (reader == null) {
             throw new RuntimeException("ts文件夹下没有文件");
         }
@@ -28,25 +28,39 @@ public class Main {
         VersionAction.initVersion();
 
         DBUtil.dataBase.open("db");
-        int initSize = Parameters.FileSetting.readTsNum * Parameters.LeafTimeKeysSize;
-        byte[] initBytes = new byte[initSize * Parameters.initNum];
-        for (int i = 0; i < Parameters.initNum; i ++ ) {
-            long offset = reader.getOffset();
-            ByteBuffer tsBuffer = reader.read();
-//            byte[] tsBytes = reader.getArray();
-//            reader.arraysListOffer(tsBytes);
-            System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
-            PrintUtil.print("ts长度" + tsBuffer);
-            byte[] leafTimeKeysBytes = InsertAction.getLeafTimeKeysBytes(tsBuffer, reader.getFileNum(), offset);
-            System.arraycopy(leafTimeKeysBytes, 0, initBytes, i * initSize, initSize);
-            PrintUtil.print("leafTimeKeys长度" + leafTimeKeysBytes.length);
+        int initTsNum = Parameters.FileSetting.readTsNum * Parameters.initNum;
+        ByteBuffer leafTimeKeyBuffer = ByteBuffer.allocateDirect(initTsNum * Parameters.leafTimeKeysSize);
+        if (initTsNum <= 2000000) {
+            ByteBuffer initTsBuffer = ByteBuffer.allocateDirect(initTsNum * Parameters.tsSize);
+            for (int i = 0; i < Parameters.initNum; i ++ ) {
+                long offset = reader.getOffset();
+                ByteBuffer tsBuffer = reader.read();
+                initTsBuffer.put(tsBuffer);
+                System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
+            }
+            DBUtil.dataBase.init_buffer(initTsNum, initTsBuffer, leafTimeKeyBuffer, 1, 0);
         }
-        DBUtil.dataBase.leaftimekey_sort(initBytes);
-        DBUtil.dataBase.init(initBytes, Parameters.FileSetting.readTsNum * Parameters.initNum);
+        else if (initTsNum <= 4000000) {
+            ByteBuffer initTsBuffer = ByteBuffer.allocateDirect(2000000 * Parameters.tsSize);
+            ByteBuffer initTsBuffer1 = ByteBuffer.allocateDirect((initTsNum - 2000000) * Parameters.tsSize);
+            for (int i = 0; i < Parameters.initNum; i ++ ) {
 
-
-
-
+                long offset = reader.getOffset();
+                ByteBuffer tsBuffer = reader.read();
+//                System.out.println(i + " " + tsBuffer.capacity() + " " + i * Parameters.FileSetting.readTsNum );
+                if (i * Parameters.FileSetting.readTsNum < 2000000) {
+                    initTsBuffer.put(tsBuffer);
+                }
+                else {
+                    initTsBuffer1.put(tsBuffer);
+                }
+                System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
+            }
+            DBUtil.dataBase.init_buffer1(2000000, initTsBuffer, initTsNum - 2000000, initTsBuffer1, leafTimeKeyBuffer, 1, 0);
+        }
+        else {
+            throw new RuntimeException("init大小超过限制");
+        }
         PrintUtil.print("初始化成功==========================");
     }
 
@@ -66,7 +80,7 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
 //        int isExact = scan.nextInt();
-        int isExact = 1;
+        int isExact = 0;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
         int queryNum = 100;
@@ -75,8 +89,12 @@ public class Main {
         ArrayList<File> files = FileUtil.getAllFile(Parameters.FileSetting.inputPath);
         int fileNum = -1;
         for (File file: files) {
-            MappedFileReader reader = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
-            CacheUtil.mappedFileReaderMap.put(fileNum, reader);
+            MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
+            CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
+
+            // todo todo
+            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts
+            CacheUtil.mappedFileReaderMap.put(fileNum, reader1);
         }
 
         init();
@@ -112,7 +130,7 @@ public class Main {
                     }
                 }
                 else {
-                    Search approximateSearch = new Search(false, 100);
+                    SearchBuffer approximateSearch = new SearchBuffer(false, 100);
                     for (int i = 0; i < queryNum; i ++) {
                         cntP = 0;   cntRes = 0;
                         long startQuery = System.currentTimeMillis();

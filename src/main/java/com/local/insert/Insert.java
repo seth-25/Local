@@ -2,13 +2,10 @@ package com.local.insert;
 
 import com.local.Main;
 import com.local.domain.Parameters;
-import com.local.util.CacheUtil;
-import com.local.util.MappedFileReader;
-import com.local.util.PrintUtil;
+import com.local.util.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Insert implements Runnable{
 
@@ -43,12 +40,12 @@ public class Insert implements Runnable{
         public void produce() throws InterruptedException {
             boolean flag = true;
             while(flag) {
-                for (Map.Entry<Integer, MappedFileReader> entry: CacheUtil.mappedFileReaderMap.entrySet()) {
+                for (Map.Entry<Integer, MappedFileReaderBuffer> entry: CacheUtil.mappedFileReaderMapBuffer.entrySet()) {
                     flag = false;
 
                     // 从文件读ts
                     long IOTimeStart = System.currentTimeMillis();
-                    MappedFileReader reader = entry.getValue();
+                    MappedFileReaderBuffer reader = entry.getValue();
                     long offset = reader.getOffset();
                     ByteBuffer tsBuffer = reader.read();
                     if (tsBuffer != null) { // 这个文件没读完
@@ -58,27 +55,27 @@ public class Insert implements Runnable{
                         continue;
                     }
 //                    byte[] tsBytes = reader.getArray();
-                    TsReadBatch tsReadBatch = new TsReadBatch(tsBuffer, reader.getFileNum(), offset, reader);
+                    TsReadBatch tsReadBatch = new TsReadBatch(tsBuffer, reader.getFileNum(), offset);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
                     put(tsReadBatch);
                     System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
 
-//                    ++cntRead;
-//                    if (cntRead == 500) {   // todo todo
-//                        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
-//                            put(new TsReadBatch(null, -1, -1, reader)); // 结束
-//                        }
-//                        return ;
-//                    }
+                    ++cntRead;
+                    if (cntRead == 500) {   // todo todo
+                        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+                            put(new TsReadBatch(null, -1, -1)); // 结束
+                        }
+                        return ;
+                    }
                 }
             }
             for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
-                put(new TsReadBatch(null, -1, -1, null)); // 结束consume
+                put(new TsReadBatch(null, -1, -1)); // 结束consume
             }
 
         }
-        public boolean consume() throws InterruptedException {
+        public boolean consume(ByteBuffer leafTimeKeysBuffer) throws InterruptedException {
             TsReadBatch tsReadBatch;
             synchronized (this) {
                 while(cntGet <= 0) {
@@ -98,8 +95,7 @@ public class Insert implements Runnable{
 //            }
 //            System.out.println();
 
-//            byte[] leafTimeKeys = InsertAction.getLeafTimeKeysBytes(tsReadBatch.getTsBuffer(), tsReadBatch.getFileNum(), tsReadBatch.getOffset());
-//            InsertAction.putLeafTimeKeysBytes(leafTimeKeys);
+            DBUtil.dataBase.put_buffer(Parameters.FileSetting.readTsNum, tsReadBatch.getTsBuffer(), leafTimeKeysBuffer, tsReadBatch.getFileNum(), tsReadBatch.getOffset());
 
             synchronized (this) {
                 cnt --; // insert完才-1，防止tsBytes被覆盖
@@ -120,9 +116,10 @@ public class Insert implements Runnable{
             CacheUtil.insertThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {
+                    ByteBuffer leafTimeKeysBuffer = ByteBuffer.allocateDirect(Parameters.FileSetting.readTsNum * Parameters.leafTimeKeysSize);
                     while(true) {
                         try {
-                            if (!tsToSaxChannel.consume()) break;
+                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer)) break;
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }

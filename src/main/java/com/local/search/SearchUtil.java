@@ -2,6 +2,8 @@ package com.local.search;
 
 import com.local.domain.Parameters;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -82,6 +84,30 @@ public class SearchUtil {
         }
         return dis;
     }
+
+    // aquery(有时间戳): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
+    public static ByteBuffer makeAQuery(ByteBuffer ts, long startTime, long endTime, int k, ByteBuffer paa, ByteBuffer saxBuffer) {
+        ByteBuffer aQuery = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize +
+                8 + 4 * Parameters.paaNum + Parameters.saxTSize).order(ByteOrder.LITTLE_ENDIAN);
+        aQuery.put(ts);
+        aQuery.putLong(startTime);
+        aQuery.putLong(endTime);
+        aQuery.putInt(k);
+        aQuery.put(paa);
+        aQuery.put(saxBuffer);
+        return aQuery;
+    }
+    // aquery(没时间戳): ts 256*4, k 4，paa 4*paa大小, saxt 8/16
+    public static ByteBuffer makeAQuery(ByteBuffer ts, int k, ByteBuffer paa, ByteBuffer saxBuffer) {
+        ByteBuffer aQuery = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize + 4 +
+                4 * Parameters.paaNum + Parameters.saxTSize).order(ByteOrder.LITTLE_ENDIAN);
+        aQuery.put(ts);
+        aQuery.putInt(k);
+        aQuery.put(paa);
+        aQuery.put(saxBuffer);
+        return aQuery;
+    }
+
 
     // aquery(有时间戳): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
     public static byte[] makeAQuery(byte[] ts, long startTime, long endTime, int k, float[] paa, byte[] saxData) {

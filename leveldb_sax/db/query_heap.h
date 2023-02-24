@@ -50,8 +50,7 @@ class query_heap_rep {
 
   virtual float push2(T& T_) = 0;
 
-  void get(vector<T>& res) {
-    res.reserve(res_heap.size());
+  void get(jniVector<T>& res) {
     while (!res_heap.empty()) {
       res.push_back(res_heap.top());
       res_heap.pop();
@@ -163,11 +162,10 @@ class query_heap_exact : public query_heap_rep<ares_exact> {
   query_heap_exact(int k, int tableNum)
       : query_heap_rep(k,tableNum) {}
 
-  void init(const vector<ares>& appro_res) {
-
-    for(auto item: appro_res) {
-      res_heap.push(item.rep);
-      p_set.insert(item.p);
+  void init(const jniVector<ares>& appro_res) {
+    for(int i=0;i<appro_res.size();i++) {
+      res_heap.push(appro_res[i].rep);
+      p_set.insert(appro_res[i].p);
     }
   }
 

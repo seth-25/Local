@@ -50,9 +50,11 @@ class DBImpl : public DB {
   Status RebalanceDranges() override;
   Status Delete(const WriteOptions&, const Slice& key) override;
   Status Write(const WriteOptions& options,LeafTimeKey& key, int memId) override;
-  Status Get(const aquery &aquery1, bool is_use_am, int am_version_id, int st_version_id, const vector<uint64_t> &st_number, vector<ares>& results, int& res_amid) override;
-  Status Get_exact(const aquery &aquery1, int am_version_id, int st_version_id, const vector<uint64_t> &st_number,
-                   const vector<ares> &appro_res, vector<ares_exact>& results, int appro_am_id, const vector<uint64_t> &appro_st_number) override;
+  Status Get(const aquery &aquery1, bool is_use_am, int am_version_id, int st_version_id, jniVector<uint64_t>& st_number,
+             jniVector<ares>& results, int& res_amid, jniInfo jniInfo_) override;
+  Status Get_exact(const aquery &aquery1, int am_version_id, int st_version_id, jniVector<uint64_t> &st_number,
+                   jniVector<ares> &appro_res, jniVector<ares_exact>& results, int appro_am_id,
+                   jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_) override;
   void Get_am(const aquery &aquery1, query_heap *res_heap, MemTable* to_find_mem);
   void Get_st(const aquery &aquery1, query_heap *res_heap, uint64_t st_number, Version* this_ver);
   void Get_am_exact(const aquery &aquery1, query_heap_exact *res_heap, MemTable* to_find_mem, bool isappro);

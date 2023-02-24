@@ -654,6 +654,7 @@ void DBImpl::CompactMemTable(std::pair<MemTable*, int> aim) {
     out("im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp));
 //    cout<<"im压缩文件号："+to_string(metaData.number)+" compacted to: "+ (string)versions_->LevelSummary(&tmp)<<endl;
   } else {
+
     RecordBackgroundError(s);
   }
   // 如果有新的表要插入，要唤醒
@@ -839,6 +840,7 @@ void DBImpl::BackgroundCompaction() {
                        f->largest, f->startTime, f->endTime);
     status = versions_->LogAndApply(c->edit(), &mutex_);
     if (!status.ok()) {
+
       RecordBackgroundError(status);
     }
     //版本号没变，不用上报
@@ -858,6 +860,7 @@ void DBImpl::BackgroundCompaction() {
     status = DoCompactionWork(compact);
     if (!status.ok()) {
       out(" DoCompactionWork错了");
+
       RecordBackgroundError(status);
     }
     CleanupCompaction(compact);
@@ -1049,6 +1052,7 @@ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
   free(to_send);
   //等待返回接到回复
   //
+
   return res;
 }
 
@@ -1092,7 +1096,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   bool tocompact_flag = false;
   //调试用
 //  int k=0;
-  while (stMerge.next(leafKey) && !shutting_down_.load(std::memory_order_acquire)) {
+  while (stMerge.next(leafKey)) {
 //    saxt_print(leafKey.asaxt);
     //调试用
 //    assert(!k ||  leafKey >= oldKey);
@@ -1206,10 +1210,11 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   }
 
 
-  if (status.ok() && shutting_down_.load(std::memory_order_acquire)) {
-    out("db关了");
-    status = Status::IOError("Deleting DB during compaction");
-  }
+//  if (status.ok() ) {
+//    out("db关了");
+//    status = Status::IOError("Deleting DB during compaction");
+//  }
+
 //  out("完成压缩");
   if (status.ok() && compact->builder != nullptr) {
     out("压缩清尾");
@@ -1246,6 +1251,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     status = InstallCompactionResults(compact);
   }
   if (!status.ok()) {
+
     RecordBackgroundError(status);
   }
   VersionSet::LevelSummaryStorage tmp;
@@ -1370,11 +1376,11 @@ Status DBImpl::Get(const ReadOptions& options, const saxt& key, const int memId)
 
 
 Status DBImpl::Get(const aquery& aquery1,
-                   bool is_use_am, int am_version_id, int st_version_id, const vector<uint64_t>& st_number,
-                   vector<ares>& results, int& res_amid) {
+                   bool is_use_am, int am_version_id, int st_version_id, jniVector<uint64_t>& st_number,
+                   jniVector<ares>& results, int& res_amid, jniInfo jniInfo_) {
 //  cout<<"近似"<<endl;
   out("开始查询=========================");
-  saxt_print(aquery1.asaxt);
+//  saxt_print(aquery1.asaxt);
   out("k:"+to_string(aquery1.k));
 #if istime
   out("starttime:"+to_string(aquery1.rep.startTime));
@@ -1383,7 +1389,6 @@ Status DBImpl::Get(const aquery& aquery1,
   out1("is_use_am", is_use_am);
   out1("am_version_id", am_version_id);
   out1("st_version_id:", st_version_id);
-  for(auto item: st_number) out(item);
   out("开始查询000000000000000000000000");
 
   if (is_use_am) {
@@ -1429,8 +1434,8 @@ Status DBImpl::Get(const aquery& aquery1,
                         this_mem);
       //      std::thread athread(&DBImpl::BGWork_Get_am, this, aquery1, res_heap, this_mem); athread.detach();
 
-      for (auto j : st_number) {
-        pool_get->enqueue(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, j,
+      for (int j=0;j<st_number.size();j++) {
+        pool_get->enqueue(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, st_number[j],
                           res_heap->vv2);
         //        std::thread sthread(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, j, res_heap->vv2); sthread.detach();
       }
@@ -1443,9 +1448,11 @@ Status DBImpl::Get(const aquery& aquery1,
       res_heap->sort_dist_p();
 
       int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+      div = max(div, (int)(res_heap->to_sort_dist_p.size() -1)/ info_p_max_size + 1);
       int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
 
-      char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
+//      char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
+      char* info = jniInfo_.info_p;
       char* add_info = info;
       charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
 #if isap
@@ -1474,7 +1481,8 @@ Status DBImpl::Get(const aquery& aquery1,
         }
         charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-        find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+//        find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+        find_tskey_ap_buffer(jniInfo_, db_jvm);
 #else
         char* out;
         size_t out_size;
@@ -1497,7 +1505,7 @@ Status DBImpl::Get(const aquery& aquery1,
       res_heap->Unlock();
       if (isdel) delete res_heap;
 #endif
-      free(info);
+//      free(info);
       return Status();
     } else {
       out("时间范围没对上");
@@ -1524,8 +1532,8 @@ Status DBImpl::Get(const aquery& aquery1,
 
 
   out("st任务");
-  for (auto j : st_number) {
-    pool_get->enqueue(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, j, res_heap->vv2);
+  for (int j=0;j<st_number.size();j++) {
+    pool_get->enqueue(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, st_number[j], res_heap->vv2);
 //    std::thread sthread(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, j, res_heap->vv2);
 //    sthread.detach();
   }
@@ -1538,9 +1546,11 @@ Status DBImpl::Get(const aquery& aquery1,
   res_heap->sort_dist_p();
 
   int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+  div = max(div, (int)(res_heap->to_sort_dist_p.size() -1)/ info_p_max_size + 1);
   int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
 
-  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
+  char* info = jniInfo_.info_p;
+//  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
   char* add_info = info;
   charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
 #if isap
@@ -1569,7 +1579,8 @@ Status DBImpl::Get(const aquery& aquery1,
     }
     charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+//    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+    find_tskey_ap_buffer(jniInfo_, db_jvm);
 #else
     char* out;
     size_t out_size;
@@ -1592,7 +1603,7 @@ Status DBImpl::Get(const aquery& aquery1,
   res_heap->Unlock();
   if (isdel) delete res_heap;
 #endif
-  free(info);
+//  free(info);
   return Status();
 }
 
@@ -2730,13 +2741,12 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
 }
 
 Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
-                         int st_version_id, const vector<uint64_t>& st_number,
-                         const vector<ares>& appro_res, vector<ares_exact>& results,
-                         int appro_am_id, const vector<uint64_t> &appro_st_number) {
+                         int st_version_id, jniVector<uint64_t>& st_number,
+                         jniVector<ares>& appro_res, jniVector<ares_exact>& results,
+                         int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_) {
 
 //  cout<<"精确"<<endl;
   out("开始查询精确=========================");
-  saxt_print(aquery1.asaxt);
   out("k:"+to_string(aquery1.k));
 #if istime
   out("starttime:"+to_string(aquery1.rep.startTime));
@@ -2744,7 +2754,6 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
 #endif
   out1("am_version_id", am_version_id);
   out1("st_version_id:", st_version_id);
-  for(auto item: st_number) out(item);
   out("开始查询精确000000000000000000000000");
 
 
@@ -2791,9 +2800,11 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
 //    athread.detach();
   }
 
-  for (auto j : st_number) {
+  for (int o=0;o<st_number.size();o++) {
+    int j = st_number[o];
     bool isappro = false;
-    for(auto appro_st_j: appro_st_number) {
+    for(int oo=0;oo<appro_st_number.size();oo++) {
+      int appro_st_j = appro_st_number[oo];
       if (appro_st_j==j) isappro = true;
     }
     pool_get->enqueue(&DBImpl::BGWork_Get_st_exact, this, aquery1, res_heap, j, res_heap->vv2, isappro);
@@ -2807,9 +2818,11 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   res_heap->sort_dist_p();
 
   int div = Get_div;
+  div = max(div, (int)(res_heap->to_sort_dist_p.size()-1)/info_p_max_size+1);
   int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
 //  cout<<"size"<<res_heap->to_sort_dist_p.size()<<endl;
-  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
+//  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
+  char* info = jniInfo_.info_p;
   char* add_info = info;
   charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
 #if isap
@@ -2838,7 +2851,8 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
     }
     charcpy(numinfo, &real_num, sizeof(int));
 #if isap
-    find_tskey_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+//    find_tskey_exact_ap(info, to_find_size_leafkey + sizeof(void*) * real_num, db_jvm);
+    find_tskey_exact_ap_buffer(jniInfo_, db_jvm);
 #else
     char* out;
     size_t out_size;
@@ -2865,7 +2879,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   if (isdel) delete res_heap;
 
 
-  free(info);
+//  free(info);
   return Status();
 }
 

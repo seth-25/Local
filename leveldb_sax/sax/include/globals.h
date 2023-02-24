@@ -36,9 +36,13 @@
 #define cha 0
 //是否java直接调用堆，0不是，1是
 #define isap 1
+// 只有一个文件不考虑hash 0 不考虑 1考虑
+#define ishash 0
 
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
 #define Get_div 20
+// 一个info最多带多少p
+#define info_p_max_size 10000
 
 ///// TYPES /////
 #if isprint

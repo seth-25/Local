@@ -844,7 +844,7 @@ bool Table::ST_Iter::getSTLeaf() {
       break;
   }
 #else
-  stLeaf.Setrep(slice.data());
+  stLeaf->Setrep(slice.data());
 #endif  // HAVE_SNAPPY
   leaftop = -1;
   return true;

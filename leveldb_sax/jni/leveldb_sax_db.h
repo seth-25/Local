@@ -25,6 +25,31 @@ JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_leaftimekey_1from_1tskey
  */
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_leaftimekey_1sort
     (JNIEnv *, jobject, jbyteArray);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    put_buffer
+ * Signature: (ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;IJ)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_put_1buffer
+    (JNIEnv *, jobject, jint, jobject, jobject, jint, jlong);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    init_buffer
+ * Signature: (ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;IJ)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer
+    (JNIEnv *, jobject, jint, jobject, jobject, jint, jlong);
+
+/*
+ * Class:     db
+ * Method:    init_buffer1
+ * Signature: (ILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;IJ)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
+    (JNIEnv *, jobject, jint, jobject, jint, jobject, jobject, jint, jlong);
+
 /*
  * Class:     leveldb_sax_db
  * Method:    saxt_from_ts
@@ -35,12 +60,28 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_saxt_1from_1ts
 
 /*
  * Class:     leveldb_sax_db
+ * Method:    paa_saxt_from_ts_buffer
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_paa_1saxt_1from_1ts_1buffer
+    (JNIEnv *, jobject, jobject, jobject, jobject);
+
+/*
+ * Class:     leveldb_sax_db
  * Method:    paa_saxt_from_ts
  * Signature: ([B[B[F)V
  */
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_paa_1saxt_1from_1ts
   (JNIEnv *, jobject, jbyteArray, jbyteArray, jfloatArray);
 
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    dist_ts_buffer
+ * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)F
+ */
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_dist_1ts_1buffer
+    (JNIEnv *, jobject, jobject, jobject);
 
 /*
  * Class:     leveldb_sax_db
@@ -85,18 +126,35 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_put
 /*
  * Class:     leveldb_sax_db
  * Method:    Get
- * Signature: ([BZII[J)[B
+ * Signature: (Ljava/nio/ByteBuffer;ZIIILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
-JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_Get
-  (JNIEnv *, jobject, jbyteArray, jboolean, jint, jint, jlongArray);
+JNIEXPORT jint JNICALL Java_leveldb_1sax_db_Get
+    (JNIEnv *, jobject, jobject, jboolean, jint, jint, jint, jobject, jobject, jobject);
 
 /*
  * Class:     leveldb_sax_db
  * Method:    Get_exact
- * Signature: ([BII[J[B[J)[B
+ * Signature: (Ljava/nio/ByteBuffer;IIILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
-JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_Get_1exact
-    (JNIEnv *, jobject, jbyteArray, jint, jint, jlongArray, jbyteArray, jlongArray);
+JNIEXPORT jint JNICALL Java_leveldb_1sax_db_Get_1exact
+    (JNIEnv *, jobject, jobject, jint, jint, jint, jobject, jint, jobject, jint, jobject, jobject, jobject);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    heap_push_buffer
+ * Signature: (Ljava/nio/ByteBuffer;[B)F
+ */
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push_1buffer
+    (JNIEnv *, jobject, jobject, jbyteArray);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    heap_push_exact_buffer
+ * Signature: (Ljava/nio/ByteBuffer;[B)F
+ */
+JNIEXPORT jfloat JNICALL Java_leveldb_1sax_db_heap_1push_1exact_1buffer
+    (JNIEnv *, jobject, jobject, jbyteArray);
+
 
 /*
  * Class:     leveldb_sax_db

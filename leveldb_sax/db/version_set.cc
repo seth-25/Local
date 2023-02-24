@@ -849,6 +849,8 @@ Status VersionSet::LogAndApply(VersionEdit* edit, port::Mutex* mu) {
     }
   }
 
+
+
   // Unlock during expensive MANIFEST log write
   //写日志，才能重启
   {

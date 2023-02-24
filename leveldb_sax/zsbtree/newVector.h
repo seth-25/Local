@@ -125,6 +125,45 @@ class newVector {
 
 };
 
+template <typename T>
+class jniVector {
+ public:
+
+  jniVector(T* data_, size_t size_) : data_(data_), size_(size_) {}
+
+
+  inline T* data() const {
+    return data_;
+  }
+
+  size_t size() const {return size_;}
+
+  T& operator[] (size_t n) const {
+    return *(data_ + n);
+  }
+
+  void push_back(const T& vv) {
+    memcpy(data_ + size_, &vv, sizeof(T));
+    size_++;
+  }
+
+  bool empty() { return size_; }
+
+
+
+  T* data_;
+  size_t size_;
+
+};
+
+
+typedef struct jniInfo_rep {
+  char* info_p;
+  void* bytebuffer_p;
+} jniInfo;
+
+
+
 
 
 #endif  // LEVELDB_NEWVECTOR_H
