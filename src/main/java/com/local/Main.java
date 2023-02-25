@@ -144,7 +144,7 @@ public class Main {
                 }
                 System.out.println("查询总时间：" + Main.searchTime + "\t平均时间" + Main.searchTime/queryNum);
                 System.out.println("读取原始时间序列总时间：" + totalReadTime + "\t平均时间" + totalReadTime/queryNum);
-                System.out.println("精确查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
+                System.out.println("查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
                 System.out.println("总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
                         "\t总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
                         "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));

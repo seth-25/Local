@@ -31,7 +31,9 @@ public class SearchActionBuffer {
                     continue;
                 }
             }
+//            PrintUtil.printTsBuffer(tsBuffer);
             dis = DBUtil.dataBase.dist_ts_buffer(aQuery.tsBuffer, tsBuffer);
+            System.out.println("距离" + dis);
             tsBuffer.rewind();
             res.clear();
             if (isExact) {
@@ -97,7 +99,6 @@ public class SearchActionBuffer {
             synchronized (reader) {
                 List<Long> pList = reader.getPList();
                 pList.add(p);
-                System.out.println("p size " + pList.size());
                 if (pList.size() >= Parameters.FileSetting.queueSize) {
                     long readTimeStart = System.currentTimeMillis();   // todo
                     List<ByteBuffer> byteBufferList = reader.readTsQueue();
@@ -159,10 +160,8 @@ public class SearchActionBuffer {
             }
         }
         ByteBuffer sstableNumBuffer = ByteBuffer.allocateDirect(8 * sstableNumList.size()).order(ByteOrder.LITTLE_ENDIAN);
-        System.out.println("sstableNumList大小" + sstableNumList.size());      // todo
         for (int i = 0; i < sstableNumList.size(); i ++ ) {
             sstableNumBuffer.putLong(sstableNumList.get(i));
-            System.out.println(sstableNumList.get(i));
         }
         return sstableNumBuffer;
     }
@@ -200,9 +199,10 @@ public class SearchActionBuffer {
         boolean isUseAm = true; // saxT范围 是否在个该机器上
         ByteBuffer saxTBuffer = ByteBuffer.allocateDirect(Parameters.saxTSize);
         ByteBuffer paaBuffer = ByteBuffer.allocateDirect(Parameters.paaNum * 4);
-        DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
 
-        searchTsBuffer.flip();
+        DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
+        PrintUtil.printTsBuffer(searchTsBuffer);
+
         ByteBuffer aQuery;
         if (Parameters.hasTimeStamp > 0) {
             aQuery = SearchUtil.makeAQuery(searchTsBuffer, startTime, endTime, k, paaBuffer, saxTBuffer);
@@ -231,7 +231,7 @@ public class SearchActionBuffer {
 
 
         // 近似查询
-        saxTBuffer.flip();
+        saxTBuffer.rewind();
         byte[] saxTData = new byte[saxTBuffer.remaining()];
         saxTBuffer.get(saxTData);
         PrintUtil.print("saxT:" + Arrays.toString(saxTData));
@@ -256,7 +256,6 @@ public class SearchActionBuffer {
 
 
     public static ByteBuffer searchExactTs(ByteBuffer searchTsBuffer, long startTime, long endTime, int k) {
-
         PrintUtil.print("精确查询===");
         boolean isUseAm = true; // saxT范围 是否在个该机器上
 //        byte[] saxTData = new byte[Parameters.saxTSize];
@@ -264,9 +263,10 @@ public class SearchActionBuffer {
 //        float[] paa = new float[Parameters.paaNum];
         ByteBuffer paaBuffer = ByteBuffer.allocateDirect(Parameters.paaNum * 4);
         PrintUtil.print("searchBuffer " + searchTsBuffer.toString());
+//        PrintUtil.printTsBuffer(searchTsBuffer);
         DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
         PrintUtil.print("saxT: "  + saxTBuffer.toString());
-        searchTsBuffer.flip();
+
         ByteBuffer aQuery;
         if (Parameters.hasTimeStamp > 0) {
             aQuery = SearchUtil.makeAQuery(searchTsBuffer, startTime, endTime, k, paaBuffer, saxTBuffer);
@@ -292,7 +292,7 @@ public class SearchActionBuffer {
         }
 
         // 近似查询
-        saxTBuffer.flip();
+        saxTBuffer.rewind();
         byte[] saxTData = new byte[saxTBuffer.remaining()];
         saxTBuffer.get(saxTData);
         int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1

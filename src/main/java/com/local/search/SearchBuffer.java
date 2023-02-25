@@ -46,19 +46,25 @@ public class SearchBuffer implements Runnable{
         try {
             if (Parameters.hasTimeStamp > 0) {  // 有时间戳
                 // 查询由1个ts和2个时间戳组成
+                searchTsBuffer.clear();
                 fileChannel.read(searchTsBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize));
+                searchTsBuffer.rewind();
 
                 fileChannel.read(startTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize);
                 startTimeBuffer.flip();
                 startTime = startTimeBuffer.getLong();
+                startTimeBuffer.clear();
 
                 fileChannel.read(endTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
                 endTimeBuffer.flip();
                 endTime = endTimeBuffer.getLong();
+                startTimeBuffer.clear();
             }
             else {
                 // 查询只有ts
+                searchTsBuffer.clear();
                 fileChannel.read(searchTsBuffer, (long) offset * Parameters.timeSeriesDataSize);
+                searchTsBuffer.rewind();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -180,10 +186,10 @@ public class SearchBuffer implements Runnable{
             // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
             // ares_exact(有时间戳): ts 256*4, float dist 4
             // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
-            ByteBuffer exactAns = SearchActionBuffer.searchExactTs(searchTsBuffer, startTime, endTime, k);
+            ByteBuffer exactRes = SearchActionBuffer.searchExactTs(searchTsBuffer, startTime, endTime, k);
             Main.searchTime += System.currentTimeMillis() - searchTimeStart;
-            byte[] ans = new byte[exactAns.remaining()];
-            exactAns.get(ans);
+            byte[] ans = new byte[exactRes.remaining()];
+            exactRes.get(ans);
             computeExactDis(ans);
         }
         else {
@@ -196,7 +202,7 @@ public class SearchBuffer implements Runnable{
             byte[] ans = new byte[ares.remaining()];
             ares.get(ans);
             computeDis(ans);
-            computeRecallAndError(ans);
+//            computeRecallAndError(ans);
         }
     }
 }

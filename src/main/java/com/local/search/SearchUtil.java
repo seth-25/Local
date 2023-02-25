@@ -95,6 +95,7 @@ public class SearchUtil {
         aQuery.putInt(k);
         aQuery.put(paa);
         aQuery.put(saxBuffer);
+        aQuery.rewind();
         return aQuery;
     }
     // aquery(没时间戳): ts 256*4, k 4，paa 4*paa大小, saxt 8/16
@@ -106,6 +107,7 @@ public class SearchUtil {
         aQuery.putInt(k);
         aQuery.put(paa);
         aQuery.put(saxBuffer);
+        aQuery.rewind();
         return aQuery;
     }
 
@@ -233,8 +235,10 @@ public class SearchUtil {
     // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void analysisInfoHeap(ByteBuffer info, SearchContent aQuery) {
         info.limit(Parameters.timeSeriesDataSize);
+        aQuery.tsBuffer.clear();
         aQuery.tsBuffer.put(info);
         info.limit(info.capacity());
+
         aQuery.startTime = info.getLong();
         aQuery.endTime = info.getLong();
         info.get(aQuery.heap);
@@ -278,6 +282,7 @@ public class SearchUtil {
     public static void analysisInfoNoTimeHeap(ByteBuffer info, SearchContent aQuery) {
         System.out.println(info);
         info.limit(Parameters.timeSeriesDataSize);
+        aQuery.tsBuffer.clear();
         aQuery.tsBuffer.put(info);
         info.limit(info.capacity());
         info.get(aQuery.heap);

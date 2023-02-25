@@ -190,12 +190,14 @@ public class MappedFileReaderBuffer {
         for (int i = 0; i < num; i ++ ) {
             long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
             ByteBuffer byteBuf = byteBufferList.get(i);
+            byteBuf.clear();
             Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset* Parameters.tsSize);   // 异步读取构成队列
             operationList.add(operation);
         }
         for (int i = 0; i < num; i ++ ) {
             Future<Integer> operation = operationList.get(i);
             while (!operation.isDone()) ;   // 等待读完
+            byteBufferList.get(i).rewind();
         }
         operationList.clear();
 
