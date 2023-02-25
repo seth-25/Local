@@ -33,7 +33,7 @@ public class SearchActionBuffer {
             }
 //            PrintUtil.printTsBuffer(tsBuffer);
             dis = DBUtil.dataBase.dist_ts_buffer(aQuery.tsBuffer, tsBuffer);
-            System.out.println("距离" + dis);
+//            System.out.println("距离" + dis);
             tsBuffer.rewind();
             res.clear();
             if (isExact) {
@@ -105,7 +105,7 @@ public class SearchActionBuffer {
                     readTime += (System.currentTimeMillis() - readTimeStart);   // todo
 
                     cnt += pushHeap(byteBufferList, res, pList, aQuery, isExact);
-                    System.out.println("push heap 成功");
+//                    System.out.println("push heap 成功");
                     reader.clearPList();
                 }
             }

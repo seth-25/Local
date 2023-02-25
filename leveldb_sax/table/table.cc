@@ -748,22 +748,22 @@ bool Table::ST_Iter::next(LeafKey& res) {
 
 
   while(++leaftop >= stLeaf->num) {
-    out2("NUM:");
-    out2((int)stLeaf->num);
+//    out2("NUM:");
+//    out2((int)stLeaf->num);
     while (top >= 0) {
-      out2("top"+to_string(top));
-      out2(st_nonleaf_stack[top]->isleaf);
-      out2(st_nonleaf_stack[top]->num);
+//      out2("top"+to_string(top));
+//      out2(st_nonleaf_stack[top]->isleaf);
+//      out2(st_nonleaf_stack[top]->num);
       if (st_nonleaf_stack[top]->isleaf) {
         if (++nonleaftops[top] < st_nonleaf_stack[top]->num) {
           //只换叶节点
-          out2("叶");
+//          out2("叶");
           if(!getSTLeaf()) continue;
           res.Set1(stLeaf->prefix);
 //          res.setAsaxt(stLeaf.prefix);
-          out2("有stleaf");
-          out2((int)stLeaf->co_d);
-          out2((int)stLeaf->num);
+//          out2("有stleaf");
+//          out2((int)stLeaf->co_d);
+//          out2((int)stLeaf->num);
 //          saxt_print(stLeaf.prefix);
 //          saxt_print((saxt)stLeaf.Get_rep(0), stLeaf.prefix, stLeaf.co_d);
 //          saxt_print((saxt)stLeaf.Get_rep(stLeaf.num-1), stLeaf.prefix, stLeaf.co_d);
@@ -773,10 +773,10 @@ bool Table::ST_Iter::next(LeafKey& res) {
         }
       } else {
         if (++nonleaftops[top] < st_nonleaf_stack[top]->num) {
-          out2("非叶");
+//          out2("非叶");
           getSTNonLeaf();
-          out2("STNonLeaf");
-          out2((int)st_nonleaf_stack[top]->co_d);
+//          out2("STNonLeaf");
+//          out2((int)st_nonleaf_stack[top]->co_d);
 //          saxt_print(st_nonleaf_stack[top]->prefix);
         } else {
           top--;
@@ -815,6 +815,8 @@ bool Table::ST_Iter::getSTLeaf() {
   Slice slice;
   STpos sTpos = nonLeaf.Get_pos(i);
   size_t stLeaf_size = sTpos.GetSize();
+//  out2((int)nonLeaf.co_d);
+//  out2((int)nonLeaf.Get_co_d(i));
   stLeaf->Set(nonLeaf.Getnum(i), nonLeaf.Get_co_d(i));
   stLeaf->Setprefix(nonLeaf.prefix, nonLeaf.Get_lsaxt(i), sizeof(saxt_only) - nonLeaf.co_size);
   if (stLeaf->ismmap) stLeaf->Setnewroom(sizeof(Leaf));
@@ -854,6 +856,9 @@ void Table::ST_Iter::getSTNonLeaf() {
   Slice slice;
   STpos sTpos = nonLeaf.Get_pos(i);
   size_t stNonLeaf_size = sTpos.GetSize();
+//  out2((int)nonLeaf.co_d);
+//  out2((int)nonLeaf.Get_co_d(i));
+//  out2((int)nonLeaf.Getnum(i));
   top++;
   if (top < st_nonleaf_stack.size()){
     if (st_nonleaf_stack[top]->ismmap) st_nonleaf_stack[top]->Setnewroom(sizeof(NonLeaf));

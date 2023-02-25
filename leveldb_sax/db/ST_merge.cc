@@ -15,7 +15,6 @@ struct TableAndFile {
 
 
 ST_merge::ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaciton_) : vec_size(0), pool_compaction(pool_compaciton_){
-
   TableCache* cache = ver->table_cache_;
   vector<PII_saxt> st_iters;
   unordered_map<Table::ST_Iter*, Cache::Handle*> handles;
@@ -68,11 +67,15 @@ ST_merge::ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaciton_)
   }
 
 
+
   for(int i=0;i<vec_size;i++) {
     pool_compaction->enqueue(&start_ST_merge_one, vec_[i]);
+    key_buffer[i] = &(vec_[i]->key_buffer[2]);
   }
 
-  memset(hh_size_buffer, 0, sizeof(PII) * vec_size);
+
+
+  memset(hh, 0, sizeof(int) * vec_size);
 
   for(int i=0;i<vec_size;i++) {
     if (!next1(i)) {
@@ -84,7 +87,7 @@ ST_merge::ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaciton_)
       i--;
     }
   }
-
+//  cout<<"ting"<<endl;
 
   out("vec_size"+to_string(vec_size));
 
@@ -101,15 +104,18 @@ bool ST_merge::next(LeafKey& leafKey) {
       if (leafKey > get_buffer_merge(i)) leafKey = get_buffer_merge(i), res = i;
     }
     if (!next1(res)) {
-      delete vec_[res];
+      out2("要删除"+ to_string(res));
+      out2(vec_size);
       vec_size--;
       for(int i=res;i<vec_size;i++) {
         vec_[i] = vec_[i+1];
-        hh_size_buffer[i] = hh_size_buffer[i + 1];
+        hh[i] = hh[i + 1];
         key_buffer[i] = key_buffer[i+1];
       }
     }
-
+//    saxt_print(leafKey.asaxt);
+//    cout<<hh[0]<<endl;
+//    cout<<vec_size<<endl;
     return true;
   }
   return false;
@@ -117,8 +123,14 @@ bool ST_merge::next(LeafKey& leafKey) {
 }
 
 
-ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), size_(0), cv_q(&mutex_q), isover(false), to_write(0){
+ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), cv_q(&mutex_q){
+  to_get.store(0, memory_order_release);
+  is_can_get.store(false, memory_order_release);
+  isover.store(false, memory_order_release);
+  to_write_id = 0;
+  to_get_id = 0;
 
+  for(auto & i : key_buffer) i.reserve(compaction_buffer_size);
 }
 
 void ST_merge_one::del(Table::ST_Iter* it) {
@@ -128,6 +140,7 @@ void ST_merge_one::del(Table::ST_Iter* it) {
 }
 
 void ST_merge_one::start() {
+
   vec_size = st_iters.size();
   vec.reserve(vec_size);
 
@@ -150,23 +163,57 @@ void ST_merge_one::start() {
 
 
   LeafKey tmpkey;
+  vector<LeafKey>* key_vec = &key_buffer[0];
+
   while(next1(tmpkey)) {
-    mutex_q.Lock();
-//    cout<<"非线程加：" + to_string(size_)+":"<<(void*)this<<endl;
-    if(size_==compaction_buffer_size) {
-      cv_q.Wait();
-      assert(size_ == 0);
+//    saxt_print(tmpkey.asaxt);
+//    assert(last <= tmpkey);
+//    assert(to_get_id != (to_write_id + 1) % 3);
+    key_vec->push_back(tmpkey);
+//    cout<<"写"+to_string(to_write_id)<<endl;
+//    cout<<"size_hou"+to_string(key_vec->size())<<endl;
+//    cout<<"size0wri:"+to_string(key_buffer[0].size());
+//    cout<<"size1wri:"+to_string(key_buffer[1].size());
+//    cout<<"size2wri:"+to_string(key_buffer[2].size());
+//    for(int i=0;i<key_vec->size()-1;i++) {
+//      if ((*key_vec)[i] > (*key_vec)[i+1]) {
+//        cout<<i<<" "<<i+1<<" "<<to_write_id<<endl;
+//        saxt_print((*key_vec)[i].asaxt);
+//        saxt_print((*key_vec)[i+1].asaxt);
+//      }
+//      assert((*key_vec)[i] <= (*key_vec)[i+1]);
+//    }
+    if(key_vec->size() >= compaction_buffer_size) {
+      if (to_get.load(memory_order_acquire) == to_write_id) {
+        to_write_id = (to_write_id + 1) % 3;
+//        for(int i=0;i<key_vec->size()-1;i++) {
+//          assert((*key_vec)[i] <= (*key_vec)[i+1]);
+//        }
+        key_vec = &key_buffer[to_write_id];
+        key_vec->clear();
+//        cout<<"写"+to_string(to_write_id)<<endl;
+//        cout<<(void*)key_vec<<endl;
+//        cout<<"size0wri:"+to_string(key_buffer[0].size());
+//        cout<<"size1wri:"+to_string(key_buffer[1].size());
+//        cout<<"size2wri:"+to_string(key_buffer[2].size())<<endl;
+        is_can_get.store(true, memory_order_release);
+
+      }
     }
-    key_buffer[to_write][size_++] = tmpkey;
-    cv_q.Signal();
-    mutex_q.Unlock();
   }
 
+
+//  cout<<"out"<<endl;
+//  cout<<"size:"+to_string(key_buffer[0].size());
+//  cout<<"size:"+to_string(key_buffer[1].size());
+//  cout<<"size:"+to_string(key_buffer[2].size())<<endl;
+
   mutex_q.Lock();
-  isover = true;
-  cv_q.Signal();
+  isover.store(true, memory_order_relaxed);
+  cv_q.Wait();
   mutex_q.Unlock();
 
+//  cout<<"outdel"<<endl;
 }
 
 bool ST_merge_one::next1(LeafKey& leafKey) {
@@ -178,15 +225,15 @@ bool ST_merge_one::next1(LeafKey& leafKey) {
       if (leafKey > vec[i].first) leafKey = vec[i].first, res = i;
     }
     if (!vec[res].second->next(vec[res].first)) {
-      out2("要删除"+ to_string(res));
-      out2(vec_size);
+//      out2("要删除"+ to_string(res));
+//      out2(vec_size);
       del(vec[res].second);
       vec_size--;
       for(int i=res;i<vec_size;i++) {
         vec[i] = vec[i+1];
       }
     }
-
+//    assert(leafKey >= last);
     return true;
   }
   return false;

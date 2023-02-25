@@ -186,7 +186,7 @@ public class MappedFileReaderBuffer {
     public List<ByteBuffer> readTsQueue() {
 //        byte[][] tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];
         int num = pList.size();
-        System.out.println("pList size " + num);
+//        System.out.println("pList size " + num);
         for (int i = 0; i < num; i ++ ) {
             long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
             ByteBuffer byteBuf = byteBufferList.get(i);

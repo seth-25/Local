@@ -80,7 +80,7 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
 //        int isExact = scan.nextInt();
-        int isExact = 0;
+        int isExact = 1;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
         int queryNum = 100;

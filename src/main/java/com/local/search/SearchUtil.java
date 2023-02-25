@@ -250,7 +250,7 @@ public class SearchUtil {
             aQuery.pList.add(info.getLong());
         }
         info.rewind();
-        System.out.println(" " + info);
+//        System.out.println(" " + info);
     }
 
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
@@ -280,7 +280,7 @@ public class SearchUtil {
     }
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
     public static void analysisInfoNoTimeHeap(ByteBuffer info, SearchContent aQuery) {
-        System.out.println(info);
+//        System.out.println(info);
         info.limit(Parameters.timeSeriesDataSize);
         aQuery.tsBuffer.clear();
         aQuery.tsBuffer.put(info);
@@ -294,7 +294,7 @@ public class SearchUtil {
             aQuery.pList.add(info.getLong());
         }
         info.rewind();
-        System.out.println(" " + info);
+//        System.out.println(" " + info);
     }
 
 }
