@@ -1,7 +1,10 @@
 package com.local.util;
 
 import com.local.domain.Parameters;
+import com.local.search.SearchUtil;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,6 +14,37 @@ public class PrintUtil {
         if (Parameters.debug) {
             System.out.println(str);
         }
+    }
+    public static void printTsBuffer(ByteBuffer tsBuffer) {
+        if (!Parameters.debug)  return ;
+        byte[] floatBytes = new byte[4];
+        tsBuffer.rewind();
+        for (int i = 0; i < Parameters.timeSeriesDataSize / 4; i ++ ) {
+            tsBuffer.get(floatBytes);
+            System.out.print(SearchUtil.bytesToFloat(floatBytes) + " ");
+        }
+        tsBuffer.rewind();
+        System.out.println();
+    }
+    public static void printSaxTBuffer(ByteBuffer saxTBuffer) {
+        if (!Parameters.debug)  return ;
+        byte[] saxTBytes = new byte[Parameters.saxTSize];
+        saxTBuffer.rewind();
+        saxTBuffer.get(saxTBytes);
+        System.out.print(Arrays.toString(saxTBytes));
+        saxTBuffer.rewind();
+        System.out.println();
+    }
+    public static void printSSTableBuffer(ByteBuffer ssTableBuffer) {
+        if (!Parameters.debug)  return ;
+        byte[] longBytes = new byte[8];
+        ssTableBuffer.rewind();
+        for (int i = 0; i < ssTableBuffer.capacity() / 8; i ++ ) {
+            ssTableBuffer.get(longBytes);
+            System.out.print(SearchUtil.bytesToLong(longBytes) + " ");
+        }
+        ssTableBuffer.rewind();
+        System.out.println();
     }
     public static void printWorkerVersion() {
         if (!Parameters.debug)  return ;

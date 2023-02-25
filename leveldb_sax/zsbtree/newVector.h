@@ -147,7 +147,7 @@ class jniVector {
     size_++;
   }
 
-  bool empty() { return size_; }
+  bool empty() { return size_ == 0; }
 
 
 

@@ -21,13 +21,13 @@ public class Parameters {
 
     ////////////////////////Search
     // 查询原始时间序列的结果 ares(含p)
-    // ares(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8, 总共1048
-    // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8, 总共1040
-    public static final int aresSize = tsSize + 16;
+    // appro_res(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8
+    // appro_res(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8
+    public static final int approximateResSize = tsSize + 16;
     //查询原始时间序列的结果 ares_exact(不含p)
-    // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐) 总共1040
-    // ares_exact(没时间戳): ts 256*4, float dist 4, 总共1028
-    public static final int aresExactSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
+    // exact_res(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐)
+    // exact_res(有时间戳): ts 256*4, float dist 4
+    public static final int exactResSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
     public static final int infoMaxPSize = 10000;   // 最多一次性查询多少个原始时间序列
 
     ///////////////////////Init

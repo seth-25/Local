@@ -257,11 +257,6 @@ void TableBuilder::WriteRawBlock(const Slice& block_contents,
                                  CompressionType type, STpos* handle) {
   Rep* r = rep_;
   handle->Set(block_contents.size(), r->offset);
-  out("yaru");
-  out(r->offset);
-  out(block_contents.size());
-  out(handle->GetOffset());
-  out(handle->GetSize());
   r->status = r->file->Append(block_contents);
   if (r->status.ok()) {
     char trailer[kBlockTrailerSize];

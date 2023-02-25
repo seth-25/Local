@@ -82,7 +82,7 @@ public class MappedFileReaderBuffer {
         Path path = Paths.get(filePath);
         asynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.READ);
         for (int i = 0; i < Parameters.FileSetting.queueSize; i ++ ) {
-            byteBufferList.add(ByteBuffer.allocate(Parameters.tsSize));
+            byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize));
         }
         this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];// new byte时间消耗很大，预先开好空间
         this.fileNum = fileNum;
@@ -183,26 +183,23 @@ public class MappedFileReaderBuffer {
     public void clearPList() {
         pList.clear();
     }
-    public byte[][] readTsQueue() {
+    public List<ByteBuffer> readTsQueue() {
 //        byte[][] tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];
         int num = pList.size();
+        System.out.println("pList size " + num);
         for (int i = 0; i < num; i ++ ) {
             long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
             ByteBuffer byteBuf = byteBufferList.get(i);
-            Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset* Parameters.tsSize);;
+            Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset* Parameters.tsSize);   // 异步读取构成队列
             operationList.add(operation);
         }
         for (int i = 0; i < num; i ++ ) {
-            ByteBuffer byteBuf = byteBufferList.get(i);
             Future<Integer> operation = operationList.get(i);
-            while (!operation.isDone()) ;
-            byteBuf.flip();
-            byteBuf.get(tsArrays[i]);
-            byteBuf.clear();
+            while (!operation.isDone()) ;   // 等待读完
         }
         operationList.clear();
 
-        return tsArrays;
+        return byteBufferList;
     }
 
     public long getFileLength() {

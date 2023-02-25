@@ -78,6 +78,7 @@ Version::~Version() {
       assert(f->refs > 0);
       f->refs--;
       if (f->refs <= 0) {
+        out1("delnumber", f->number);
         delete f;
       }
     }
@@ -579,6 +580,7 @@ std::string Version::DebugString() const {
 uint64_t Version::GetSize(uint64_t number) {
   for(auto& f : files_){
     for(auto& item: f) {
+      out1("filenumber", item->number);
       if (item->number == number) return item->file_size;
     }
   }

@@ -44,7 +44,7 @@ public class SearchUtil {
         return bytes;
     }
 
-    static byte[] floatToBytes(float f) {
+    public static byte[] floatToBytes(float f) {
         int tf = Float.floatToIntBits(f);
         byte[] bytes = new byte[4];
         for (int i = 0; i < 4; i ++ ) {
@@ -52,7 +52,7 @@ public class SearchUtil {
         }
         return bytes;
     }
-    static float bytesToFloat(byte[] b) {
+    public static float bytesToFloat(byte[] b) {
         int tb = 0;
         tb |= (b[0] & 0xff);
         tb |= (b[1] & 0xff) << 8;
@@ -60,7 +60,7 @@ public class SearchUtil {
         tb |= (b[3] & 0xff) << 24;
         return Float.intBitsToFloat(tb);
     }
-    static float computeDist(byte[] a, byte[] b) {
+    public static float computeDist(byte[] a, byte[] b) {
         assert a.length == b.length;
         float dis = 0;
         float[] af = new float[a.length / 4];
@@ -101,6 +101,7 @@ public class SearchUtil {
     public static ByteBuffer makeAQuery(ByteBuffer ts, int k, ByteBuffer paa, ByteBuffer saxBuffer) {
         ByteBuffer aQuery = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize + 4 +
                 4 * Parameters.paaNum + Parameters.saxTSize).order(ByteOrder.LITTLE_ENDIAN);
+
         aQuery.put(ts);
         aQuery.putInt(k);
         aQuery.put(paa);
@@ -138,6 +139,7 @@ public class SearchUtil {
 
     static public class SearchContent {
         public byte[] timeSeriesData = new byte[Parameters.timeSeriesDataSize];
+        public ByteBuffer tsBuffer = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize);
         public long startTime;
         public long endTime;
         public int k;
@@ -154,7 +156,7 @@ public class SearchUtil {
     }
 
     // info: ts 256*4，starttime 8， endtime 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
-    public static void analysisSearchSend(byte[] info, SearchContent aQuery) {
+    public static void analysisInfo(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4];
         byte[] longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
@@ -177,7 +179,7 @@ public class SearchUtil {
         }
     }
     // info: ts 256*4， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p*n 8*n
-    public static void analysisSearchSendNoTime(byte[] info, SearchContent aQuery) {
+    public static void analysisInfoNoTime(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
         System.arraycopy(info, Parameters.timeSeriesDataSize, intBytes, 0, 4);
@@ -197,7 +199,7 @@ public class SearchUtil {
     }
 
     // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
-    public static void analysisSearchSendHeap(byte[] info, SearchContent aQuery) {
+    public static void analysisInfoHeap(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4];
         byte[] longBytes = new byte[8];
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
@@ -228,8 +230,27 @@ public class SearchUtil {
             aQuery.pList.add(p);
         }
     }
+    // info(有时间戳): ts 256*4，starttime 8， endtime 8, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    public static void analysisInfoHeap(ByteBuffer info, SearchContent aQuery) {
+        info.limit(Parameters.timeSeriesDataSize);
+        aQuery.tsBuffer.put(info);
+        info.limit(info.capacity());
+        aQuery.startTime = info.getLong();
+        aQuery.endTime = info.getLong();
+        info.get(aQuery.heap);
+        aQuery.k = info.getInt();
+        aQuery.needNum = info.getInt();
+        aQuery.topDist = info.getFloat();
+        int numSearch = info.getInt();
+        for (int i = 0; i < numSearch; i ++ ) {
+            aQuery.pList.add(info.getLong());
+        }
+        info.rewind();
+        System.out.println(" " + info);
+    }
+
     // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
-    public static void analysisSearchSendNoTimeHeap(byte[] info, SearchContent aQuery) {
+    public static void analysisInfoNoTimeHeap(byte[] info, SearchContent aQuery) {
         byte[] intBytes = new byte[4], longBytes = new byte[8];;
         System.arraycopy(info, 0, aQuery.timeSeriesData, 0, Parameters.timeSeriesDataSize);
 
@@ -252,6 +273,23 @@ public class SearchUtil {
             Long p = bytesToLong(longBytes);
             aQuery.pList.add(p);
         }
+    }
+    // info(没时间戳): ts 256*4, heap 8， k 4, 还要多少个needNum 4, topdist 4, 要查的个数n 4，p * n 8*n
+    public static void analysisInfoNoTimeHeap(ByteBuffer info, SearchContent aQuery) {
+        System.out.println(info);
+        info.limit(Parameters.timeSeriesDataSize);
+        aQuery.tsBuffer.put(info);
+        info.limit(info.capacity());
+        info.get(aQuery.heap);
+        aQuery.k = info.getInt();
+        aQuery.needNum = info.getInt();
+        aQuery.topDist = info.getFloat();
+        int numSearch = info.getInt();
+        for (int i = 0; i < numSearch; i ++ ) {
+            aQuery.pList.add(info.getLong());
+        }
+        info.rewind();
+        System.out.println(" " + info);
     }
 
 }

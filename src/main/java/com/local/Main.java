@@ -38,7 +38,7 @@ public class Main {
                 initTsBuffer.put(tsBuffer);
                 System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             }
-            DBUtil.dataBase.init_buffer(initTsNum, initTsBuffer, leafTimeKeyBuffer, 1, 0);
+            DBUtil.dataBase.init_buffer(initTsNum, initTsBuffer, leafTimeKeyBuffer, 0, 0);
         }
         else if (initTsNum <= 4000000) {
             ByteBuffer initTsBuffer = ByteBuffer.allocateDirect(2000000 * Parameters.tsSize);
@@ -56,7 +56,7 @@ public class Main {
                 }
                 System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             }
-            DBUtil.dataBase.init_buffer1(2000000, initTsBuffer, initTsNum - 2000000, initTsBuffer1, leafTimeKeyBuffer, 1, 0);
+            DBUtil.dataBase.init_buffer1(2000000, initTsBuffer, initTsNum - 2000000, initTsBuffer1, leafTimeKeyBuffer, 0, 0);
         }
         else {
             throw new RuntimeException("init大小超过限制");
@@ -92,9 +92,9 @@ public class Main {
             MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
 
-            // todo todo
-            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts
-            CacheUtil.mappedFileReaderMap.put(fileNum, reader1);
+//            // todo todo
+//            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts
+//            CacheUtil.mappedFileReaderMap.put(fileNum, reader1);
         }
 
         init();
@@ -117,7 +117,7 @@ public class Main {
                 Thread.sleep(10000);
 
                 if (isExact == 1) {
-                    Search exactSearch = new Search(true, 100);
+                    SearchBuffer exactSearch = new SearchBuffer(true, 100);
                     for (int i = 0; i < queryNum; i ++ ) {
                         cntP = 0;   cntRes = 0;
                         long startQuery = System.currentTimeMillis();

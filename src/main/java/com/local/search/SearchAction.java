@@ -12,7 +12,6 @@ import com.local.version.VersionAction;
 import com.local.version.VersionUtil;
 import com.local.domain.Pair;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -46,9 +45,9 @@ public class SearchAction {
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
-            SearchUtil.analysisSearchSend(info, aQuery);
+            SearchUtil.analysisInfo(info, aQuery);
         } else {
-            SearchUtil.analysisSearchSendNoTime(info, aQuery);
+            SearchUtil.analysisInfoNoTime(info, aQuery);
         }
         aQuery.sortPList();
 
@@ -118,20 +117,20 @@ public class SearchAction {
             // 返回若干个ares_exact(不含p)
             // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐)
             // ares_exact(没时间戳): ts 256*4, float dist 4
-            byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresExactSize];
+            byte[] tmp = new byte[aQuery.pList.size() * Parameters.exactResSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
                 if (cnt < aQuery.k && (dis < aQuery.topDist || cnt < aQuery.needNum)) { // 距离<topDist都要传给db用于剪枝
-                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresExactSize, Parameters.tsSize);
-                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresExactSize + Parameters.tsSize, 4);
+                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.exactResSize, Parameters.tsSize);
+                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.exactResSize + Parameters.tsSize, 4);
                     cnt++;
                 }
                 else {
                     break;
                 }
             }
-            byte[] aresExact = new byte[cnt * Parameters.aresExactSize]; // aresExact: cnt个ares
-            System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.aresExactSize);
+            byte[] aresExact = new byte[cnt * Parameters.exactResSize]; // aresExact: cnt个ares
+            System.arraycopy(tmp, 0, aresExact, 0, cnt * Parameters.exactResSize);
 
             synchronized (SearchAction.class) { // todo
                 Main.cntP += aQuery.pList.size();
@@ -150,13 +149,13 @@ public class SearchAction {
             // 返回至多k个ares(含p)
             // ares(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8
-            byte[] tmp = new byte[aQuery.pList.size() * Parameters.aresSize];
+            byte[] tmp = new byte[aQuery.pList.size() * Parameters.approximateResSize];
             for (OriTs oriTs : nearlyTsList) {
                 float dis = oriTs.dis;
                 if (cnt < aQuery.k && (dis < aQuery.topDist || cnt < aQuery.needNum)) {
-                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.aresSize, Parameters.tsSize);
-                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize, 4);
-                    System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.aresSize + Parameters.tsSize + 8, Parameters.pointerSize);
+                    System.arraycopy(oriTs.ts, 0, tmp, cnt * Parameters.approximateResSize, Parameters.tsSize);
+                    System.arraycopy(SearchUtil.floatToBytes(dis), 0, tmp, cnt * Parameters.approximateResSize + Parameters.tsSize, 4);
+                    System.arraycopy(oriTs.p, 0, tmp, cnt * Parameters.approximateResSize + Parameters.tsSize + 8, Parameters.pointerSize);
 
                     cnt ++ ;
                 }
@@ -165,8 +164,8 @@ public class SearchAction {
                 }
             }
 
-            byte[] ares = new byte[cnt * Parameters.aresSize]; // ares: cnt个ares
-            System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.aresSize);
+            byte[] ares = new byte[cnt * Parameters.approximateResSize]; // ares: cnt个ares
+            System.arraycopy(tmp, 0, ares, 0, cnt * Parameters.approximateResSize);
             tmp = null;
             synchronized (SearchAction.class) { // todo
                 Main.cntP += aQuery.pList.size();
@@ -191,9 +190,9 @@ public class SearchAction {
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
-            SearchUtil.analysisSearchSendHeap(info, aQuery);
+            SearchUtil.analysisInfoHeap(info, aQuery);
         } else {
-            SearchUtil.analysisSearchSendNoTimeHeap(info, aQuery);
+            SearchUtil.analysisInfoNoTimeHeap(info, aQuery);
         }
         if (Parameters.findOriTsSort) {
             aQuery.sortPList();
@@ -201,10 +200,10 @@ public class SearchAction {
 
         byte[] ares;
         if (isExact) {
-            ares= new byte[Parameters.aresExactSize];
+            ares= new byte[Parameters.exactResSize];
         }
         else {
-            ares = new byte[Parameters.aresSize];
+            ares = new byte[Parameters.approximateResSize];
         }
         int cnt = 0;
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
@@ -306,8 +305,8 @@ public class SearchAction {
         }
         return cnt;
     }
-    static byte[] aresAppro = new byte[Parameters.aresSize];
-    static byte[] aresExact = new byte[Parameters.aresExactSize];
+    static byte[] aresAppro = new byte[Parameters.approximateResSize];
+    static byte[] aresExact = new byte[Parameters.exactResSize];
     public static void searchOriTsHeapQueue(byte[] info, boolean isExact) {
         long searchOriTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.length + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
@@ -317,9 +316,9 @@ public class SearchAction {
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
         if (Parameters.hasTimeStamp > 0) {
-            SearchUtil.analysisSearchSendHeap(info, aQuery);
+            SearchUtil.analysisInfoHeap(info, aQuery);
         } else {
-            SearchUtil.analysisSearchSendNoTimeHeap(info, aQuery);
+            SearchUtil.analysisInfoNoTimeHeap(info, aQuery);
         }
         if (Parameters.findOriTsSort) {
             aQuery.sortPList();
@@ -485,7 +484,7 @@ public class SearchAction {
         byte[] ares = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                 rTree, amVersionID, stVersionID);
 
-        while((ares.length - 4) / Parameters.aresSize < k && d > 0) { // 查询结果不够k个
+        while((ares.length - 4) / Parameters.approximateResSize < k && d > 0) { // 查询结果不够k个
             d --;
             ares = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                 rTree, amVersionID, stVersionID);
@@ -539,7 +538,7 @@ public class SearchAction {
         byte[] approRes = aresAndSSNum.getKey();
         long[] approSSTableNum = aresAndSSNum.getValue();
 
-        while((approRes.length - 4) / Parameters.aresSize < k && d > 0) { // 查询结果不够k个
+        while((approRes.length - 4) / Parameters.approximateResSize < k && d > 0) { // 查询结果不够k个
             d --;
             approRes = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                                         rTree, amVersionID, stVersionID);

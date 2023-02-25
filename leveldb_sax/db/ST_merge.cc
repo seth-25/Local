@@ -101,8 +101,6 @@ bool ST_merge::next(LeafKey& leafKey) {
       if (leafKey > get_buffer_merge(i)) leafKey = get_buffer_merge(i), res = i;
     }
     if (!next1(res)) {
-      out2("要删除"+ to_string(res));
-      out2(vec_size);
       delete vec_[res];
       vec_size--;
       for(int i=res;i<vec_size;i++) {

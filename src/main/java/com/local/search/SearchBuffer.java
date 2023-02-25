@@ -12,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 public class SearchBuffer implements Runnable{
@@ -39,7 +38,7 @@ public class SearchBuffer implements Runnable{
         }
         this.startTimeBytes = new byte[Parameters.timeStampSize];
         this.endTimeBytes = new byte[Parameters.timeStampSize];
-        this.searchTsBuffer = ByteBuffer.allocate(Parameters.timeSeriesDataSize);
+        this.searchTsBuffer = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize);
         this.startTimeBuffer = ByteBuffer.allocate(Parameters.timeStampSize).order(ByteOrder.LITTLE_ENDIAN);
         this.endTimeBuffer = ByteBuffer.allocate(Parameters.timeStampSize).order(ByteOrder.LITTLE_ENDIAN);
     }
@@ -50,9 +49,11 @@ public class SearchBuffer implements Runnable{
                 fileChannel.read(searchTsBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize));
 
                 fileChannel.read(startTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize);
+                startTimeBuffer.flip();
                 startTime = startTimeBuffer.getLong();
 
                 fileChannel.read(endTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
+                endTimeBuffer.flip();
                 endTime = endTimeBuffer.getLong();
             }
             else {
@@ -68,7 +69,7 @@ public class SearchBuffer implements Runnable{
     }
     private void computeDis(byte[] ans) {
         double dis = 0;
-        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+        for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
@@ -79,7 +80,7 @@ public class SearchBuffer implements Runnable{
     private void computeExactDis(byte[] ans) {
         double dis = 0;
 //        double oldDis = 0;
-        for (int i = 0; i < ans.length; i += Parameters.aresExactSize) {
+        for (int i = 0; i < ans.length; i += Parameters.exactResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
@@ -103,7 +104,7 @@ public class SearchBuffer implements Runnable{
     private void computeRecallAndError(byte[] ans) {
         Main.isRecord = false;  // 计算召回率和错误率时不要记录io时间和访问次数
         ArrayList<Ts> approAnsList = new ArrayList<>();
-        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+        for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
             byte[] floatBytes = new byte[4];
@@ -113,10 +114,11 @@ public class SearchBuffer implements Runnable{
 
         ArrayList<Ts> exactAnsList = new ArrayList<>();
 
+        PrintUtil.print("计算回归率，进行精确查询");
         ByteBuffer exactRes = SearchActionBuffer.searchExactTs(searchTsBuffer, startTime, endTime, k);
         byte[] exactAns = new byte[exactRes.remaining()];
         exactRes.get(exactAns);
-        for (int i = 0; i < exactAns.length; i += Parameters.aresExactSize) {
+        for (int i = 0; i < exactAns.length; i += Parameters.exactResSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
             byte[] floatBytes = new byte[4];
@@ -178,9 +180,11 @@ public class SearchBuffer implements Runnable{
             // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
             // ares_exact(有时间戳): ts 256*4, float dist 4
             // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
-//            ans = SearchActionBuffer.searchExactTs(searchTsBytes, startTime, endTime, k);
-//            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
-//            computeExactDis(ans);
+            ByteBuffer exactAns = SearchActionBuffer.searchExactTs(searchTsBuffer, startTime, endTime, k);
+            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
+            byte[] ans = new byte[exactAns.remaining()];
+            exactAns.get(ans);
+            computeExactDis(ans);
         }
         else {
             // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
@@ -192,7 +196,7 @@ public class SearchBuffer implements Runnable{
             byte[] ans = new byte[ares.remaining()];
             ares.get(ans);
             computeDis(ans);
-//            computeRecallAndError(ans);
+            computeRecallAndError(ans);
         }
     }
 }

@@ -3,6 +3,7 @@ package leveldb_sax;
 
 import com.local.domain.Parameters;
 import com.local.search.SearchAction;
+import com.local.search.SearchActionBuffer;
 import com.local.version.VersionAction;
 
 import java.nio.ByteBuffer;
@@ -43,13 +44,15 @@ public class db_send {
 
 
     public static void find_tskey_ap_buffer(ByteBuffer info) {
+//        System.out.println("查询原始时间序列");
 //        SearchAction.searchOriTsHeap(info, false);
-//        SearchAction.searchOriTsHeapQueue(info, false);
+        SearchActionBuffer.searchOriTsHeapQueue(info, false);
     }
 
     public static void find_tskey_exact_ap_buffer(ByteBuffer info) {
+//        System.out.println("查询原始时间序列");
 //        SearchAction.searchOriTsHeap(info, true);
-//        SearchAction.searchOriTsHeapQueue(info, true);
+        SearchActionBuffer.searchOriTsHeapQueue(info, true);
     }
 
 

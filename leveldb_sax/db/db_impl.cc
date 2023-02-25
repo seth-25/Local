@@ -1423,6 +1423,7 @@ Status DBImpl::Get(const aquery& aquery1,
         mutex_.Lock();
         version_map[st_version_id]->Ref();
         res_heap->vv2 = version_map[st_version_id];
+        out1("versize", res_heap->vv2->GetSize(4));
         res_heap->v2_mutex = &mutex_;
         mutex_.Unlock();
       }
@@ -1439,9 +1440,10 @@ Status DBImpl::Get(const aquery& aquery1,
                           res_heap->vv2);
         //        std::thread sthread(&DBImpl::BGWork_Get_st, this, aquery1, res_heap, j, res_heap->vv2); sthread.detach();
       }
-
+      out1("deng", 1);
       //等待结果
       res_heap->wait();
+      out1("numper", 1);
 
 #if cha == 0
       // 按dist排序，分成20份依次查询
@@ -1450,7 +1452,7 @@ Status DBImpl::Get(const aquery& aquery1,
       int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
       div = max(div, (int)(res_heap->to_sort_dist_p.size() -1)/ info_p_max_size + 1);
       int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
-
+      out1("numper", num_per);
 //      char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * num_per);
       char* info = jniInfo_.info_p;
       char* add_info = info;
@@ -1641,9 +1643,9 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
   //必找的一个点
   Finder.find_One(res_leafkeys, res_leafkeys_num);
 
-  for(int i=0;i<res_leafkeys_num;i++) {
-    saxt_print(res_leafkeys[i].asaxt);
-  }
+//  for(int i=0;i<res_leafkeys_num;i++) {
+//    saxt_print(res_leafkeys[i].asaxt);
+//  }
 //
 //  exit(1);
   out("开查am");
@@ -2169,21 +2171,26 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
 
 void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
                     uint64_t st_number, Version* this_ver) {
-
-
+  out1("st_number", st_number);
   LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum);
   int res_leafkeys_num;
-  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
-  int res_p_num;
-  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
-  char* add_info = info;
-  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
-  charcpy(add_info, &aquery1.k, sizeof(int));
-
+//  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
+//  int res_p_num;
+//  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
+//  char* add_info = info;
+//  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+//  charcpy(add_info, &aquery1.k, sizeof(int));
+  out("12222");
+  mutex_.Lock();
   uint64_t filesize = this_ver->GetSize(st_number);
+  mutex_.Unlock();
+  out1("filesize", filesize);
   Cache::Handle* file_handle = nullptr;
   Table* t = versions_->table_cache_->Get(st_number, filesize, file_handle);
 
+
+
+  out("st");
 #if istime == 2
   Table::ST_finder Finder(t, aquery1.asaxt, aquery1.rep.startTime, aquery1.rep.endTime, (ts_type*)aquery1.paa);
 #else
@@ -2203,6 +2210,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   out("开查st");
   if (res_leafkeys_num) {
     //策略
+    /*
     if (lookupi == 0) {
       int to_find_num = 1;
       get_dist_and_sort((ts_type*)aquery1.paa, res_leafkeys, res_leafkeys_num, res_p);
@@ -2280,7 +2288,8 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
         if (isbreak) break;
       }
     }
-    else if (lookupi == 2){
+    */
+    if (lookupi == 2){
 #if cha
       // 直接查一个叶
       res_heap->Lock();
@@ -2323,8 +2332,8 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
       res_heap->isfinish();
       versions_->table_cache_->cache_->Release(file_handle);
       free(res_leafkeys);
-      free(res_p);
-      free(info);
+//      free(res_p);
+//      free(info);
       res_heap->Unlock();
       return;
 #endif
@@ -2337,12 +2346,13 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   res_heap->isfinish();
   versions_->table_cache_->cache_->Release(file_handle);
   free(res_leafkeys);
-  free(res_p);
-  free(info);
+//  free(res_p);
+//  free(info);
   res_heap->Unlock();
-  return;
+//  return;
 #endif
 
+  /*
   bool isdel = false;
   bool isover = false;
 
@@ -2738,6 +2748,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   free(res_p);
   free(info);
   if (isdel) delete res_heap;
+   */
 }
 
 Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,

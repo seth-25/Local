@@ -4,23 +4,136 @@ import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
+import com.local.Main;
 import com.local.domain.Pair;
 import com.local.domain.Parameters;
 import com.local.domain.Version;
-import com.local.util.CacheUtil;
-import com.local.util.DBUtil;
-import com.local.util.PrintUtil;
-import com.local.util.SaxTUtil;
+import com.local.util.*;
 import com.local.version.VersionAction;
 import com.local.version.VersionUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
 public class SearchActionBuffer {
+    static byte[] empty4Bytes = new byte[4];
+    public static int pushHeap(List<ByteBuffer> byteBufferList, ByteBuffer res, List<Long> pList, SearchUtil.SearchContent aQuery, boolean isExact) {
+        float dis;
+        int cnt = 0;
+        for (int i = 0; i < pList.size(); i ++ ) {
+            ByteBuffer tsBuffer = byteBufferList.get(i);
+            if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
+                tsBuffer.position(Parameters.timeSeriesDataSize);
+                long timestamps = tsBuffer.getLong();
+                if (timestamps < aQuery.startTime || timestamps > aQuery.endTime) {
+                    continue;
+                }
+            }
+            dis = DBUtil.dataBase.dist_ts_buffer(aQuery.tsBuffer, tsBuffer);
+            tsBuffer.rewind();
+            res.clear();
+            if (isExact) {
+                // ares_exact(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐)
+                // ares_exact(没时间戳): ts 256*4, float dist 4
+                res.put(tsBuffer);
+                res.putFloat(dis);
+            } else {
+                // ares(有时间戳): ts 256*4, long time 8, float dist 4, 空4位(time是long,对齐), long p 8
+                // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), long p 8
+                res.put(tsBuffer);
+                res.putFloat(dis);
+                res.put(empty4Bytes);
+                res.putLong(pList.get(i));
+            }
+            if (aQuery.needNum > 0) {
+                cnt ++ ;
+                aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                aQuery.needNum -- ;
+            }
+            else {
+                if (dis < aQuery.topDist) {
+                    cnt ++ ;
+                    aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                }
+            }
+        }
+        return cnt;
+    }
+    static ByteBuffer ares = ByteBuffer.allocateDirect(Parameters.approximateResSize).order(ByteOrder.LITTLE_ENDIAN);
+    static ByteBuffer exactRes = ByteBuffer.allocateDirect(Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);
+    public static void searchOriTsHeapQueue(ByteBuffer info, boolean isExact) {
+        long searchOriTsTimeStart = System.currentTimeMillis(); // todo
+        PrintUtil.print("查询原始时间序列 info长度" + info.capacity() + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
+        long readTime = 0;   // todo
+        long readLockTime = 0;   // todo
+
+        SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
+
+        if (Parameters.hasTimeStamp > 0) {
+            SearchUtil.analysisInfoHeap(info, aQuery);
+        } else {
+            SearchUtil.analysisInfoNoTimeHeap(info, aQuery);
+        }
+        if (Parameters.findOriTsSort) {
+            aQuery.sortPList();
+        }
+        ByteBuffer res;
+        if(isExact) res = exactRes;
+        else res = ares;
+
+
+        int cnt = 0;
+        Set<MappedFileReaderBuffer> readerSet = new HashSet<>();
+        for (int i = 0; i < aQuery.pList.size(); i ++ ) {
+            Long p = aQuery.pList.get(i);
+            int p_hash = (int) (p >> 56);   // 文件名
+
+            MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(p_hash);
+            readerSet.add(reader);
+
+            long readLockTimeStart = System.currentTimeMillis();    // todo
+            synchronized (reader) {
+                List<Long> pList = reader.getPList();
+                pList.add(p);
+                System.out.println("p size " + pList.size());
+                if (pList.size() >= Parameters.FileSetting.queueSize) {
+                    long readTimeStart = System.currentTimeMillis();   // todo
+                    List<ByteBuffer> byteBufferList = reader.readTsQueue();
+                    readTime += (System.currentTimeMillis() - readTimeStart);   // todo
+
+                    cnt += pushHeap(byteBufferList, res, pList, aQuery, isExact);
+                    System.out.println("push heap 成功");
+                    reader.clearPList();
+                }
+            }
+            readLockTime += System.currentTimeMillis() - readLockTimeStart; // todo
+        }
+        for (MappedFileReaderBuffer reader : readerSet) { // 剩下不足Parameters.FileSetting.queueSize的
+            long readTimeStart = System.currentTimeMillis();   // todo
+            List<ByteBuffer> byteBufferList = reader.readTsQueue();
+            readTime += (System.currentTimeMillis() - readTimeStart);   // todo
+            List<Long> pList = reader.getPList();
+            cnt += pushHeap(byteBufferList, res, pList, aQuery, isExact);
+            reader.clearPList();
+        }
+        if (Main.isRecord) {
+            synchronized (SearchAction.class) { // todo
+                Main.cntP += aQuery.pList.size();
+                Main.totalReadTime += readTime;
+                Main.totalReadLockTime += readLockTime;
+                Main.cntRes += cnt;
+            }
+        }
+
+        PrintUtil.print(" 读取时间：" + readTime + " readLockTime：" + readLockTime +
+                " 查询个数：" + aQuery.pList.size() + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchOriTsTimeStart) +
+                " 线程：" + Thread.currentThread().getName() + "\n");  // todo
+    }
+
+
+
     public static ByteBuffer searchRtree(RTree<String, Rectangle> rTree, long startTime, long endTime, byte[] minSaxT, byte[] maxSaxT) {
         Iterable<Entry<String, Rectangle>> results;
         if (Parameters.hasTimeStamp > 0) {
@@ -46,8 +159,10 @@ public class SearchActionBuffer {
             }
         }
         ByteBuffer sstableNumBuffer = ByteBuffer.allocateDirect(8 * sstableNumList.size()).order(ByteOrder.LITTLE_ENDIAN);
+        System.out.println("sstableNumList大小" + sstableNumList.size());      // todo
         for (int i = 0; i < sstableNumList.size(); i ++ ) {
             sstableNumBuffer.putLong(sstableNumList.get(i));
+            System.out.println(sstableNumList.get(i));
         }
         return sstableNumBuffer;
     }
@@ -65,13 +180,17 @@ public class SearchActionBuffer {
             sstableNumBuffer = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
         }
 //        PrintUtil.print("r树结果: sstableNum：" + Arrays.toString(sstableNum));
+        PrintUtil.print("r树结果： 个数：" + sstableNumBuffer.capacity() / 8);
+        PrintUtil.printSSTableBuffer(sstableNumBuffer);
 
         // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
-        ByteBuffer approRes = ByteBuffer.allocateDirect(k * Parameters.aresSize + 4);   // 空的ByteBuffer给C写
-        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8); // 空的ByteBuffer给C写
+        ByteBuffer approRes = ByteBuffer.allocateDirect(k * Parameters.approximateResSize + 4).order(ByteOrder.LITTLE_ENDIAN);   // 空的ByteBuffer给C写
+        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
         int numAres = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID,
                 sstableNumBuffer.capacity() / 8, sstableNumBuffer, approRes, infoBuffer);
+
 //        PrintUtil.print("近似查询结果长度" + approRes.capacity());
+
         return new Pair<>(new Pair<>(numAres, approRes), sstableNumBuffer);
     }
 
@@ -79,14 +198,11 @@ public class SearchActionBuffer {
     public static ByteBuffer searchTs(ByteBuffer searchTsBuffer, long startTime, long endTime, int k) {
         PrintUtil.print("近似查询===");
         boolean isUseAm = true; // saxT范围 是否在个该机器上
-//        byte[] saxTData = new byte[Parameters.saxTSize];
         ByteBuffer saxTBuffer = ByteBuffer.allocateDirect(Parameters.saxTSize);
-//        float[] paa = new float[Parameters.paaNum];
         ByteBuffer paaBuffer = ByteBuffer.allocateDirect(Parameters.paaNum * 4);
-        PrintUtil.print("searchBuffer " + searchTsBuffer.toString());
-        PrintUtil.print("saxT: "  + saxTBuffer.toString());
         DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
-        PrintUtil.print("saxT: "  + saxTBuffer.toString());
+
+        searchTsBuffer.flip();
         ByteBuffer aQuery;
         if (Parameters.hasTimeStamp > 0) {
             aQuery = SearchUtil.makeAQuery(searchTsBuffer, startTime, endTime, k, paaBuffer, saxTBuffer);
@@ -115,8 +231,10 @@ public class SearchActionBuffer {
 
 
         // 近似查询
+        saxTBuffer.flip();
         byte[] saxTData = new byte[saxTBuffer.remaining()];
         saxTBuffer.get(saxTData);
+        PrintUtil.print("saxT:" + Arrays.toString(saxTData));
         int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1,增大查询范围
         Pair<Integer, ByteBuffer> aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                 rTree, amVersionID, stVersionID, k).getKey();
@@ -130,7 +248,7 @@ public class SearchActionBuffer {
             numAres = aresPair.getKey();
         }
 
-        // 释放版本
+//         释放版本
         VersionAction.unRefVersion(version);
 
         return ares;
@@ -138,6 +256,7 @@ public class SearchActionBuffer {
 
 
     public static ByteBuffer searchExactTs(ByteBuffer searchTsBuffer, long startTime, long endTime, int k) {
+
         PrintUtil.print("精确查询===");
         boolean isUseAm = true; // saxT范围 是否在个该机器上
 //        byte[] saxTData = new byte[Parameters.saxTSize];
@@ -145,9 +264,9 @@ public class SearchActionBuffer {
 //        float[] paa = new float[Parameters.paaNum];
         ByteBuffer paaBuffer = ByteBuffer.allocateDirect(Parameters.paaNum * 4);
         PrintUtil.print("searchBuffer " + searchTsBuffer.toString());
-        PrintUtil.print("saxT: "  + saxTBuffer.toString());
         DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
         PrintUtil.print("saxT: "  + saxTBuffer.toString());
+        searchTsBuffer.flip();
         ByteBuffer aQuery;
         if (Parameters.hasTimeStamp > 0) {
             aQuery = SearchUtil.makeAQuery(searchTsBuffer, startTime, endTime, k, paaBuffer, saxTBuffer);
@@ -173,6 +292,7 @@ public class SearchActionBuffer {
         }
 
         // 近似查询
+        saxTBuffer.flip();
         byte[] saxTData = new byte[saxTBuffer.remaining()];
         saxTBuffer.get(saxTData);
         int d = Parameters.bitCardinality;  // 相聚度,开始为bitCardinality,找不到k个则-1
@@ -182,7 +302,7 @@ public class SearchActionBuffer {
         ByteBuffer approSSTableNum = aresAndSSNum.getValue();
         int numAres = aresPair.getKey();
         ByteBuffer approRes = aresPair.getValue();
-        while((numAres - 4) / Parameters.aresSize < k && d > 0) { // 查询结果不够k个
+        while((numAres - 4) / Parameters.approximateResSize < k && d > 0) { // 查询结果不够k个
             d --;
             aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData,
                     aQuery, d, rTree, amVersionID, stVersionID, k).getKey();
@@ -256,8 +376,8 @@ public class SearchActionBuffer {
 //        PrintUtil.print("精确查询 r树结果:" + Arrays.toString(sstableNum) + "\t近似查询 r树结果:" + Arrays.toString(approSSTableNum));
 //        PrintUtil.print("aQuery长度 " + aQuery.length + "\t近似查询长度 " + approRes.length);
 
-        ByteBuffer exactRes = ByteBuffer.allocateDirect(k * Parameters.aresExactSize);   // 空的ByteBuffer给C写
-        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8); // 空的ByteBuffer给C写
+        ByteBuffer exactRes = ByteBuffer.allocateDirect(k * Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);   // 空的ByteBuffer给C写
+        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
         int numExactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID,
                 sstableNumList.size(), sstableNumBuffer, numAres, approRes,
                 approSSTableNum.capacity() / 8, approSSTableNum, exactRes, infoBuffer);

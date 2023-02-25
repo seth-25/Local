@@ -159,15 +159,8 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_paa_1saxt_1from_1ts_1buffer
   ts_only* ts_ = (ts_only*)env->GetDirectBufferAddress(ts);
   saxt_only* saxt_out_ = (saxt_only*)env->GetDirectBufferAddress(saxt_out);
   paa_only* paa_out_ = (paa_only*)env->GetDirectBufferAddress(paa_out);
-  printf("123");
-//  for (int i = 0; i < 256; i ++ ) {
-//    printf("%lf ", ((ts_type*) ts)[i]);
-//  }
-  ts_print((ts_type*)ts, 256);
-  printf("\n");
-
   paa_saxt_from_ts((ts_type*)ts_, (saxt_type*)saxt_out_, (ts_type*)paa_out_);
-  printf("456");
+
 }
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_paa_1saxt_1from_1ts
@@ -176,7 +169,6 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_paa_1saxt_1from_1ts
   saxt_only saxtArr;
 //  memset(saxtArr.asaxt, 0, sizeof(saxt_only));
   paa_only paaArr;
-
   env->GetByteArrayRegion(ts, 0, sizeof(ts_only), (jbyte*)tsArr.ts);
   paa_saxt_from_ts(tsArr.ts, saxtArr.asaxt, paaArr.apaa);
   env->SetByteArrayRegion(saxt_out, 0, sizeof(saxt_only), (jbyte*)saxtArr.asaxt);
@@ -254,9 +246,16 @@ JNIEXPORT jint JNICALL Java_leveldb_1sax_db_Get
   jniVector<uint64_t> st_numbers(st_numbers_, st_number_num);
   char* info_ = (char*)env->GetDirectBufferAddress(info);
   jniInfo info1 = {info_, info};
+//  printf("start get\n");
+//  for(int i=0;i<st_number_num;i++) {
+//    cout<<st_numbers_[i]<<" ";
+//  }
+  saxt_print(aquery1->asaxt);
+
   db->Get(*aquery1, is_use_am, am_version_id, st_version_id, st_numbers, results, res_amid, info1);
   int* a = (int*)(results_ + results.size());
   *a = res_amid;
+  printf("finish get\n");
   return results.size();
 }
 

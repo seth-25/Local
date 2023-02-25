@@ -63,7 +63,7 @@ public class Search implements Runnable{
     }
     private void computeDis(byte[] ans) {
         double dis = 0;
-        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+        for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
@@ -74,7 +74,7 @@ public class Search implements Runnable{
     private void computeExactDis(byte[] ans) {
         double dis = 0;
 //        double oldDis = 0;
-        for (int i = 0; i < ans.length; i += Parameters.aresExactSize) {
+        for (int i = 0; i < ans.length; i += Parameters.exactResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
@@ -98,7 +98,7 @@ public class Search implements Runnable{
     private void computeRecallAndError(byte[] ans) {
         Main.isRecord = false;  // 计算召回率和错误率时不要记录io时间和访问次数
         ArrayList<Ts> approAnsList = new ArrayList<>();
-        for (int i = 0; i < ans.length - 4; i += Parameters.aresSize) {
+        for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
             byte[] floatBytes = new byte[4];
@@ -110,7 +110,7 @@ public class Search implements Runnable{
 
         byte[] exactAns = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
 
-        for (int i = 0; i < exactAns.length; i += Parameters.aresExactSize) {
+        for (int i = 0; i < exactAns.length; i += Parameters.exactResSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
             byte[] floatBytes = new byte[4];
