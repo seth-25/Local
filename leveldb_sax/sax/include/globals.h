@@ -105,8 +105,13 @@ typedef unsigned char cod;
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
 #define get_exact_multiThread_file_size 1000*1024*1024
 
-#define pool_get_size 32
+#define pool_get_size 32  // 查询线程
 #define pool_compaction_size 8
+
+// 压缩合并申请的缓存大小， 几个leaf
+#define compaction_leaf_size 500
+// 压缩合并 把前缀压缩放哪个线程里， 0 放主线程， 1 放snap压缩线程
+#define qiehuan 0
 
 
 //超过这个重构叶结点

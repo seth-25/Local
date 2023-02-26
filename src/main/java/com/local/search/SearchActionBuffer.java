@@ -51,13 +51,23 @@ public class SearchActionBuffer {
             }
             if (aQuery.needNum > 0) {
                 cnt ++ ;
-                aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                if (isExact) {
+                    aQuery.topDist = DBUtil.dataBase.heap_push_exact_buffer(res, aQuery.heap);
+                }
+                else {
+                    aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                }
                 aQuery.needNum -- ;
             }
             else {
                 if (dis < aQuery.topDist) {
                     cnt ++ ;
-                    aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                    if (isExact) {
+                        aQuery.topDist = DBUtil.dataBase.heap_push_exact_buffer(res, aQuery.heap);
+                    }
+                    else {
+                        aQuery.topDist = DBUtil.dataBase.heap_push_buffer(res, aQuery.heap);
+                    }
                 }
             }
         }
@@ -91,6 +101,11 @@ public class SearchActionBuffer {
         for (int i = 0; i < aQuery.pList.size(); i ++ ) {
             Long p = aQuery.pList.get(i);
             int p_hash = (int) (p >> 56);   // 文件名
+
+            // todo todo
+            if (approbitmap.get(p) != null) {
+                System.out.println("精确有近似的p!!! " + p);
+            }
 
             MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(p_hash);
             readerSet.add(reader);
@@ -175,7 +190,9 @@ public class SearchActionBuffer {
         }
         else {
             byte[] minSaxT = SaxTUtil.makeMinSaxT(saxTData, d);
+//            System.out.println("minsax" + Arrays.toString(minSaxT));
             byte[] maxSaxT = SaxTUtil.makeMaxSaxT(saxTData, d);
+//            System.out.println("maxsax" + Arrays.toString(maxSaxT));
             sstableNumBuffer = searchRtree(rTree, startTime, endTime, minSaxT, maxSaxT);
         }
 //        PrintUtil.print("r树结果: sstableNum：" + Arrays.toString(sstableNum));
@@ -302,7 +319,8 @@ public class SearchActionBuffer {
         ByteBuffer approSSTableNum = aresAndSSNum.getValue();
         int numAres = aresPair.getKey();
         ByteBuffer approRes = aresPair.getValue();
-        while((numAres - 4) / Parameters.approximateResSize < k && d > 0) { // 查询结果不够k个
+        while(numAres < k && d > 0) { // 查询结果不够k个
+//        while(d > 0) { // 查询结果不够k个
             d --;
             aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData,
                     aQuery, d, rTree, amVersionID, stVersionID, k).getKey();
@@ -310,43 +328,7 @@ public class SearchActionBuffer {
             numAres = aresPair.getKey();
         }
 
-//        // todo
-//        System.out.println("判断近似结果正确");
-//        for (int i = 0; i < approRes.length - 4; i += Parameters.aresSize) {
-//            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-//            System.arraycopy(approRes, i, tsBytes, 0, Parameters.timeSeriesDataSize);
-//            byte[] floatBytes = new byte[4];
-//            System.arraycopy(approRes, i + Parameters.tsSize, floatBytes, 0, 4);
-//            byte[] pBytes = new byte[8];
-//            System.arraycopy(approRes, i + Parameters.tsSize + 8, pBytes, 0, 8);
-//            long p = SearchUtil.bytesToLong(pBytes);
-//            if (bitmap.get(p) != null) {
-//                System.out.println(" 近似p有重复！！！ " + p);
-//            }
-//            bitmap.put(p, 1L);
-//            int p_hash = (int) (p >> 56);   // 文件名
-//            long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
-//            MappedFileReader reader = CacheUtil.mappedFileReaderMap.get(p_hash);
-//            byte[] ts;
-//            synchronized (reader) {
-//                ts = reader.readTsNewByte(offset);
-//            }
-//            for (int j = 0; j < Parameters.tsSize; j ++ ) {
-//                if (ts[j] != tsBytes[j]) {
-//                    System.out.println("错误！！！！！！！！！！！！！");
-//
-//                    System.out.println(Arrays.toString(ts).substring(0,100));
-//                    System.out.println(Arrays.toString(tsBytes).substring(0,100));
-//                    break;
-//                }
-//                if (SearchUtil.bytesToFloat(floatBytes) != DBUtil.dataBase.dist_ts(ts, searchTsBytes)) {
-//                    System.out.println("距离错误！！！！！！！！！！！！！");
-//
-//                    System.out.println(Arrays.toString(ts).substring(0,100));
-//                    System.out.println(Arrays.toString(tsBytes).substring(0,100));
-//                }
-//            }
-//        }
+//        checkDis(approRes, searchTsBuffer);
 
         // 精确
         Iterable<Entry<String, Rectangle>> results;
@@ -376,6 +358,10 @@ public class SearchActionBuffer {
 //        PrintUtil.print("精确查询 r树结果:" + Arrays.toString(sstableNum) + "\t近似查询 r树结果:" + Arrays.toString(approSSTableNum));
 //        PrintUtil.print("aQuery长度 " + aQuery.length + "\t近似查询长度 " + approRes.length);
 
+
+//        System.out.println("近似sstable:");
+//        PrintUtil.printSSTableBuffer(approSSTableNum);
+
         ByteBuffer exactRes = ByteBuffer.allocateDirect(k * Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);   // 空的ByteBuffer给C写
         ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
         int numExactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID,
@@ -388,4 +374,57 @@ public class SearchActionBuffer {
 
         return exactRes;
     }
+
+    public static void checkDis(ByteBuffer approRes, ByteBuffer searchTsBuffer) {
+        //        // todo
+        System.out.println("判断近似结果正确");
+        byte[] ares = new byte[approRes.capacity()];
+        approRes.get(ares);
+        approRes.rewind();
+        searchTsBuffer.rewind();
+        byte[] searchTsBytes = new byte[Parameters.tsSize];
+        searchTsBuffer.get(searchTsBytes);
+        searchTsBuffer.rewind();
+
+        approbitmap.clear();
+
+        for (int i = 0; i < ares.length - 4; i += Parameters.approximateResSize) {
+            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
+            System.arraycopy(ares, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] floatBytes = new byte[4];
+            System.arraycopy(ares, i + Parameters.tsSize, floatBytes, 0, 4);
+            byte[] pBytes = new byte[8];
+            System.arraycopy(ares, i + Parameters.tsSize + 8, pBytes, 0, 8);
+            long p = SearchUtil.bytesToLong(pBytes);
+            if (approbitmap.get(p) != null) {
+                System.out.println(" 近似p有重复！！！ " + p);
+            }
+            approbitmap.put(p, 1L);
+            int p_hash = (int) (p >> 56);   // 文件名
+            long offset = p & 0x00ffffffffffffffL;  // ts在文件中的位置
+            MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(p_hash);
+            byte[] ts;
+            synchronized (reader) {
+                ts = reader.readTsNewByte(offset);
+            }
+            for (int j = 0; j < Parameters.tsSize; j ++ ) {
+                if (ts[j] != tsBytes[j]) {
+                    System.out.println("ts错误！！！！！！！！！！！！！");
+
+                    System.out.println(Arrays.toString(ts).substring(0,100));
+                    System.out.println(Arrays.toString(tsBytes).substring(0,100));
+                    break;
+                }
+
+                if (SearchUtil.bytesToFloat(floatBytes) != DBUtil.dataBase.dist_ts(ts, searchTsBytes)) {
+                    System.out.println("距离错误！！！！！！！！！！！！！");
+
+                    System.out.println(Arrays.toString(ts).substring(0,100));
+                    System.out.println(Arrays.toString(tsBytes).substring(0,100));
+                }
+            }
+        }
+        System.out.println("判断完毕");
+    }
+    static Map<Long, Long> approbitmap = new HashMap<>();
 }

@@ -130,7 +130,6 @@ ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), cv_q
   to_write_id = 0;
   to_get_id = 0;
 
-  for(auto & i : key_buffer) i.reserve(compaction_buffer_size);
 }
 
 void ST_merge_one::del(Table::ST_Iter* it) {
@@ -140,6 +139,8 @@ void ST_merge_one::del(Table::ST_Iter* it) {
 }
 
 void ST_merge_one::start() {
+
+  for(auto & i : key_buffer) i.reserve(compaction_buffer_size * 16);
 
   vec_size = st_iters.size();
   vec.reserve(vec_size);

@@ -19,6 +19,7 @@ public class Main {
         FileUtil.deleteFolderFiles("./db");
 
         MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(0);
+//        FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(0);
         if (reader == null) {
             throw new RuntimeException("ts文件夹下没有文件");
         }
@@ -36,6 +37,7 @@ public class Main {
                 long offset = reader.getOffset();
                 ByteBuffer tsBuffer = reader.read();
                 initTsBuffer.put(tsBuffer);
+                tsBuffer.flip();
                 System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             }
             DBUtil.dataBase.init_buffer(initTsNum, initTsBuffer, leafTimeKeyBuffer, 0, 0);
@@ -54,6 +56,7 @@ public class Main {
                 else {
                     initTsBuffer1.put(tsBuffer);
                 }
+                tsBuffer.flip();
                 System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
             }
             DBUtil.dataBase.init_buffer1(2000000, initTsBuffer, initTsNum - 2000000, initTsBuffer1, leafTimeKeyBuffer, 0, 0);
@@ -91,6 +94,9 @@ public class Main {
         for (File file: files) {
             MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
+
+            FileChannelReader reader1 = new FileChannelReader(file.getPath(), Parameters.FileSetting.readSize, fileNum);
+            CacheUtil.fileChannelReaderMap.put(fileNum, reader1);
 
 //            // todo todo
 //            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts

@@ -127,6 +127,8 @@ class MemTableInserter : public WriteBatch::Handler {
       : mem_(mems[memId]), mems(mems), mutex_(mutex), memId(memId), versionSet(versionSet){}
 
   bool Put(LeafKey& key) override {
+//    char tmp[16] = {14, 2, 77, 89, -63, -29, 88, 43, -109, -20, -121, 26, 15, 6, -1, 1};
+//    if(key.asaxt == *(saxt_only*)tmp) cout<<"you"<<endl;
     return mem_->Add(key);
   }
 

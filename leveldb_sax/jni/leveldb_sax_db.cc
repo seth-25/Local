@@ -119,8 +119,8 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
 #endif
   }
   int num = tskeynum + tskeynum1;
-  for(int i=tskeynum;i<num;i++) {
-    saxt_from_ts(tskeys_c1[i].ts, leafTimeKeys[i].leafKey.asaxt.asaxt);
+  for(int i=tskeynum, j=0;j<tskeynum1 && i < num ;i++, j++) {
+    saxt_from_ts(tskeys_c1[j].ts, leafTimeKeys[i].leafKey.asaxt.asaxt);
 #if ishash
     leafTimeKeys[i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else

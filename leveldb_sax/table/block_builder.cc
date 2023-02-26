@@ -130,16 +130,18 @@ void BlockBuilder::Add(NonLeaf* nonLeaf, vector<void*> &new_p) {
   buffer_.append((char*)&(nonLeaf->isleaf),1);
 }
 
-void BlockBuilder::AddLeaf(NonLeafKey* nonLeafKey) {
+void BlockBuilder::AddLeaf(NonLeafKey* nonLeafKey, void* tocopy) {
   cod co_d = nonLeafKey->co_d;
   size_t co_saxt_size = co_d * sizeof(saxt_type);
   size_t noco_saxt_size = sizeof(LeafKey) - co_saxt_size;
-  LeafKey* leafKeys = (LeafKey*)nonLeafKey->p;
+  LeafKey* leafKeys = (LeafKey*)tocopy;
   //把共享的压缩掉
   for(int i=0;i<nonLeafKey->num;i++){
     buffer_.append(((char*)(leafKeys + i)), noco_saxt_size);
   }
 }
+
+
 
 void BlockBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf) {
   cod co_d = nonLeafKey->co_d;

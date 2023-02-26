@@ -9,16 +9,65 @@
 
 #include "leveldb/table.h"
 
+
 namespace leveldb {
-class ST_Conmpaction : public Zsbtree_Build {
+
+
+
+class ST_Compaction_Leaf {
+ public:
+
+  typedef struct leaf_leafkey_rep{
+    LeafKey rep[Leaf_rebuildnum];
+  } leaf_leafkey;
+
+  leaf_leafkey leafs[compaction_leaf_size];
+
+#if qiehuan
+  void add(NonLeafKey* nonLeafKey, long snap_add, void*& tocopy) {
+    snap_add %= compaction_leaf_size;
+    LeafKey* leafKeys = (LeafKey*)nonLeafKey->p;
+    int num = nonLeafKey->num;
+    char* tmpbuffer = (char*)leafs[snap_add].rep;
+    tocopy = tmpbuffer;
+    memcpy((char*)leafs[snap_add].rep, leafKeys, num * sizeof(LeafKey));
+  }
+
+#else
+  void add(NonLeafKey* nonLeafKey, long snap_add, void*& tocopy, size_t& size_tocopy) {
+    snap_add %= compaction_leaf_size;
+    cod co_d = nonLeafKey->co_d;
+    size_t co_saxt_size = co_d * sizeof(saxt_type);
+    size_t noco_saxt_size = sizeof(LeafKey) - co_saxt_size;
+    LeafKey* leafKeys = (LeafKey*)nonLeafKey->p;
+    char* tmpbuffer = (char*)leafs[snap_add].rep;
+    tocopy = tmpbuffer;
+    int num = nonLeafKey->num;
+    size_tocopy = num * noco_saxt_size;
+    //把共享的压缩掉
+    for(int i=0;i<num;i++){
+      charcpy(tmpbuffer, leafKeys + i, noco_saxt_size);
+    }
+  }
+#endif
+};
+
+
+class ST_Compaction : public Zsbtree_Build {
   void doleaf(NonLeafKey* nonLeafKey) override;
   void dononleaf(NonLeafKey* nonLeafKey, bool isleaf) override;
 
  public:
-  ST_Conmpaction(int max_size, int min_size, TableBuilder* tableBuilder);
+  ST_Compaction(int max_size, int min_size, TableBuilder* tableBuilder, ThreadPool* snap_pool, ST_Compaction_Leaf* leafs_);
+
+
+  void add_root();
 
  private:
+  ST_Compaction_Leaf* leafs_;
   TableBuilder* tableBuilder;
+  ThreadPool* snap_pool;
+  long snap_add;
 };
 }
 

@@ -85,16 +85,16 @@ public class SearchBuffer implements Runnable{
 
     private void computeExactDis(byte[] ans) {
         double dis = 0;
-//        double oldDis = 0;
+        double oldDis = 0;
         for (int i = 0; i < ans.length; i += Parameters.exactResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
             System.out.println(SearchUtil.bytesToFloat(floatBytes));
-//            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
-//                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
-//            }
-//            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
+                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
+            }
+            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
         Main.oneDis = dis / k;
     }

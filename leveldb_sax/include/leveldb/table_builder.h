@@ -19,6 +19,7 @@
 #include "leveldb/export.h"
 #include "leveldb/options.h"
 #include "leveldb/status.h"
+#include<atomic>
 
 
 namespace leveldb {
@@ -52,8 +53,17 @@ class LEVELDB_EXPORT TableBuilder {
   // Add key,value to the table being constructed.
   // REQUIRES: key is after any previously added key according to comparator.
   // REQUIRES: Finish(), Abandon() have not been called
-  void AddLeaf(NonLeafKey* nonLeafKey);
+#if qiehuan
+  void AddLeaf(NonLeafKey* nonLeafKey, void* tocopy);
+#else
+  void AddLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_tocopy);
+#endif
   void AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf);
+
+  void Addsnap(NonLeafKey* nonLeafKey);
+
+
+
   void AddRootKey(NonLeafKey* nonLeafKey);
   void Add(MemTable* mem);
 
@@ -85,11 +95,17 @@ class LEVELDB_EXPORT TableBuilder {
   // Finish() call, returns the size of the final generated file.
   uint64_t FileSize() const;
 
+  inline void wait_leaf_buffer(long snap_add) { while ( snap_add - snap_add_finish.load(memory_order_acquire) > compaction_leaf_size - 2) {} }
+
+  inline void wait_snap_wan(long snap_add) { while (snap_add_finish.load(memory_order_acquire) != snap_add) {} }
+
  private:
   void Add_dfs(NonLeaf* nonLeaf);
   bool ok() const { return status().ok(); }
   void WriteBlock(BlockBuilder* block, STpos* handle);
   void WriteRawBlock(const Slice& data, CompressionType, STpos* handle);
+
+  atomic<long> snap_add_finish;
 
   struct Rep;
   Rep* rep_;

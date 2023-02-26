@@ -30,7 +30,10 @@ class BlockBuilder {
 
   //返回压缩后的大小
 
-  void AddLeaf(NonLeafKey* nonLeafKey);
+  void AddLeaf(NonLeafKey* nonLeafKey, void* tocopy) ;
+  inline void AddLeaf_(void* tocopy, size_t size_tocopy) {
+    buffer_.append((char*)tocopy, size_tocopy);
+  }
   void AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf);
 
   void Add(Leaf* leaf, LeafKey* copyleaf);

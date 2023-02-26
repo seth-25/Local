@@ -161,6 +161,8 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname, const void
   pool = new ThreadPool(pool_size);
   pool_get = new ThreadPool(pool_get_size);
   pool_compaction = new ThreadPool(pool_compaction_size);
+  pool_snap = new ThreadPool(1);
+  stCompactionLeaf = new ST_Compaction_Leaf();
 }
 
 DBImpl::~DBImpl() {
@@ -1091,7 +1093,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 //  SequenceNumber last_sequence_for_key = kMaxSequenceNumber;
   LeafKey leafKey;
   LeafKey oldKey;
-  Zsbtree_Build* zsbtreeBuild;
+  ST_Compaction* zsbtreeBuild;
   //因为两个文件范围不能重合，除了最后一个文件
   bool tocompact_flag = false;
   //调试用
@@ -1156,8 +1158,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
 //      saxt_print(oldKey.asaxt.asaxt);
 //      saxt_print(leafKey.asaxt.asaxt);
       zsbtreeBuild->finish();
-      compact->builder->AddRootKey(zsbtreeBuild->GetRootKey());
-
+      zsbtreeBuild->add_root();
       assert(zsbtreeBuild->GetRootKey()->rsaxt == saxt_only(compact->current_output()->largest.user_key().data()));
       delete zsbtreeBuild;
       status = FinishCompactionOutputFile(compact);
@@ -1185,7 +1186,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       }
 //      out("small");
 //      saxt_print(leafKey.asaxt);
-      zsbtreeBuild = new ST_Conmpaction(Leaf_maxnum, Leaf_minnum, compact->builder);
+      zsbtreeBuild = new ST_Compaction(Leaf_maxnum, Leaf_minnum, compact->builder, pool_snap, stCompactionLeaf);
       InternalKey ikey(Slice((char*)leafKey.asaxt.asaxt, sizeof(saxt_only)), 0, static_cast<ValueType>(0));
       Slice key = ikey.Encode();
       compact->current_output()->smallest.DecodeFrom(key);
@@ -1197,6 +1198,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     zsbtreeBuild->Add(leafKey);
 //    out("add完");
     // Close output file if it is big enough
+    //无所谓 filesize
     if (!tocompact_flag && compact->builder->FileSize() >=
         compact->compaction->MaxOutputFileSize()) {
 //      cout<<"max_size"<<compact->compaction->MaxOutputFileSize()<<endl;
@@ -1225,7 +1227,7 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
     compact->current_output()->largest.DecodeFrom(key);
     zsbtreeBuild->finish();
     out((int)zsbtreeBuild->nonleafkeys.size());
-    compact->builder->AddRootKey(zsbtreeBuild->GetRootKey());
+    zsbtreeBuild->add_root();
     assert(zsbtreeBuild->GetRootKey()->rsaxt == saxt_only(compact->current_output()->largest.user_key().data()));
     delete zsbtreeBuild;
     status = FinishCompactionOutputFile(compact);
@@ -1415,6 +1417,7 @@ Status DBImpl::Get(const aquery& aquery1,
     if (istrue) {
       out("时间范围对上");
       res_amid = i - 1;
+//      cout<<"res_amid"<<" "<<res_amid<<endl;
       //表范围有重合
       query_heap* res_heap = new query_heap(aquery1.k, st_number.size() + 1);
       res_heap->vv1 = this_mem_version;
@@ -2794,17 +2797,20 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   res_heap->Lock();
 
 
+//  cout<<"jinqueamid"<<" "<<appro_am_id<<endl;
   for(auto item: to_find_mems) {
     pool_get->enqueue(&DBImpl::BGWork_Get_am_exact, this, aquery1, res_heap, this_mems[item], appro_am_id == item);
 //    std::thread athread(&DBImpl::BGWork_Get_am_exact, this, aquery1, res_heap, this_mems[item], appro_am_id == item);
 //    athread.detach();
   }
 
+//  cout<<"cst_number"<<endl;
   for (int o=0;o<st_number.size();o++) {
     int j = st_number[o];
     bool isappro = false;
     for(int oo=0;oo<appro_st_number.size();oo++) {
       int appro_st_j = appro_st_number[oo];
+//      cout<<appro_st_j<<endl;
       if (appro_st_j==j) isappro = true;
     }
     pool_get->enqueue(&DBImpl::BGWork_Get_st_exact, this, aquery1, res_heap, j, res_heap->vv2, isappro);
@@ -2896,9 +2902,8 @@ void DBImpl::BGWork_Get_st_exact(void* db, const aquery& aquery1,
 
 void DBImpl::Get_am_exact(const aquery& aquery1, query_heap_exact* res_heap,
                     MemTable* to_find_mem, bool isappro) {
-
+//  isappro = true;
   if (isappro){
-
     ZsbTree_finder_exact_appro Finder(aquery1, res_heap, to_find_mem->GetRoot(), db_jvm);
 
     Finder.start();
@@ -2933,7 +2938,7 @@ void DBImpl::Get_am_exact(const aquery& aquery1, query_heap_exact* res_heap,
 static int x1 = 0;
 void DBImpl::Get_st_exact(const aquery& aquery1, query_heap_exact* res_heap,
                     uint64_t st_number, Version* this_ver, bool isappro) {
-
+//  isappro = true;
   out1("get_st_exact", st_number);
 //  cout<<"get_st_exact:"+st_number<<endl;
 //  cout<<"jia"<<++x1<<endl;
@@ -3053,8 +3058,10 @@ Status DBImpl::Init(LeafTimeKey* leafKeys, int leafKeysNum) {
 #if istime > 0
   ts_time* times_rep = (ts_time*)malloc(leafKeysNum*sizeof(ts_time));
 #endif
+//  char tmp[16] = {14, 2, 77, 89, -63, -29, 88, 43, -109, -20, -121, 26, 15, 6, -1, 1};
   for(int i=0;i<leafKeysNum;i++){
     leafkeys_rep[i] = leafKeys[i].leafKey;
+//    if(leafKeys[i].leafKey.asaxt == *(saxt_only*)tmp) cout<<"youinit"<<endl;
 #if istime > 0
     times_rep[i] = leafKeys[i].keytime;
 #endif
@@ -3406,11 +3413,7 @@ Status DBImpl::MakeRoomForWrite(bool force, int memId) {
   bool allow_delay = !force;
   Status s;
   while (true) {
-    if (!bg_error_.ok()) {
-      // Yield previous error
-      s = bg_error_;
-      break;
-    } else if (allow_delay && versions_->NumLevelFiles(0) >=
+      if (allow_delay && versions_->NumLevelFiles(0) >=
                                   config::kL0_SlowdownWritesTrigger) {
       // We are getting close to hitting a hard limit on the number of
       // L0 files.  Rather than delaying a single write by several

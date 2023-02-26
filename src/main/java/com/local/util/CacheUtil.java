@@ -14,7 +14,7 @@ public class CacheUtil {
     public static Map<String, HashMap<Integer, Integer>> workerInVerRef = new ConcurrentHashMap<>(); // 所有worker的内存版本ref
     public static Map<String, HashMap<Integer, Integer>> workerOutVerRef = new ConcurrentHashMap<>(); // 所有worker的外存版本ref
 
-//    public static Map<Integer, FileChannelReader> fileChannelReaderMap = new HashMap<>();
+    public static Map<Integer, FileChannelReader> fileChannelReaderMap = new HashMap<>();
     public static Map<Integer, MappedFileReaderBuffer> mappedFileReaderMapBuffer = new HashMap<>();
     public static Map<Integer, MappedFileReader> mappedFileReaderMap = new HashMap<>();     // todo todo
     public static ExecutorService insertThreadPool = Executors.newFixedThreadPool(Parameters.insertNumThread + 1);

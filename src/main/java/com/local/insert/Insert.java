@@ -41,11 +41,13 @@ public class Insert implements Runnable{
             boolean flag = true;
             while(flag) {
                 for (Map.Entry<Integer, MappedFileReaderBuffer> entry: CacheUtil.mappedFileReaderMapBuffer.entrySet()) {
+//                for (Map.Entry<Integer, FileChannelReader> entry: CacheUtil.fileChannelReaderMap.entrySet()) {
                     flag = false;
 
                     // 从文件读ts
                     long IOTimeStart = System.currentTimeMillis();
                     MappedFileReaderBuffer reader = entry.getValue();
+//                    FileChannelReader reader = entry.getValue();
                     long offset = reader.getOffset();
                     ByteBuffer tsBuffer = reader.read();
                     if (tsBuffer != null) { // 这个文件没读完
@@ -90,8 +92,12 @@ public class Insert implements Runnable{
                 return false;
             }
             System.out.println("插入次数：" + ++cntInsert);
+
+//            byte[] tsBytes = new byte[Parameters.FileSetting.readSize];
+//            tsReadBatch.getTsBuffer().get(tsBytes);
+//            tsReadBatch.getTsBuffer().rewind();
 //            for (int i = 0; i < 100; i ++ ) {
-//                System.out.print(tsReadBatch.getTsBytes()[i] + " ");
+//                System.out.print(tsBytes[i] + " ");
 //            }
 //            System.out.println();
 

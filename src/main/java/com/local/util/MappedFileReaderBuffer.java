@@ -29,12 +29,12 @@ public class MappedFileReaderBuffer {
 
 
     private final int arraySize;
-    private byte[] array;
-    private byte[][] arrays; // 用于读取时间序列进行插入
+//    private byte[] array;
+//    private byte[][] arrays; // 用于读取时间序列进行插入
     private Queue<byte[]> arraysList = new ConcurrentLinkedQueue<>();   // 用于指定使用哪个array
-    private byte[] resArray;
+//    private byte[] resArray;
     private byte[] tsArray; // 用于查询原始时间序列，返回单个ts
-    byte[][] tsArrays;
+//    byte[][] tsArrays;
 
     private boolean isRes = false;
 
@@ -44,7 +44,7 @@ public class MappedFileReaderBuffer {
     private List<ByteBuffer> byteBufferList = new ArrayList<>();
     private List<Future<Integer>> operationList = new ArrayList<>();
 
-    private int offset = 0;
+    private long offset = 0;
 
     private final int fileNum;
 
@@ -69,10 +69,10 @@ public class MappedFileReaderBuffer {
         }
         // 顺序读
         this.arraySize = arraySize;
-        this.arrays = new byte[2 * Parameters.insertNumThread][arraySize];
-        for (int i = 0; i < 2 * Parameters.insertNumThread; i ++ ) {
-            arraysList.offer(arrays[i]);
-        }
+//        this.arrays = new byte[2 * Parameters.insertNumThread][arraySize];
+//        for (int i = 0; i < 2 * Parameters.insertNumThread; i ++ ) {
+//            arraysList.offer(arrays[i]);
+//        }
 
 
         // 随机读
@@ -84,21 +84,24 @@ public class MappedFileReaderBuffer {
         for (int i = 0; i < Parameters.FileSetting.queueSize; i ++ ) {
             byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize));
         }
-        this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];// new byte时间消耗很大，预先开好空间
+//        this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];// new byte时间消耗很大，预先开好空间
         this.fileNum = fileNum;
     }
 
     public ByteBuffer read() {
-        array = arraysList.poll();
+//        array = arraysList.poll();
         if (count >= number) {  // 文件读取完毕
             PrintUtil.print("清空读取文件的byte数组");
-            resArray = null;
-            arrays = null;
+//            resArray = null;
+//            arrays = null;
             return null;
         }
 
         int limit = mappedBufArray[count].limit();
         int position = mappedBufArray[count].position();
+
+
+//        ByteBuffer newBuffer = ByteBuffer.allocateDirect(Parameters.FileSetting.readSize);
 
         if (limit - position > arraySize) {
             isRes = false;
@@ -106,6 +109,11 @@ public class MappedFileReaderBuffer {
             MappedByteBuffer mappedByteBuffer = mappedBufArray[count];
             mappedByteBuffer.load();
             while(!mappedByteBuffer.isLoaded());
+//
+//            newBuffer.put(mappedByteBuffer);
+//            System.out.println(newBuffer);
+//            return newBuffer;
+
             return mappedByteBuffer;
         }
         else if (limit - position == arraySize){ // 本内存文件映射最后一次读取数据
@@ -115,6 +123,11 @@ public class MappedFileReaderBuffer {
             MappedByteBuffer mappedByteBuffer = mappedBufArray[count ++];   // 转换到下一个内存文件映射
             mappedByteBuffer.load();
             while(!mappedByteBuffer.isLoaded());
+//
+//            newBuffer.put(mappedByteBuffer);
+//            System.out.println(newBuffer);
+//            return newBuffer;
+
             return mappedByteBuffer;
         }
         else {
@@ -126,6 +139,11 @@ public class MappedFileReaderBuffer {
             MappedByteBuffer mappedByteBuffer = mappedBufArray[count ++ ];
             mappedByteBuffer.load();
             while(!mappedByteBuffer.isLoaded());
+//
+//            newBuffer.put(mappedByteBuffer);
+//            System.out.println(newBuffer);
+//            return newBuffer;
+
             return mappedByteBuffer;
         }
     }
@@ -208,7 +226,7 @@ public class MappedFileReaderBuffer {
         return fileLength;
     }
 
-    public int getOffset() {
+    public long getOffset() {
         return offset;
     }
 
@@ -218,7 +236,7 @@ public class MappedFileReaderBuffer {
 
     public void close() throws IOException {
         fileIn.close();
-        arrays = null;
-        resArray = null;
+//        arrays = null;
+//        resArray = null;
     }
 }

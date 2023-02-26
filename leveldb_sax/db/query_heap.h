@@ -163,10 +163,13 @@ class query_heap_exact : public query_heap_rep<ares_exact> {
       : query_heap_rep(k,tableNum) {}
 
   void init(const jniVector<ares>& appro_res) {
+//    cout<<"近似查询的p"<<endl;
     for(int i=0;i<appro_res.size();i++) {
       res_heap.push(appro_res[i].rep);
       p_set.insert(appro_res[i].p);
+//      cout<<appro_res[i].p<<endl;
     }
+//    if(appro_res.size()<k) cout<<"错了"<<endl;
   }
 
   inline bool is_in_set(void* p) {

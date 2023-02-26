@@ -53,7 +53,7 @@ struct TableBuilder::Rep {
 
 TableBuilder::TableBuilder(const Options& options, WritableFile* file)
     : rep_(new Rep(options, file)) {
-
+  snap_add_finish.store(0, memory_order_release);
 }
 
 TableBuilder::~TableBuilder() {
@@ -75,24 +75,41 @@ Status TableBuilder::ChangeOptions(const Options& options) {
   return Status::OK();
 }
 
-void TableBuilder::AddLeaf(NonLeafKey* nonLeafKey) {
+
+#if qiehuan
+void TableBuilder::AddLeaf(NonLeafKey* nonLeafKey, void* tocopy) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-
-  r->data_block.AddLeaf(nonLeafKey);
-  Flush();
-  nonLeafKey->p = r->pending_handle.Get();
+  r->data_block.AddLeaf(nonLeafKey, tocopy);
+  Addsnap(nonLeafKey);
 }
+#else
+void TableBuilder::AddLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_tocopy) {
+  Rep* r = rep_;
+  assert(!r->closed);
+  if (!ok()) return;
+  r->data_block.AddLeaf_(tocopy, size_tocopy);
+//  r->data_block.AddLeaf(nonLeafKey);
+  Addsnap(nonLeafKey);
+}
+#endif
 
 void TableBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
   r->data_block.AddNonLeaf(nonLeafKey, isleaf);
+  Addsnap(nonLeafKey);
+}
+
+void TableBuilder::Addsnap(NonLeafKey* nonLeafKey) {
+  Rep* r = rep_;
   Flush();
   nonLeafKey->p = r->pending_handle.Get();
+  snap_add_finish.fetch_add(1, memory_order_release);
 }
+
 
 void TableBuilder::AddRootKey(NonLeafKey* nonLeafKey) {
   Rep* r = rep_;
@@ -295,6 +312,7 @@ void TableBuilder::Abandon() {
 //uint64_t TableBuilder::NumEntries() const { return rep_->num_entries; }
 
 uint64_t TableBuilder::FileSize() const { return rep_->offset; }
+
 
 
 }  // namespace leveldb

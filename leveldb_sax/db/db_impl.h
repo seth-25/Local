@@ -244,6 +244,8 @@ class DBImpl : public DB {
   ThreadPool* pool;
   ThreadPool* pool_get;
   ThreadPool* pool_compaction;
+  ThreadPool* pool_snap;
+  ST_Compaction_Leaf* stCompactionLeaf;
   bool imms_isdoing[10];
   std::deque<std::pair<MemTable*, int>> imms GUARDED_BY(mutex_);
   std::atomic<bool> has_imm_;         // So bg thread can detect non-null imm_
