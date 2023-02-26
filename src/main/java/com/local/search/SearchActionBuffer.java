@@ -204,9 +204,7 @@ public class SearchActionBuffer {
         ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
         int numAres = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID,
                 sstableNumBuffer.capacity() / 8, sstableNumBuffer, approRes, infoBuffer);
-
 //        PrintUtil.print("近似查询结果长度" + approRes.capacity());
-
         return new Pair<>(new Pair<>(numAres, approRes), sstableNumBuffer);
     }
 
