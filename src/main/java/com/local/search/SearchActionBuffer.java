@@ -266,7 +266,7 @@ public class SearchActionBuffer {
                     rTree, amVersionID, stVersionID, k).getKey();
             ares = aresPair.getValue();
             numAres = aresPair.getKey();
-            PrintUtil.print("近似结果个数 " + numAres);
+            System.out.println("近似结果个数 " + numAres);
         }
 
 //         释放版本
@@ -278,7 +278,7 @@ public class SearchActionBuffer {
 
     public static ByteBuffer searchExactTs(ByteBuffer searchTsBuffer, long startTime, long endTime, int k) {
         PrintUtil.print("精确查询===");
-        System.out.println("时间 " + startTime + " " + endTime);
+//        System.out.println("时间 " + startTime + " " + endTime);
         boolean isUseAm = true; // saxT范围 是否在个该机器上
 //        byte[] saxTData = new byte[Parameters.saxTSize];
         ByteBuffer saxTBuffer = ByteBuffer.allocateDirect(Parameters.saxTSize);
@@ -333,7 +333,7 @@ public class SearchActionBuffer {
             approSSTableNum = aresAndSSNum.getValue();
             approRes = aresPair.getValue();
             numAres = aresPair.getKey();
-            PrintUtil.print("近似结果个数 " + numAres);
+            System.out.println("近似结果个数 " + numAres);
         }
 
 //        checkDis(approRes, searchTsBuffer);

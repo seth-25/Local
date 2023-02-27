@@ -173,7 +173,7 @@ public class Search implements Runnable{
             // ares_exact(有时间戳): ts 256*4, float dist 4
             // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
             ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
-            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
+            Main.searchTime = System.currentTimeMillis() - searchTimeStart;
             computeExactDis(ans);
         }
         else {
@@ -181,7 +181,7 @@ public class Search implements Runnable{
             // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
             // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
             ans = SearchAction.searchTs(searchTsBytes, startTime, endTime, k);
-            Main.searchTime += System.currentTimeMillis() - searchTimeStart;
+            Main.searchTime = System.currentTimeMillis() - searchTimeStart;
 
 
             computeDis(ans);

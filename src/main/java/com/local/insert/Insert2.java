@@ -1,5 +1,6 @@
 package com.local.insert;
 
+
 import com.local.Main;
 import com.local.SearchLock;
 import com.local.domain.Parameters;
@@ -9,12 +10,12 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * Search after insert
+ * Search while insert
  */
-public class Insert implements Runnable{
+public class Insert2 implements Runnable{
     private int queryNum;
     SearchLock searchLock;
-    public Insert(int queryNum, SearchLock searchLock) {
+    public Insert2(int queryNum, SearchLock searchLock) {
         this.queryNum = queryNum;
         this.searchLock = searchLock;
     }
@@ -73,7 +74,7 @@ public class Insert implements Runnable{
 
                     ++cntRead;
 
-                    if (cntRead == 200 - Parameters.initNum) {   // 提前结束
+                    if (cntRead == 100 - Parameters.initNum) {   // 提前结束
                         for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
                             put(new TsReadBatch(null, -1, -1)); // 结束
                         }
@@ -86,7 +87,7 @@ public class Insert implements Runnable{
             }
 
         }
-        public boolean consume(ByteBuffer leafTimeKeysBuffer) throws InterruptedException {
+        public boolean consume(ByteBuffer leafTimeKeysBuffer, int queryNum, SearchLock searchLock) throws InterruptedException {
             TsReadBatch tsReadBatch;
             synchronized (this) {
                 while(cntGet <= 0) {
@@ -116,8 +117,19 @@ public class Insert implements Runnable{
                 cnt --; // insert完才-1，防止tsBytes被覆盖
 //                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
-
                 System.out.println("插入次数：" + ++cntInsert);
+
+                if (cntInsert > 10) {
+                    searchLock.lock.lock();
+                    try {
+                        searchLock.searchNum ++;
+                        searchLock.condition.signal();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        searchLock.lock.unlock();
+                    }
+                }
             }
             return true;
         }
@@ -136,7 +148,7 @@ public class Insert implements Runnable{
                     ByteBuffer leafTimeKeysBuffer = ByteBuffer.allocateDirect(Parameters.FileSetting.readTsNum * Parameters.leafTimeKeysSize);
                     while(true) {
                         try {
-                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer)) break;
+                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer, queryNum, searchLock)) break;
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
@@ -157,17 +169,6 @@ public class Insert implements Runnable{
         Main.hasInsert = true;
         System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime);
         CacheUtil.insertThreadPool.shutdown();
-
-
-        searchLock.lock.lock();
-        try {
-            searchLock.searchNum = queryNum;
-            searchLock.condition.signal();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            searchLock.lock.unlock();
-        }
 
     }
 

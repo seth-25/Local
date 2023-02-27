@@ -2,7 +2,7 @@ package com.local.domain;
 
 public class Parameters {
 
-    public static final int hasTimeStamp = 2;   // 0没时间戳,1有且不存时间戳,2有且存时间戳
+    public static final int hasTimeStamp = 0;   // 0没时间戳,1有且不存时间戳,2有且存时间戳
 
     public static String hostName = "Ubuntu002"; // 本机的hostname
     public static int numThread = 5;
