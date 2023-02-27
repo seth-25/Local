@@ -127,14 +127,19 @@ class MemTableInserter : public WriteBatch::Handler {
       : mem_(mems[memId]), mems(mems), mutex_(mutex), memId(memId), versionSet(versionSet){}
 
   bool Put(LeafKey& key) override {
-//    char tmp[16] = {14, 2, 77, 89, -63, -29, 88, 43, -109, -20, -121, 26, 15, 6, -1, 1};
-//    if(key.asaxt == *(saxt_only*)tmp) cout<<"you"<<endl;
+//    char tmp[16] = {67, -62, 116, -32, -92, -3, 73, 62, -61, -67, 23, 79, 15, 3, -1, 0};
+//    if(key.asaxt == *(saxt_only*)tmp) {
+//      cout<<"you"<<endl;
+//      cout<<key.keytime_<<endl;
+//    }
     return mem_->Add(key);
   }
 
   void SetTime(ts_time newtime) override {
+//    if(newtime>100000000000)
+//      exit(1);
     if (mem_->endTime < newtime) mem_->endTime = newtime;
-    else if (mem_->startTime > newtime) mem_->startTime = newtime;
+    if (mem_->startTime > newtime) mem_->startTime = newtime;
   }
 
 

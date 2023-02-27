@@ -1,7 +1,6 @@
 package com.local.util;
 
 import com.local.domain.Parameters;
-import com.local.domain.TimeSeries;
 
 public class TsUtil {
 //    public static int computeHash(TimeSeries timeSeries) {
@@ -9,9 +8,9 @@ public class TsUtil {
 //        return (int) (bytesToLong(timeStampByte) % Parameters.tsHash);
 //    }
     public static boolean compareTs(byte[] ts1, byte[] ts2) {
-        assert ts1.length == Parameters.timeSeriesDataSize;
-        assert ts2.length == Parameters.timeSeriesDataSize;
-        for (int i = 0; i < Parameters.timeSeriesDataSize; i ++ ) {
+        assert ts1.length == Parameters.tsDataSize;
+        assert ts2.length == Parameters.tsDataSize;
+        for (int i = 0; i < Parameters.tsDataSize; i ++ ) {
             if (ts1[i] != ts2[i]) return false;
         }
         return true;

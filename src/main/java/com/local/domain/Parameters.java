@@ -2,14 +2,14 @@ package com.local.domain;
 
 public class Parameters {
 
-    public static final int hasTimeStamp = 0;   // 0没时间戳,1有且不存时间戳,2有且存时间戳
+    public static final int hasTimeStamp = 2;   // 0没时间戳,1有且不存时间戳,2有且存时间戳
 
     public static String hostName = "Ubuntu002"; // 本机的hostname
     public static int numThread = 5;
 
-    public static final int timeSeriesDataSize = 256 * 4;   // 时间序列多少字节
+    public static final int tsDataSize = 256 * 4;   // 时间序列多少字节
     public static final int timeStampSize = 8; // 时间戳多少字节
-    public static final int tsSize = (hasTimeStamp > 0) ? timeSeriesDataSize + timeStampSize : timeSeriesDataSize;
+    public static final int tsSize = (hasTimeStamp > 0) ? tsDataSize + timeStampSize : tsDataSize;
 
 
     public static final int segmentSize  = 16;   // 分成几段

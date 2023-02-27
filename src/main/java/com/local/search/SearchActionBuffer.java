@@ -25,8 +25,9 @@ public class SearchActionBuffer {
         for (int i = 0; i < pList.size(); i ++ ) {
             ByteBuffer tsBuffer = byteBufferList.get(i);
             if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
-                tsBuffer.position(Parameters.timeSeriesDataSize);
+                tsBuffer.position(Parameters.tsDataSize);
                 long timestamps = tsBuffer.getLong();
+
                 if (timestamps < aQuery.startTime || timestamps > aQuery.endTime) {
                     continue;
                 }
@@ -91,6 +92,9 @@ public class SearchActionBuffer {
         if (Parameters.findOriTsSort) {
             aQuery.sortPList();
         }
+
+//        System.out.println("aQuery时间:" + aQuery.startTime + " " + aQuery.endTime);
+
         ByteBuffer res;
         if(isExact) res = exactRes;
         else res = ares;
@@ -255,15 +259,14 @@ public class SearchActionBuffer {
                 rTree, amVersionID, stVersionID, k).getKey();
         int numAres = aresPair.getKey();
         ByteBuffer ares = aresPair.getValue();
-        if (numAres < k) {
-            System.out.println("近似结果 < k 个");
-        }
         while(numAres < k && d > 0) { // 查询结果不够k个
             d --;
+            System.out.println("近似结果 < k 个, d:" + d + " 时间" + startTime + " " + endTime);
             aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
                     rTree, amVersionID, stVersionID, k).getKey();
             ares = aresPair.getValue();
             numAres = aresPair.getKey();
+            PrintUtil.print("近似结果个数 " + numAres);
         }
 
 //         释放版本
@@ -275,6 +278,7 @@ public class SearchActionBuffer {
 
     public static ByteBuffer searchExactTs(ByteBuffer searchTsBuffer, long startTime, long endTime, int k) {
         PrintUtil.print("精确查询===");
+        System.out.println("时间 " + startTime + " " + endTime);
         boolean isUseAm = true; // saxT范围 是否在个该机器上
 //        byte[] saxTData = new byte[Parameters.saxTSize];
         ByteBuffer saxTBuffer = ByteBuffer.allocateDirect(Parameters.saxTSize);
@@ -320,17 +324,16 @@ public class SearchActionBuffer {
         ByteBuffer approSSTableNum = aresAndSSNum.getValue();
         int numAres = aresPair.getKey();
         ByteBuffer approRes = aresPair.getValue();
-        if (numAres < k) {
-            System.out.println("近似结果 < k 个");
-        }
         while(numAres < k && d > 0) { // 查询结果不够k个
             d --;
+            System.out.println("近似结果 < k 个, d:" + d + " 时间" + startTime + " " + endTime);
             aresAndSSNum = getAresFromDB(isUseAm, startTime, endTime, saxTData,
                     aQuery, d, rTree, amVersionID, stVersionID, k);
             aresPair = aresAndSSNum.getKey();
             approSSTableNum = aresAndSSNum.getValue();
             approRes = aresPair.getValue();
             numAres = aresPair.getKey();
+            PrintUtil.print("近似结果个数 " + numAres);
         }
 
 //        checkDis(approRes, searchTsBuffer);
@@ -394,8 +397,8 @@ public class SearchActionBuffer {
         approbitmap.clear();
 
         for (int i = 0; i < ares.length - 4; i += Parameters.approximateResSize) {
-            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(ares, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] tsBytes = new byte[Parameters.tsDataSize];
+            System.arraycopy(ares, i, tsBytes, 0, Parameters.tsDataSize);
             byte[] floatBytes = new byte[4];
             System.arraycopy(ares, i + Parameters.tsSize, floatBytes, 0, 4);
             byte[] pBytes = new byte[8];

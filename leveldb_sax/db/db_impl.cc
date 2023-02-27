@@ -594,7 +594,6 @@ void DBImpl::CompactMemTable(std::pair<MemTable*, int> aim) {
   mutex_.Lock();
 //  assert(imm_ != nullptr);
   MemTable* first_imm = aim.first;
-
   // Save the contents of the memtable as a new Table
   VersionEdit edit;
 //  Version* base = versions_->current();
@@ -1445,12 +1444,16 @@ Status DBImpl::Get(const aquery& aquery1,
 
       //等待结果
       res_heap->wait();
-
 #if cha == 0
       // 按dist排序，分成20份依次查询
       res_heap->sort_dist_p();
 
       int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+      if(res_heap->to_sort_dist_p.empty()) {
+        out(0);
+        delete res_heap;
+        return Status();
+      }
       div = max(div, (int)(res_heap->to_sort_dist_p.size() -1)/ info_p_max_size + 1);
       int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
 
@@ -1549,6 +1552,11 @@ Status DBImpl::Get(const aquery& aquery1,
   res_heap->sort_dist_p();
 
   int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+  if(res_heap->to_sort_dist_p.empty()) {
+    out(0);
+    delete res_heap;
+    return Status();
+  }
   div = max(div, (int)(res_heap->to_sort_dist_p.size() -1)/ info_p_max_size + 1);
   int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
 
@@ -2176,12 +2184,6 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
 
   LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum);
   int res_leafkeys_num;
-  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
-  int res_p_num;
-  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
-  char* add_info = info;
-  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
-  charcpy(add_info, &aquery1.k, sizeof(int));
 
   uint64_t filesize = this_ver->GetSize(st_number);
   Cache::Handle* file_handle = nullptr;
@@ -2194,96 +2196,20 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
 #endif
   Finder.root_Get();
 
+  out("stkai");
   //必找的一个点
   Finder.find_One(res_leafkeys, res_leafkeys_num);
+  out("stkaiawdwa");
 
-  for(int i=0;i<res_leafkeys_num;i++) {
-    saxt_print(res_leafkeys[i].asaxt);
-    out(res_leafkeys[i].p);
-  }
+//  for(int i=0;i<res_leafkeys_num;i++) {
+//    saxt_print(res_leafkeys[i].asaxt);
+//    out(res_leafkeys[i].p);
+//  }
 //
 //  exit(1);
   out("开查st");
   if (res_leafkeys_num) {
     //策略
-    if (lookupi == 0) {
-      int to_find_num = 1;
-      get_dist_and_sort((ts_type*)aquery1.paa, res_leafkeys, res_leafkeys_num, res_p);
-      res_p_num = res_leafkeys_num;
-      for (int i=0;i<res_p_num;i++) {
-        res_heap->Lock();;
-        float top = res_heap->top();
-        int need = res_heap->need();
-        res_heap->Unlock();
-        if (need == 0 && top < res_p[i].first) break;
-        //否则send
-        char* tmpinfo = add_info;
-        charcpy(tmpinfo, &need, sizeof(int));
-        charcpy(tmpinfo, &top, sizeof(float));
-        charcpy(tmpinfo, &to_find_num, sizeof(int));
-        charcpy(tmpinfo, &res_p[i].second, sizeof(void*));
-        size_t out_size;
-        char* out;
-        size_t to_find_size = to_find_size_leafkey + sizeof(void*);
-        find_tskey(info, to_find_size, out, out_size, db_jvm);
-        ares* ares_out = (ares*) out;
-        // 写堆
-        res_heap->Lock();;;
-        for (int j=0;j<out_size;j++) {
-          if (!res_heap->push(ares_out[j])) break;
-        }
-        res_heap->Unlock();
-        free(out);
-      }
-    }
-    else if (lookupi == 1) {
-      // 一部分 k个
-      int to_find_num = aquery1.k;
-      get_dist_and_sort((ts_type*)aquery1.paa, res_leafkeys, res_leafkeys_num, res_p);
-      res_p_num = res_leafkeys_num;
-      for (int i=0;i<res_p_num;i+=to_find_num) {
-        int endi = min(i + to_find_num-1, res_p_num - 1);
-        res_heap->Lock();
-        float top = res_heap->top();
-        int need = res_heap->need();
-        res_heap->Unlock();
-        bool isbreak = false;
-        if (need == 0) {
-          if (top < res_p[endi].first) {
-            int l=i,r=endi;
-            while(l<r) {
-              int mid = (l+r)/2;
-              if(top < res_p[mid].first) r = mid;
-              else l = mid + 1;
-            }
-            endi = l-1;
-            isbreak = true;
-          }
-        }
-        int findsize = endi - i + 1;
-        if (!findsize) break;
-        //否则send
-        char* tmpinfo = add_info;
-        charcpy(tmpinfo, &need, sizeof(int));
-        charcpy(tmpinfo, &top, sizeof(float));
-        charcpy(tmpinfo, &findsize, sizeof(int));
-        for (int j=i;j<=endi;j++) charcpy(tmpinfo, &res_p[j].second, sizeof(void*));
-        size_t out_size;
-        char* out;
-        size_t to_find_size = to_find_size_leafkey + sizeof(void*) * findsize;
-        find_tskey(info, to_find_size, out, out_size, db_jvm);
-        ares* ares_out = (ares*) out;
-        // 写堆
-        res_heap->Lock();;;
-        for (int j=0;j<out_size;j++) {
-          if (!res_heap->push(ares_out[j])) break;
-        }
-        res_heap->Unlock();
-        free(out);
-        if (isbreak) break;
-      }
-    }
-    else if (lookupi == 2){
 #if cha
       // 直接查一个叶
       res_heap->Lock();
@@ -2318,6 +2244,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
         free(out);
       }
 #else
+    out("kai");
       res_heap->Lock();
       for(int i=0;i<res_leafkeys_num;i++) {
         res_heap->to_sort_dist_p.emplace_back(minidist_paa_to_saxt((ts_type*)aquery1.paa, res_leafkeys[i].asaxt.asaxt, Bit_cardinality), res_leafkeys[i].p);
@@ -2326,12 +2253,11 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
       res_heap->isfinish();
       versions_->table_cache_->cache_->Release(file_handle);
       free(res_leafkeys);
-      free(res_p);
-      free(info);
       res_heap->Unlock();
+      out("kai");
       return;
 #endif
-    }
+
   }
 
 #if cha==0
@@ -2340,11 +2266,16 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   res_heap->isfinish();
   versions_->table_cache_->cache_->Release(file_handle);
   free(res_leafkeys);
-  free(res_p);
-  free(info);
   res_heap->Unlock();
   return;
 #endif
+
+  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
+  int res_p_num;
+  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
+  char* add_info = info;
+  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+  charcpy(add_info, &aquery1.k, sizeof(int));
 
   bool isdel = false;
   bool isover = false;
@@ -2822,7 +2753,11 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   res_heap->wait();
   // 按dist排序，分成20份依次查询
   res_heap->sort_dist_p();
-
+  if(res_heap->to_sort_dist_p.empty()) {
+    out(0);
+    delete res_heap;
+    return Status();
+  }
   int div = Get_div;
   div = max(div, (int)(res_heap->to_sort_dist_p.size()-1)/info_p_max_size+1);
   int num_per = (res_heap->to_sort_dist_p.size()-1)/div+1;
@@ -3058,10 +2993,13 @@ Status DBImpl::Init(LeafTimeKey* leafKeys, int leafKeysNum) {
 #if istime > 0
   ts_time* times_rep = (ts_time*)malloc(leafKeysNum*sizeof(ts_time));
 #endif
-//  char tmp[16] = {14, 2, 77, 89, -63, -29, 88, 43, -109, -20, -121, 26, 15, 6, -1, 1};
+//  char tmp[16] = {105, -40, -71, -23, 85, 73, -120, 31, 43, -60, -33, 62, 7, 2, -1, 1};
   for(int i=0;i<leafKeysNum;i++){
     leafkeys_rep[i] = leafKeys[i].leafKey;
-//    if(leafKeys[i].leafKey.asaxt == *(saxt_only*)tmp) cout<<"youinit"<<endl;
+//    if(leafKeys[i].leafKey.asaxt == *(saxt_only*)tmp) {
+//        cout << "youinit" << endl;
+////        cout<< leafkeys_rep[i].keytime_;
+//    }
 #if istime > 0
     times_rep[i] = leafKeys[i].keytime;
 #endif

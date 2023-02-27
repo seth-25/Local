@@ -80,7 +80,7 @@ public class SearchAction {
 
             long disTimeStart = System.currentTimeMillis();    // todo
             if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
-                long timestamps = TsUtil.bytesToLong(ts, Parameters.timeSeriesDataSize);
+                long timestamps = TsUtil.bytesToLong(ts, Parameters.tsDataSize);
                 if (timestamps >= aQuery.startTime && timestamps <= aQuery.endTime) {
                     OriTs oriTs = new OriTs(ts, DBUtil.dataBase.dist_ts(aQuery.timeSeriesData, ts),  SearchUtil.longToBytes(aQuery.pList.get(i)));
                     nearlyTsList.add(oriTs);

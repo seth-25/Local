@@ -38,7 +38,7 @@ public class SearchBuffer implements Runnable{
         }
         this.startTimeBytes = new byte[Parameters.timeStampSize];
         this.endTimeBytes = new byte[Parameters.timeStampSize];
-        this.searchTsBuffer = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize);
+        this.searchTsBuffer = ByteBuffer.allocateDirect(Parameters.tsDataSize);
         this.startTimeBuffer = ByteBuffer.allocate(Parameters.timeStampSize).order(ByteOrder.LITTLE_ENDIAN);
         this.endTimeBuffer = ByteBuffer.allocate(Parameters.timeStampSize).order(ByteOrder.LITTLE_ENDIAN);
     }
@@ -47,23 +47,25 @@ public class SearchBuffer implements Runnable{
             if (Parameters.hasTimeStamp > 0) {  // 有时间戳
                 // 查询由1个ts和2个时间戳组成
                 searchTsBuffer.clear();
-                fileChannel.read(searchTsBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize));
+                fileChannel.read(searchTsBuffer, (long) offset * (2 * Parameters.timeStampSize + Parameters.tsDataSize));
                 searchTsBuffer.rewind();
 
-                fileChannel.read(startTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize);
+                startTimeBuffer.clear();
+                fileChannel.read(startTimeBuffer, (long) offset * (2 * Parameters.timeStampSize + Parameters.tsDataSize) + Parameters.tsDataSize);
                 startTimeBuffer.flip();
                 startTime = startTimeBuffer.getLong();
-                startTimeBuffer.clear();
 
-                fileChannel.read(endTimeBuffer, (long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
+
+                endTimeBuffer.clear();
+                fileChannel.read(endTimeBuffer, (long) offset * (2 * Parameters.timeStampSize + Parameters.tsDataSize) + Parameters.tsDataSize + Parameters.timeStampSize);
                 endTimeBuffer.flip();
                 endTime = endTimeBuffer.getLong();
-                startTimeBuffer.clear();
+
             }
             else {
                 // 查询只有ts
                 searchTsBuffer.clear();
-                fileChannel.read(searchTsBuffer, (long) offset * Parameters.timeSeriesDataSize);
+                fileChannel.read(searchTsBuffer, (long) offset * Parameters.tsDataSize);
                 searchTsBuffer.rewind();
             }
         } catch (IOException e) {
@@ -115,8 +117,8 @@ public class SearchBuffer implements Runnable{
         Main.isRecord = false;  // 计算召回率和错误率时不要记录io时间和访问次数
         ArrayList<Ts> approAnsList = new ArrayList<>();
         for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
-            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] tsBytes = new byte[Parameters.tsDataSize];
+            System.arraycopy(ans, i, tsBytes, 0, Parameters.tsDataSize);
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             approAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
@@ -131,8 +133,8 @@ public class SearchBuffer implements Runnable{
         exactRes.get(exactAns);
         exactRes.clear();
         for (int i = 0; i < exactAns.length; i += Parameters.exactResSize) {
-            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] tsBytes = new byte[Parameters.tsDataSize];
+            System.arraycopy(exactAns, i, tsBytes, 0, Parameters.tsDataSize);
             byte[] floatBytes = new byte[4];
             System.arraycopy(exactAns, i + Parameters.tsSize, floatBytes, 0, 4);
             exactAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));

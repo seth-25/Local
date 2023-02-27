@@ -5,6 +5,7 @@ import com.local.domain.Parameters;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.FileChannel;
@@ -77,7 +78,7 @@ public class MappedFileReaderBuffer {
         Path path = Paths.get(filePath);
         asynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.READ);
         for (int i = 0; i < Parameters.FileSetting.queueSize; i ++ ) {
-            byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize));
+            byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize).order(ByteOrder.LITTLE_ENDIAN));
         }
 //        this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];// new byte时间消耗很大，预先开好空间
         this.fileNum = fileNum;

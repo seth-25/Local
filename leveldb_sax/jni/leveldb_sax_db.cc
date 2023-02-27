@@ -127,9 +127,9 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
     leafTimeKeys[i].leafKey.p = (void*) (offset + i);
 #endif
 #if istime == 1
-    leafTimeKeys[i].keytime = tskeys_c1[i].tsTime;
+    leafTimeKeys[i].keytime = tskeys_c1[j].tsTime;
 #elif istime == 2
-    leafTimeKeys[i].leafKey.keytime_ = tskeys_c1[i].tsTime;
+    leafTimeKeys[i].leafKey.keytime_ = tskeys_c1[j].tsTime;
 #endif
   }
 

@@ -19,7 +19,7 @@ public class PrintUtil {
         if (!Parameters.debug)  return ;
         byte[] floatBytes = new byte[4];
         tsBuffer.rewind();
-        for (int i = 0; i < Parameters.timeSeriesDataSize / 4; i ++ ) {
+        for (int i = 0; i < Parameters.tsDataSize / 4; i ++ ) {
             tsBuffer.get(floatBytes);
             System.out.print(SearchUtil.bytesToFloat(floatBytes) + " ");
         }

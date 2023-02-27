@@ -74,6 +74,7 @@ class query_heap_rep {
   // 这个表结束了
   inline bool subOver() {
     over--;
+    out1("over",over);
     if (over==1) {
       cv.notify_one();
     } else if (over==0){
@@ -90,7 +91,7 @@ class query_heap_rep {
 
   bool isfinish() {
 #if istime
-    if (!use && res_heap.size() == k) {
+    if (!use) {
       cv.notify_one();
       return true;
     }

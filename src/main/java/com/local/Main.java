@@ -19,7 +19,6 @@ public class Main {
         FileUtil.deleteFolderFiles("./db");
 
         MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(0);
-//        FileChannelReader reader = CacheUtil.fileChannelReaderMap.get(0);
         if (reader == null) {
             throw new RuntimeException("ts文件夹下没有文件");
         }
@@ -94,13 +93,6 @@ public class Main {
         for (File file: files) {
             MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
-
-//            FileChannelReader reader1 = new FileChannelReader(file.getPath(), Parameters.FileSetting.readSize, fileNum);
-//            CacheUtil.fileChannelReaderMap.put(fileNum, reader1);
-
-//            // todo todo
-//            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts
-//            CacheUtil.mappedFileReaderMap.put(fileNum, reader1);
         }
 
         init();

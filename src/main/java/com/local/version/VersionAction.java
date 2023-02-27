@@ -98,7 +98,7 @@ public class VersionAction {
 
             // rtree插入
             RTree<String, Rectangle> tree = newVersion.getrTree();
-            PrintUtil.print("\trtree插入:" + VersionUtil.saxT2Double(ver1.minSax) + " " + VersionUtil.saxT2Double(ver1.maxSax) + " 文件名" + ver1.fileNum);
+            PrintUtil.print("\trtree插入:" + VersionUtil.saxT2Double(ver1.minSax) + " " + VersionUtil.saxT2Double(ver1.maxSax) + " " + ver1.minTime + " " + ver1.maxTime + " 文件名" + ver1.fileNum);
 
             tree = tree.add(new String(ver1.minSax, StandardCharsets.ISO_8859_1) + new String(ver1.maxSax, StandardCharsets.ISO_8859_1) + ver1.fileNum,
                     Geometries.rectangle (VersionUtil.saxT2Double(ver1.minSax), (double) ver1.minTime, VersionUtil.saxT2Double(ver1.maxSax), (double) ver1.maxTime));
@@ -123,12 +123,14 @@ public class VersionAction {
 
             newVersion.updateVersion(workerHostName, ver2.outVer);
 
+            PrintUtil.print("\trtree插入:" + "时间" + ver2.addMinTimes + " " + ver2.addMaxTimes + " 文件名" + ver2.addFileNums);
             // rtree删除
             RTree<String, Rectangle> tree = newVersion.getrTree();
             for (int i = 0; i < ver2.delMaxSaxes.size(); i ++ ) {
                 tree = tree.delete(new String(ver2.delMinSaxes.get(i), StandardCharsets.ISO_8859_1) + new String(ver2.delMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ver2.delFileNums.get(i),
                         Geometries.rectangle (VersionUtil.saxT2Double(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i), VersionUtil.saxT2Double(ver2.delMaxSaxes.get(i)), (double) ver2.delMaxTimes.get(i)));
             }
+
             // rtree增加
             for (int i = 0; i < ver2.addMaxSaxes.size(); i ++ ) {
                 tree = tree.add(new String(ver2.addMinSaxes.get(i), StandardCharsets.ISO_8859_1) + new String(ver2.addMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ver2.addFileNums.get(i),
@@ -154,14 +156,14 @@ public class VersionAction {
 
             VersionUtil.analysisVersionBytes(versionBytes, ver1);
 
-            PrintUtil.print("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件" + ver1.fileNum + " " + ver1.minTime + " " + ver1.maxTime);
+            PrintUtil.print("\t需要更新版本1:" + "内" + ver1.inVer + " 外" + ver1.outVer + " 文件" + ver1.fileNum + " 时间：" + ver1.minTime + " " + ver1.maxTime);
 
             unRefVersion(CacheUtil.curVersion);  // 当前大版本ref-1,先清除小版本再加入新的小版本
             CacheUtil.curVersion.updateVersion(workerHostName, new Pair<>(ver1.inVer, ver1.outVer));
 
             // rtree插入
             RTree<String, Rectangle> tree = CacheUtil.curVersion.getrTree();
-            PrintUtil.print("\trtree插入:" + VersionUtil.saxT2Double(ver1.minSax) + " " + VersionUtil.saxT2Double(ver1.maxSax) + " 文件名" + ver1.fileNum);
+            PrintUtil.print("\trtree插入:" + VersionUtil.saxT2Double(ver1.minSax) + " " + VersionUtil.saxT2Double(ver1.maxSax) + " 时间：" + ver1.minTime + " " + ver1.maxTime + " 文件名" + ver1.fileNum);
             tree = tree.add(new String(ver1.minSax, StandardCharsets.ISO_8859_1) + new String(ver1.maxSax, StandardCharsets.ISO_8859_1) + ver1.fileNum,
                     Geometries.rectangle (VersionUtil.saxT2Double(ver1.minSax), (double) ver1.minTime, VersionUtil.saxT2Double(ver1.maxSax), (double) ver1.maxTime));
 
@@ -189,6 +191,7 @@ public class VersionAction {
                 tree = tree.delete(new String(ver2.delMinSaxes.get(i), StandardCharsets.ISO_8859_1)  + new String(ver2.delMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ver2.delFileNums.get(i),
                         Geometries.rectangle (VersionUtil.saxT2Double(ver2.delMinSaxes.get(i)), (double) ver2.delMinTimes.get(i), VersionUtil.saxT2Double(ver2.delMaxSaxes.get(i)), (double) ver2.delMaxTimes.get(i)));
             }
+            PrintUtil.print("\trtree插入:" + "时间" + ver2.addMinTimes + " " + ver2.addMaxTimes + " 文件名" + ver2.addFileNums);
             // rtree增加
             for (int i = 0; i < ver2.addMaxSaxes.size(); i ++ ) {
                 tree = tree.add(new String(ver2.addMinSaxes.get(i), StandardCharsets.ISO_8859_1)  + new String(ver2.addMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ver2.addFileNums.get(i),

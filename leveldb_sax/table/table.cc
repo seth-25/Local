@@ -956,7 +956,7 @@ void Table::ST_finder_exact::leaf_todo(STLeaf& leaf) {
     int new_res_size = 0;
     for(int i=0;i<res_size;i++) {
       ts_time* timep = (ts_time*)leaf.Get_rep(i);
-      if (aquery1.rep.startTime <= *timep && *timep <= aquery1.rep.endTime){
+      if (aquery1->rep.startTime <= *timep && *timep <= aquery1->rep.endTime){
         charcpy(tmpinfo, timep + 1, sizeof(void*));
         new_res_size ++;
       }
@@ -994,8 +994,9 @@ void Table::ST_finder_exact::leaf_todo(STLeaf& leaf) {
     LeafKey aleafKey;
     for(int i=0;i<num;i++) {
       leaf.SetLeafKey(&aleafKey, i);
-      if (aquery1.rep.startTime <= aleafKey.keytime_ && aleafKey.keytime_ <= aquery1.rep.endTime &&
-          minidist_paa_to_saxt(aquery1.paa, aleafKey.asaxt.asaxt, Bit_cardinality) <= topdist) {
+      if (aquery1->rep.startTime <= aleafKey.keytime_ && aleafKey.keytime_ <= aquery1->rep.endTime ) {
+        float dist = minidist_paa_to_saxt(aquery1->paa, aleafKey.asaxt.asaxt, Bit_cardinality);
+        if(dist <= topdist)
         tmp_distp[res_size++] = {dist, aleafKey.p};
       }
     }
@@ -1255,7 +1256,7 @@ void Table::ST_finder_exact_appro::leaf_todo(STLeaf& leaf) {
     for(int i=0;i<res_size;i++) {
       ts_time* timep = (ts_time*)leaf.Get_rep(i);
       void* thisp = *((void**)timep + 1);
-      if (!heap->is_in_set(thisp) && aquery1.rep.startTime <= *timep && *timep <= aquery1.rep.endTime){
+      if (!heap->is_in_set(thisp) && aquery1->rep.startTime <= *timep && *timep <= aquery1->rep.endTime){
         charcpy(tmpinfo, &thisp, sizeof(void*));
         new_res_size ++;
       }
@@ -1301,7 +1302,7 @@ void Table::ST_finder_exact_appro::leaf_todo(STLeaf& leaf) {
     LeafKey aleafKey;
     for(int i=0;i<num;i++) {
       leaf.SetLeafKey(&aleafKey, i);
-      if (!heap->is_in_set(aleafKey.p) && aquery1.rep.startTime <= aleafKey.keytime_ && aleafKey.keytime_ <= aquery1.rep.endTime) {
+      if (!heap->is_in_set(aleafKey.p) && aquery1->rep.startTime <= aleafKey.keytime_ && aleafKey.keytime_ <= aquery1->rep.endTime) {
         float dist = minidist_paa_to_saxt(aquery1->paa, aleafKey.asaxt.asaxt, Bit_cardinality);
         if(dist <= topdist) tmp_distp[res_size++] = {dist, aleafKey.p};
       }

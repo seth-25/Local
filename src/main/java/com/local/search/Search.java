@@ -17,7 +17,7 @@ public class Search implements Runnable{
     private final byte[] endTimeBytes;
     private long startTime;
     private long endTime;
-    public static byte[] searchTsBytes = new byte[Parameters.timeSeriesDataSize];
+    public static byte[] searchTsBytes = new byte[Parameters.tsDataSize];
 
     private final int k;
     private int offset = 0;
@@ -30,7 +30,7 @@ public class Search implements Runnable{
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        searchTsBytes = new byte[Parameters.timeSeriesDataSize];
+        searchTsBytes = new byte[Parameters.tsDataSize];
         startTimeBytes = new byte[Parameters.timeStampSize];
         endTimeBytes = new byte[Parameters.timeStampSize];
     }
@@ -38,20 +38,20 @@ public class Search implements Runnable{
         try {
             if (Parameters.hasTimeStamp > 0) {  // 有时间戳
                 // 查询由1个ts和2个时间戳组成
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize));
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.tsDataSize));
                 randomAccessFile.read(searchTsBytes);
 
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize);
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.tsDataSize) + Parameters.tsDataSize);
                 randomAccessFile.read(startTimeBytes);
                 startTime = TsUtil.bytesToLong(startTimeBytes);
 
-                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.timeSeriesDataSize) + Parameters.timeSeriesDataSize + Parameters.timeStampSize);
+                randomAccessFile.seek((long) offset * (Parameters.timeStampSize + 2 * Parameters.tsDataSize) + Parameters.tsDataSize + Parameters.timeStampSize);
                 randomAccessFile.read(endTimeBytes);
                 endTime = TsUtil.bytesToLong(endTimeBytes);
             }
             else {
                 // 查询只有ts
-                randomAccessFile.seek((long) offset * Parameters.timeSeriesDataSize);
+                randomAccessFile.seek((long) offset * Parameters.tsDataSize);
                 randomAccessFile.read(searchTsBytes);
             }
         } catch (IOException e) {
@@ -99,8 +99,8 @@ public class Search implements Runnable{
         Main.isRecord = false;  // 计算召回率和错误率时不要记录io时间和访问次数
         ArrayList<Ts> approAnsList = new ArrayList<>();
         for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
-            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(ans, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] tsBytes = new byte[Parameters.tsDataSize];
+            System.arraycopy(ans, i, tsBytes, 0, Parameters.tsDataSize);
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             approAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
@@ -111,8 +111,8 @@ public class Search implements Runnable{
         byte[] exactAns = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
 
         for (int i = 0; i < exactAns.length; i += Parameters.exactResSize) {
-            byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
-            System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
+            byte[] tsBytes = new byte[Parameters.tsDataSize];
+            System.arraycopy(exactAns, i, tsBytes, 0, Parameters.tsDataSize);
             byte[] floatBytes = new byte[4];
             System.arraycopy(exactAns, i + Parameters.tsSize, floatBytes, 0, 4);
             exactAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
