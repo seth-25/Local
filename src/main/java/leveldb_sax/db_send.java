@@ -62,13 +62,13 @@ public class db_send {
     @Deprecated
     public static void find_tskey_ap(byte[] info) {
 //        SearchAction.searchOriTsHeap(info, false);
-        SearchAction.searchOriTsHeapQueue(info, false);
+//        SearchAction.searchOriTsHeapQueue(info, false);
     }
 
 
     @Deprecated
     public static void find_tskey_exact_ap(byte[] info) {
 //        SearchAction.searchOriTsHeap(info, true);
-        SearchAction.searchOriTsHeapQueue(info, true);
+//        SearchAction.searchOriTsHeapQueue(info, true);
     }
 }

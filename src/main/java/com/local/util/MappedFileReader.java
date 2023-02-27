@@ -96,7 +96,6 @@ public class MappedFileReader {
             arrays = null;
             return -1;
         }
-
         int limit = mappedBufArray[count].limit();
         int position = mappedBufArray[count].position();
 
@@ -131,7 +130,9 @@ public class MappedFileReader {
         }
         return oldOffset;
     }
-
+    public void arraysListOffer(byte[] array) {
+        arraysList.offer(array);
+    }
     public byte[] getArray() {
         if (!isRes) {
             return array;
@@ -140,9 +141,7 @@ public class MappedFileReader {
             return resArray;
         }
     }
-    public void arraysListOffer(byte[] array) {
-        arraysList.offer(array);
-    }
+
     public byte[] readTs(long offset, int num) {
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);

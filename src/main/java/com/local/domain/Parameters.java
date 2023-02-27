@@ -43,5 +43,5 @@ public class Parameters {
     }
     public static final boolean findOriTsSort = true; // 批量查询原始时间序列，是否排序
     public static final boolean isSuffix = true;
-    public static final boolean debug = true;
+    public static final boolean debug = false;
 }

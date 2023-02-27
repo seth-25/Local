@@ -89,7 +89,7 @@ public class SearchUtil {
     public static ByteBuffer makeAQuery(ByteBuffer ts, long startTime, long endTime, int k, ByteBuffer paa, ByteBuffer saxBuffer) {
         ByteBuffer aQuery = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize + 2 * Parameters.timeStampSize +
                 8 + 4 * Parameters.paaNum + Parameters.saxTSize).order(ByteOrder.LITTLE_ENDIAN);
-        aQuery.put(ts);
+        aQuery.put(ts); ts.rewind();
         aQuery.putLong(startTime);
         aQuery.putLong(endTime);
         aQuery.putInt(k);
@@ -103,7 +103,7 @@ public class SearchUtil {
         ByteBuffer aQuery = ByteBuffer.allocateDirect(Parameters.timeSeriesDataSize + 4 +
                 4 * Parameters.paaNum + Parameters.saxTSize).order(ByteOrder.LITTLE_ENDIAN);
 
-        aQuery.put(ts);
+        aQuery.put(ts); ts.rewind();
         aQuery.putInt(k);
         aQuery.put(paa);
         aQuery.put(saxBuffer);

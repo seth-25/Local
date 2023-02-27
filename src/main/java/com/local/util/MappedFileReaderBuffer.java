@@ -29,11 +29,7 @@ public class MappedFileReaderBuffer {
 
 
     private final int arraySize;
-//    private byte[] array;
-//    private byte[][] arrays; // 用于读取时间序列进行插入
     private Queue<byte[]> arraysList = new ConcurrentLinkedQueue<>();   // 用于指定使用哪个array
-//    private byte[] resArray;
-    private byte[] tsArray; // 用于查询原始时间序列，返回单个ts
 //    byte[][] tsArrays;
 
     private boolean isRes = false;
@@ -76,7 +72,6 @@ public class MappedFileReaderBuffer {
 
 
         // 随机读
-        this.tsArray = new byte[Parameters.tsSize];
         this.readTsByteBuf = ByteBuffer.allocate(Parameters.tsSize);
 
         Path path = Paths.get(filePath);
@@ -170,18 +165,6 @@ public class MappedFileReaderBuffer {
 //        return tsArrays[num];
 //    }
 
-    public byte[] readTs(long offset) {
-        try {
-            fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        readTsByteBuf.flip();
-        readTsByteBuf.get(tsArray);
-        readTsByteBuf.clear();
-        return tsArray;
-    }
-
     public byte[] readTsNewByte(long offset) {
         try {
             fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
@@ -202,9 +185,7 @@ public class MappedFileReaderBuffer {
         pList.clear();
     }
     public List<ByteBuffer> readTsQueue() {
-//        byte[][] tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];
         int num = pList.size();
-//        System.out.println("pList size " + num);
         for (int i = 0; i < num; i ++ ) {
             long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
             ByteBuffer byteBuf = byteBufferList.get(i);

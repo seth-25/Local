@@ -79,6 +79,8 @@ public class SearchBuffer implements Runnable{
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+
+            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
         }
         Main.oneDis = dis / k;
     }
@@ -90,10 +92,12 @@ public class SearchBuffer implements Runnable{
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
-            System.out.println(SearchUtil.bytesToFloat(floatBytes));
+
+            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
             if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
                 System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
             }
+
             oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
         Main.oneDis = dis / k;
@@ -121,9 +125,11 @@ public class SearchBuffer implements Runnable{
         ArrayList<Ts> exactAnsList = new ArrayList<>();
 
         PrintUtil.print("计算回归率，进行精确查询");
+        searchTsBuffer.rewind();
         ByteBuffer exactRes = SearchActionBuffer.searchExactTs(searchTsBuffer, startTime, endTime, k);
         byte[] exactAns = new byte[exactRes.remaining()];
         exactRes.get(exactAns);
+        exactRes.clear();
         for (int i = 0; i < exactAns.length; i += Parameters.exactResSize) {
             byte[] tsBytes = new byte[Parameters.timeSeriesDataSize];
             System.arraycopy(exactAns, i, tsBytes, 0, Parameters.timeSeriesDataSize);
@@ -159,8 +165,16 @@ public class SearchBuffer implements Runnable{
         Main.totalRecall += ((double)cnt / k);
 
         double error = 0;
+
+        double exactDis = 0;
         for (int i = 0; i < k; i ++ ) {
-//            System.out.println("近似距离" + approAnsList.get(i).dis + "\t精确距离" + exactAnsList.get(i).dis);
+            System.out.println("近似距离" + approAnsList.get(i).dis + "\t精确距离" + exactAnsList.get(i).dis);
+            exactDis += Math.sqrt(exactAnsList.get(i).dis);
+        }
+        exactDis /= k;
+        System.out.println("精确平均距离" + exactDis);
+
+        for (int i = 0; i < k; i ++ ) {
             if (exactAnsList.get(i).dis == 0) {
                 System.out.println("exact query dis = 0, unable to calculate error");
                 Main.totalError = Double.NaN;

@@ -3029,7 +3029,7 @@ Status DBImpl::Put(const WriteOptions& o, LeafTimeKey& key) {
   //读写锁
   {
     // 这个是大平衡需要
-    boost::shared_lock<boost::shared_mutex> lock1(range_mutex);
+//    boost::shared_lock<boost::shared_mutex> lock1(range_mutex);
 
     //顺序
     int i = 1;
@@ -3100,8 +3100,8 @@ Status DBImpl::Init(LeafTimeKey* leafKeys, int leafKeysNum) {
     write_signal_.emplace_back(&write_mutex.back());
     writers_vec[0].emplace_back();
     writers_vec[1].emplace_back();
-    writers_vec[0].back().reserve(8192);
-    writers_vec[1].back().reserve(8192);
+    writers_vec[0].back().reserve(input_buffer_size);
+    writers_vec[1].back().reserve(input_buffer_size);
     towrite[i] = 0;
     writers_is[i] = false;
     imms_isdoing[i] = false;
@@ -3295,7 +3295,7 @@ Status DBImpl::Write(const WriteOptions& options,LeafTimeKey& key, int memId) {
     //有空的线程
     vector<LeafTimeKey>* w = &writers_vec[towrite[memId]][memId];
     w->push_back(key);
-    if (w->size()>=8100) {
+    if (w->size()>=input_buffer_size-48) {
       int id = w->size();
 //      out(to_string(memId)+"进入"+to_string(id));
       write_signal_[memId].Wait();
@@ -3336,7 +3336,7 @@ Status DBImpl::Write(const WriteOptions& options,LeafTimeKey& key, int memId) {
     w->clear();
     assert(&writers_vec[towrite[memId]][memId] != w);
     w = &writers_vec[towrite[memId]][memId];
-    if (w->size()>=8100) {
+    if (w->size()>=input_buffer_size-48) {
 //      out("要解锁1"+to_string(memId));
       write_signal_[memId].SignalAll();
       writers_is[memId] = false;

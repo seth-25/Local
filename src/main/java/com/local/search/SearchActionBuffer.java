@@ -102,10 +102,10 @@ public class SearchActionBuffer {
             Long p = aQuery.pList.get(i);
             int p_hash = (int) (p >> 56);   // 文件名
 
-            // todo todo
-            if (approbitmap.get(p) != null) {
-                System.out.println("精确有近似的p!!! " + p);
-            }
+//            // todo todo
+//            if (approbitmap.get(p) != null) {
+//                System.out.println("精确有近似的p!!! " + p);
+//            }
 
             MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(p_hash);
             readerSet.add(reader);
@@ -255,6 +255,9 @@ public class SearchActionBuffer {
                 rTree, amVersionID, stVersionID, k).getKey();
         int numAres = aresPair.getKey();
         ByteBuffer ares = aresPair.getValue();
+        if (numAres < k) {
+            System.out.println("近似结果 < k 个");
+        }
         while(numAres < k && d > 0) { // 查询结果不够k个
             d --;
             aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData, aQuery, d,
@@ -317,11 +320,15 @@ public class SearchActionBuffer {
         ByteBuffer approSSTableNum = aresAndSSNum.getValue();
         int numAres = aresPair.getKey();
         ByteBuffer approRes = aresPair.getValue();
+        if (numAres < k) {
+            System.out.println("近似结果 < k 个");
+        }
         while(numAres < k && d > 0) { // 查询结果不够k个
-//        while(d > 0) { // 查询结果不够k个
             d --;
-            aresPair = getAresFromDB(isUseAm, startTime, endTime, saxTData,
-                    aQuery, d, rTree, amVersionID, stVersionID, k).getKey();
+            aresAndSSNum = getAresFromDB(isUseAm, startTime, endTime, saxTData,
+                    aQuery, d, rTree, amVersionID, stVersionID, k);
+            aresPair = aresAndSSNum.getKey();
+            approSSTableNum = aresAndSSNum.getValue();
             approRes = aresPair.getValue();
             numAres = aresPair.getKey();
         }

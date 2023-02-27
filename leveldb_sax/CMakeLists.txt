@@ -50,7 +50,7 @@ check_include_file("unistd.h" HAVE_UNISTD_H)
 
 include(CheckLibraryExists)
 check_library_exists(crc32c crc32c_value "" HAVE_CRC32C)
-check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
+#check_library_exists(snappy snappy_compress "" HAVE_SNAPPY)
 check_library_exists(tcmalloc malloc "" HAVE_TCMALLOC)
 
 
@@ -308,11 +308,11 @@ endif(HAVE_CLANG_THREAD_SAFETY)
 if(HAVE_CRC32C)
   target_link_libraries(leveldb crc32c)
 endif(HAVE_CRC32C)
-
-if(HAVE_SNAPPY)
-  MESSAGE( STATUS "snap")
-  target_link_libraries(leveldb snappy)
-endif(HAVE_SNAPPY)
+#
+#if(HAVE_SNAPPY)
+#  MESSAGE( STATUS "snap")
+#  target_link_libraries(leveldb snappy)
+#endif(HAVE_SNAPPY)
 
 if(HAVE_TCMALLOC)
   MESSAGE( STATUS "tc")
@@ -322,7 +322,7 @@ endif(HAVE_TCMALLOC)
 # Needed by port_stdcxx.h
 find_package(Threads REQUIRED)
 target_link_libraries(leveldb Threads::Threads)
-target_link_libraries(leveldb snappy)
+#target_link_libraries(leveldb snappy)
 target_link_libraries(leveldb tcmalloc)
 target_link_libraries(leveldb sax zsbtree ${Boost_LIBRARIES})
 

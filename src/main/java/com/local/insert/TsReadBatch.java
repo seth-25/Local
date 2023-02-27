@@ -1,7 +1,4 @@
 package com.local.insert;
-
-import com.local.util.MappedFileReader;
-
 import java.nio.ByteBuffer;
 
 class TsReadBatch {

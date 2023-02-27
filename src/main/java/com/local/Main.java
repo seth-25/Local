@@ -95,8 +95,8 @@ public class Main {
             MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
 
-            FileChannelReader reader1 = new FileChannelReader(file.getPath(), Parameters.FileSetting.readSize, fileNum);
-            CacheUtil.fileChannelReaderMap.put(fileNum, reader1);
+//            FileChannelReader reader1 = new FileChannelReader(file.getPath(), Parameters.FileSetting.readSize, fileNum);
+//            CacheUtil.fileChannelReaderMap.put(fileNum, reader1);
 
 //            // todo todo
 //            MappedFileReader reader1 = new MappedFileReader(file.getPath(), Parameters.FileSetting.readSize, fileNum );  // 初始化的ts
