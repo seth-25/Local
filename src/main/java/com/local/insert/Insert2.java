@@ -14,10 +14,18 @@ import java.util.*;
  */
 public class Insert2 implements Runnable{
     private int queryNum;
+    private int readLimit;
+    private int searchStart;
+    private int interval;
+    private int eachSearchNum;
     SearchLock searchLock;
-    public Insert2(int queryNum, SearchLock searchLock) {
+    public Insert2(int queryNum, SearchLock searchLock, int readLimit, int searchStart, int interval, int eachSearchNum) {
         this.queryNum = queryNum;
         this.searchLock = searchLock;
+        this.readLimit = readLimit;
+        this.searchStart = searchStart;
+        this.interval = interval;
+        this.eachSearchNum = eachSearchNum;
     }
 
     private static int cntRead = 0;
@@ -48,7 +56,7 @@ public class Insert2 implements Runnable{
             cntGet ++ ;
             notifyAll();
         }
-        public void produce() throws InterruptedException {
+        public void produce(int readLimit) throws InterruptedException {
             boolean flag = true;
             while(flag) {
                 for (Map.Entry<Integer, MappedFileReaderBuffer> entry: CacheUtil.mappedFileReaderMapBuffer.entrySet()) {
@@ -60,6 +68,7 @@ public class Insert2 implements Runnable{
                     MappedFileReaderBuffer reader = entry.getValue();
                     long offset = reader.getOffset();
                     ByteBuffer tsBuffer = reader.read();
+//                    ByteBuffer tsBuffer = ByteBuffer.allocateDirect(1);
                     if (tsBuffer != null) { // 这个文件没读完
                         flag = true;
                     }
@@ -69,14 +78,15 @@ public class Insert2 implements Runnable{
                     TsReadBatch tsReadBatch = new TsReadBatch(tsBuffer, reader.getFileNum(), offset);
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
+
                     put(tsReadBatch);
                     System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
 
                     ++cntRead;
 
-                    if (cntRead == 100 - Parameters.initNum) {   // 提前结束
+                    if (cntRead == readLimit - Parameters.initNum) {   // 提前结束
                         for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
-                            put(new TsReadBatch(null, -1, -1)); // 结束
+                            put(new TsReadBatch(null, -1, -1)); // 结束标识
                         }
                         return ;
                     }
@@ -87,7 +97,7 @@ public class Insert2 implements Runnable{
             }
 
         }
-        public boolean consume(ByteBuffer leafTimeKeysBuffer, int queryNum, SearchLock searchLock) throws InterruptedException {
+        public boolean consume(ByteBuffer leafTimeKeysBuffer, SearchLock searchLock, int searchStart, int interval, int eachSearchNum) throws InterruptedException {
             TsReadBatch tsReadBatch;
             synchronized (this) {
                 while(cntGet <= 0) {
@@ -115,25 +125,31 @@ public class Insert2 implements Runnable{
 
             synchronized (this) {
                 cnt --; // insert完才-1，防止tsBytes被覆盖
-//                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
                 System.out.println("插入次数：" + ++cntInsert);
 
-                if (cntInsert > 10) {
+                if (cntInsert + Parameters.initNum > searchStart && (cntInsert + Parameters.initNum) % interval == 0) {
                     searchLock.lock.lock();
-                    try {
-                        searchLock.searchNum ++;
-                        searchLock.condition.signal();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        searchLock.lock.unlock();
-                    }
+                    if (searchLock.searchNum > 0) searchLock.condition.await();
+                    searchLock.searchNum = eachSearchNum;
+                    searchLock.condition.signal();
+                    searchLock.lock.unlock();
+//                    try {
+//                        searchLock.searchNum ++;
+//                        totalSearchNum ++;
+//                        System.out.println("查询次数 " + totalSearchNum + " 插入次数：" + cntInsert + " 查询队列个数" + searchLock.searchNum);
+//                        searchLock.condition.signal();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    } finally {
+//                        searchLock.lock.unlock();
+//                    }
                 }
             }
             return true;
         }
     }
+    static int totalSearchNum = 0;
     @Override
     public void run() {
         insertTime = System.currentTimeMillis();
@@ -148,7 +164,7 @@ public class Insert2 implements Runnable{
                     ByteBuffer leafTimeKeysBuffer = ByteBuffer.allocateDirect(Parameters.FileSetting.readTsNum * Parameters.leafTimeKeysSize);
                     while(true) {
                         try {
-                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer, queryNum, searchLock)) break;
+                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer, searchLock, searchStart, interval, eachSearchNum)) break;
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
@@ -159,7 +175,7 @@ public class Insert2 implements Runnable{
 
         PrintUtil.print("开始插入======================");
         try {
-            tsToSaxChannel.produce();
+            tsToSaxChannel.produce(readLimit);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

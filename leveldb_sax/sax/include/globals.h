@@ -95,10 +95,10 @@ typedef unsigned char cod;
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 4000000
+#define init_num 1000000
 
 //一个memtable存的数量
-#define Table_maxnum 2000000
+#define Table_maxnum 500000
 
 // 压缩im的线程数，一般与表数量一致
 #define pool_size init_num/Table_maxnum
@@ -106,7 +106,7 @@ typedef unsigned char cod;
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
 #define get_exact_multiThread_file_size 1000*1024*1024
 
-#define pool_get_size 32  // 查询线程
+#define pool_get_size 26  // 查询线程
 #define pool_compaction_size 2  // 压缩合并线程
 
 // 压缩合并申请的缓存大小， 几个leaf

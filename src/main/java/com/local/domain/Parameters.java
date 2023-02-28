@@ -29,9 +29,9 @@ public class Parameters {
     // exact_res(有时间戳): ts 256*4, float dist 4
     public static final int exactResSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
     public static final int infoMaxPSize = 10000;   // 最多一次性查询多少个原始时间序列
-
+    public static final boolean findOriTsSort = true; // 批量查询原始时间序列，是否排序
     ///////////////////////Init
-    public static final int initNum = 4;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
+    public static final int initNum = 1;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
     public static final int insertNumThread = 2;    // 插入的线程
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量
@@ -41,7 +41,7 @@ public class Parameters {
         public static final int queueSize = 32; // 随机读写队列长度
 
     }
-    public static final boolean findOriTsSort = true; // 批量查询原始时间序列，是否排序
+
     public static final boolean isSuffix = true;
     public static final boolean debug = false;
 }

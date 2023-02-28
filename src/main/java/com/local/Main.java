@@ -85,11 +85,14 @@ public class Main {
         int isExact = 1;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
-        int queryNum = 100;
+        int queryNum = 40;
         System.out.println("k: ");
 //        int k = scan.nextInt();
         int k = 100;
 
+        /**
+         * init
+         */
         FileUtil.createFolder(Parameters.FileSetting.inputPath);
         ArrayList<File> files = FileUtil.getAllFile(Parameters.FileSetting.inputPath);
         int fileNum = -1;
@@ -97,17 +100,26 @@ public class Main {
             MappedFileReaderBuffer reader = new MappedFileReaderBuffer(file.getPath(), Parameters.FileSetting.readSize, ++ fileNum );  // 初始化的ts
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
         }
-
         init();
 
-        Thread.sleep(5000);
+//        Thread.sleep(5000);
 
         SearchLock searchLock = new SearchLock();
         /**
          * Insert
          */
 //        Insert insert = new Insert(queryNum, searchLock);
-        Insert2 insert = new Insert2(queryNum, searchLock);
+        /**
+         * Search while insert
+         */
+        int readLimit = 500;   // 读多少次停止
+        int searchStart = 100;  // 读多少次开始查询,确保大于initNum
+        int interval = 10;    // 读几次进行一轮查询
+        int eachSearchNum = 10; // 一轮查询有几个查询
+        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
+        if ((readLimit - searchStart) / interval * eachSearchNum < queryNum) throw new RuntimeException("请减少queryNum或interval");
+
+        Insert2 insert = new Insert2(queryNum, searchLock, readLimit, searchStart, interval, eachSearchNum);
         CacheUtil.insertThreadPool.execute(insert);
 
         /**
@@ -126,22 +138,25 @@ public class Main {
 
 
         int totalSearchNum = 0;
-        int eachSearchNum = 0;
 
         while(true) {
             searchLock.lock.lock();
-            if (searchLock.searchNum > 0) {
-                eachSearchNum = searchLock.searchNum;
-                searchLock.searchNum = 0;
-            }
-            else {
-                searchLock.condition.await();
-                if (searchLock.searchNum > 0) {
-                    eachSearchNum = searchLock.searchNum;
-                    searchLock.searchNum = 0;
-                }
-            }
+            if (searchLock.searchNum == 0) searchLock.condition.await();
+            eachSearchNum = searchLock.searchNum;
+//            if (searchLock.searchNum > 0) {
+//                eachSearchNum = searchLock.searchNum;
+//                searchLock.searchNum = 0;
+//            }
+//            else {
+//                searchLock.condition.await();
+//                if (searchLock.searchNum > 0) {
+//                    eachSearchNum = searchLock.searchNum;
+//                    searchLock.searchNum = 0;
+//                }
+//            }
             searchLock.lock.unlock();
+            System.out.println("查询" + eachSearchNum);
+//            Thread.sleep(1000);
             // 运行查询
             for (int i = 0; i < eachSearchNum; i ++ ) {
                 search.run();
@@ -150,8 +165,14 @@ public class Main {
                 System.out.println("-----------------------------------------------");
                 totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis; totalSearchTime += searchTime;
             }
-
             totalSearchNum += eachSearchNum;
+            System.out.println("查询完" + totalSearchNum);
+
+            searchLock.lock.lock();
+            searchLock.searchNum = 0;
+            searchLock.condition.signal();
+            searchLock.lock.unlock();
+
             if (totalSearchNum >= queryNum) {
                 if (isExact != 1) {
                     System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
@@ -164,53 +185,9 @@ public class Main {
                         "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
                 break;
             }
+
+
         }
-
-//        while(true) {
-//            if (CacheUtil.curVersion.getWorkerVersions().get(Parameters.hostName) != null) {    // 等到初始化得到版本
-//                if (isExact == 1) {
-//                    SearchBuffer exactSearch = new SearchBuffer(true, 100);
-//                    for (int i = 0; i < queryNum; i ++ ) {
-//                        cntP = 0;   cntRes = 0;
-//                        long startQuery = System.currentTimeMillis();
-//
-//                        if (insert.getCntInsert() - 100 >= i){
-//                            exactSearch.run();
-//
-//                            System.out.println("精确查询时间：" + searchTime);
-//                            System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
-//                            System.out.println("-----------------------------------------------");
-//                            totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis;
-//                        }
-//                    }
-//                }
-//                else {
-//                    SearchBuffer approximateSearch = new SearchBuffer(false, 100);
-//                    for (int i = 0; i < queryNum; i ++) {
-//                        cntP = 0;   cntRes = 0;
-//                        long startQuery = System.currentTimeMillis();
-//                        approximateSearch.run();
-//                        System.out.println("近似查询时间:" + searchTime);
-//                        System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
-//                        System.out.println("-----------------------------------------------");
-//                        totalCntP += cntP; totalCntRes += cntRes;   totalDis += oneDis;
-//                    }
-//                    System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
-//                }
-//                System.out.println("查询总时间：" + totalSearchTime + "\t平均时间" + totalSearchTime /queryNum);
-//                System.out.println("读取原始时间序列总时间：" + totalReadTime + "\t平均时间" + totalReadTime/queryNum);
-//                System.out.println("查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
-//                System.out.println("总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
-//                        "\t总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-//                        "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
-//                break;
-//            }
-//            Thread.sleep(100);
-//        }
-
-
-
-
 
         ///////////////////////////////////////////////////////////////////////
 
