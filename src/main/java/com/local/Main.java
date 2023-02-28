@@ -102,16 +102,15 @@ public class Main {
         }
         init();
 
-//        Thread.sleep(5000);
 
-        SearchLock searchLock = new SearchLock();
         /**
          * Insert
          */
+        SearchLock searchLock = new SearchLock();
+         // Search after insert
 //        Insert insert = new Insert(queryNum, searchLock);
-        /**
-         * Search while insert
-         */
+
+         // Search while insert
         int readLimit = 500;   // 读多少次停止
         int searchStart = 100;  // 读多少次开始查询,确保大于initNum
         int interval = 10;    // 读几次进行一轮查询

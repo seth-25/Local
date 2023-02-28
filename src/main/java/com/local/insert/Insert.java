@@ -73,12 +73,6 @@ public class Insert implements Runnable{
 
                     ++cntRead;
 
-                    if (cntRead == 200 - Parameters.initNum) {   // 提前结束
-                        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
-                            put(new TsReadBatch(null, -1, -1)); // 结束
-                        }
-                        return ;
-                    }
                 }
             }
             for (int i = 0; i < Parameters.insertNumThread; i ++ ) {

@@ -5,8 +5,6 @@ public class Parameters {
     public static final int hasTimeStamp = 0;   // 0没时间戳,1有且不存时间戳,2有且存时间戳
 
     public static String hostName = "Ubuntu002"; // 本机的hostname
-    public static int numThread = 5;
-
     public static final int tsDataSize = 256 * 4;   // 时间序列多少字节
     public static final int timeStampSize = 8; // 时间戳多少字节
     public static final int tsSize = (hasTimeStamp > 0) ? tsDataSize + timeStampSize : tsDataSize;
@@ -32,7 +30,9 @@ public class Parameters {
     public static final boolean findOriTsSort = true; // 批量查询原始时间序列，是否排序
     ///////////////////////Init
     public static final int initNum = 1;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
-    public static final int insertNumThread = 2;    // 插入的线程
+    public static final int insertNumThread = 1;    // 插入的线程
+
+
     public static class FileSetting {
         public static final int readTsNum = 1000000; // 读取文件时一次读的ts数量
         public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字 节数
