@@ -90,7 +90,7 @@ typedef unsigned char cod;
 
 
 #define Ts_length 256
-#define Leaf_maxnum 512
+#define Leaf_maxnum 2048
 #define Leaf_minnum (Leaf_maxnum/2)
 //最小
 #define Leaf_maxnum_rebalance 10
@@ -119,6 +119,8 @@ typedef unsigned char cod;
 #define qiehuan 0
 
 #define input_buffer_size 2048  // 缓冲区
+
+#define ischalr 0 //不管必须查左右兄弟结点
 
 
 //超过这个重构叶结点

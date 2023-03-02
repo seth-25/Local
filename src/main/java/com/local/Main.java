@@ -85,7 +85,7 @@ public class Main {
         int isExact = 0;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
-        int queryNum = 100000;
+        int queryNum = 10;
         System.out.println("k: ");
 //        int k = scan.nextInt();
         int k = 100;

@@ -135,7 +135,9 @@ class LEVELDB_EXPORT Table {
 
     void r_Get_NonLeaf(STNonLeaf& nonLeaf1, int i);
 
-    inline int leaf_Get(STLeaf& leaf, LeafKey* res);
+    int leaf_Get(STLeaf& leaf, LeafKey* res);
+
+    int leaf_Get1(STLeaf& leaf, LeafKey* res, int nownum);
 
 // 在nonLeaf的范围里, 才调用
     bool nonLeaf_Get(STNonLeaf& nonLeaf);

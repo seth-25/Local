@@ -44,7 +44,9 @@ class ZsbTree_finder{
 
   void r_Get_NonLeaf(NonLeafKey &nonLeafKey);
 
-  inline void leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num);
+  void leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num);
+
+  void leaf_Get1(Leaf *leaf, LeafKey* res, int& res_num);
 
 // 在nonLeaf的范围里, 才调用
   void nonLeaf_Get(NonLeaf &nonLeaf);

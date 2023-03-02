@@ -48,7 +48,7 @@ void ZsbTree_finder::r_Get_NonLeaf(NonLeafKey &nonLeafKey) {
 }
 
 
-inline void ZsbTree_finder::leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num) {
+void ZsbTree_finder::leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num) {
   res_num = leaf->num;
 #if istime == 2
   int newnum = 0;
@@ -62,6 +62,44 @@ inline void ZsbTree_finder::leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_
   memcpy(res, leaf->leafKeys, sizeof(LeafKey) * res_num);
 #endif
   oneId = id;
+
+  // 根据id和cod,判断是否该查找左右两个点
+
+  NonLeaf& nonLeaf = *to_find_nonleaf;
+  if (id > 0) {
+#if ischalr
+    leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id - 1].p, res, res_num);
+#else
+    if (nonLeaf.nonLeafKeys[id - 1].co_d == leaf->co_d)
+      leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id - 1].p, res, res_num);
+#endif
+  }
+
+  if (id + 1 < nonLeaf.num) {
+#if ischalr
+    leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id + 1].p, res, res_num);
+#else
+    if (nonLeaf.nonLeafKeys[id + 1].co_d == leaf->co_d)
+      leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id + 1].p, res, res_num);
+#endif
+  }
+
+}
+
+void ZsbTree_finder::leaf_Get1(Leaf *leaf, LeafKey* res, int& res_num) {
+  int leafnum = leaf->num;
+#if istime == 2
+  int newnum = 0;
+  LeafKey* returnleafkeys = leaf->leafKeys;
+  for(int i=0;i<leafnum;i++) {
+    ts_time thistime = returnleafkeys[i].keytime_;
+    if (startTime <= thistime && thistime <= endTime) res[res_num + newnum++] = returnleafkeys[i];
+  }
+  res_num += newnum;
+#else
+  memcpy(res + res_num, leaf->leafKeys, sizeof(LeafKey) * leafnum);
+  res_num += leafnum;
+#endif
 }
 
 

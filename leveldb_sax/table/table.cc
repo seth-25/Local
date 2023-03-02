@@ -383,6 +383,7 @@ void Table::ST_finder::r_Get_NonLeaf(STNonLeaf& nonLeaf1, int i) {
 }
 
 int Table::ST_finder::leaf_Get(STLeaf& leaf, LeafKey* res) {
+  int returnnum = 0;
 #if istime == 2
   int j = 0;
   int leafnum = leaf.num;
@@ -390,11 +391,60 @@ int Table::ST_finder::leaf_Get(STLeaf& leaf, LeafKey* res) {
     leaf.SetLeafKey(res+j, i);
     if (startTime <= res[j].keytime_ && res[j].keytime_ <= endTime) j++;
   }
-  return j;
+  returnnum = j;
 #else
   int leafnum = leaf.num;
   for(int i=0;i<leafnum;i++){
     leaf.SetLeafKey(res+i, i);
+  }
+  returnnum = leafnum;
+#endif
+
+  STNonLeaf& nonLeaf = *to_find_nonleaf;
+  if(oneId > 0) {
+#if ischalr
+    STLeaf* stLeaf = getSTLeaf(nonLeaf, oneId - 1);
+    returnnum += leaf_Get1(*stLeaf, res, returnnum);
+    delete stLeaf;
+#else
+    if (nonLeaf.Get_co_d(oneId - 1) >= leaf.co_d){
+      STLeaf* stLeaf = getSTLeaf(nonLeaf, oneId - 1);
+      returnnum += leaf_Get1(*stLeaf, res, returnnum);
+      delete stLeaf;
+    }
+#endif
+  }
+
+  if(oneId < nonLeaf.num - 1) {
+#if ischalr
+    STLeaf* stLeaf = getSTLeaf(nonLeaf, oneId + 1);
+    returnnum += leaf_Get1(*stLeaf, res, returnnum);
+    delete stLeaf;
+#else
+    if (nonLeaf.Get_co_d(oneId + 1) >= leaf.co_d){
+      STLeaf* stLeaf = getSTLeaf(nonLeaf, oneId + 1);
+      returnnum += leaf_Get1(*stLeaf, res, returnnum);
+      delete stLeaf;
+    }
+#endif
+  }
+
+  return returnnum;
+}
+
+int Table::ST_finder::leaf_Get1(STLeaf& leaf, LeafKey* res, int nownum) {
+#if istime == 2
+  int j = 0;
+  int leafnum = leaf.num;
+  for(int i=0;i<leafnum;i++){
+    leaf.SetLeafKey(res+nownum+j, i);
+    if (startTime <= res[nownum+j].keytime_ && res[nownum+j].keytime_ <= endTime) j++;
+  }
+  return j;
+#else
+  int leafnum = leaf.num;
+  for(int i=0;i<leafnum;i++){
+    leaf.SetLeafKey(res+nownum+i, i);
   }
   return leafnum;
 #endif

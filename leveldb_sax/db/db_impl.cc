@@ -1645,14 +1645,9 @@ void DBImpl::BGWork_Get_st(void* db, const aquery& aquery1,
 void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
                     MemTable* to_find_mem) {
 
-  LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum);
+  LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum*3);
   int res_leafkeys_num;
-  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
-  int res_p_num;
-  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
-  char* add_info = info;
-  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
-  charcpy(add_info, &aquery1.k, sizeof(int));
+
 
 #if istime == 2
   ZsbTree_finder Finder(aquery1.asaxt, aquery1.rep.startTime, aquery1.rep.endTime, (ts_type*)aquery1.paa);
@@ -1664,92 +1659,14 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
   //必找的一个点
   Finder.find_One(res_leafkeys, res_leafkeys_num);
 
-  for(int i=0;i<res_leafkeys_num;i++) {
-    saxt_print(res_leafkeys[i].asaxt);
-  }
+//  for(int i=0;i<res_leafkeys_num;i++) {
+//    saxt_print(res_leafkeys[i].asaxt);
+//  }
 //
 //  exit(1);
   out("开查am");
   if (res_leafkeys_num) {
     //策略
-    if (lookupi == 0) {
-      int to_find_num = 1;
-      get_dist_and_sort((ts_type*)aquery1.paa, res_leafkeys, res_leafkeys_num, res_p);
-      res_p_num = res_leafkeys_num;
-      for (int i=0;i<res_p_num;i++) {
-        res_heap->Lock();
-        float top = res_heap->top();
-        int need = res_heap->need();
-        res_heap->Unlock();
-        if (need == 0 && top < res_p[i].first) break;
-        //否则send
-        char* tmpinfo = add_info;
-        charcpy(tmpinfo, &need, sizeof(int));
-        charcpy(tmpinfo, &top, sizeof(float));
-        charcpy(tmpinfo, &to_find_num, sizeof(int));
-        charcpy(tmpinfo, &res_p[i].second, sizeof(void*));
-        size_t out_size;
-        char* out;
-        size_t to_find_size = to_find_size_leafkey + sizeof(void*);
-        find_tskey(info, to_find_size, out, out_size, db_jvm);
-        ares* ares_out = (ares*) out;
-        // 写堆
-        res_heap->Lock();
-        for (int j=0;j<out_size;j++) {
-          if (!res_heap->push(ares_out[j])) break;
-        }
-        res_heap->Unlock();
-        free(out);
-      }
-    }
-    else if (lookupi == 1) {
-      // 一部分 k个
-      int to_find_num = aquery1.k;
-      get_dist_and_sort((ts_type*)aquery1.paa, res_leafkeys, res_leafkeys_num, res_p);
-      res_p_num = res_leafkeys_num;
-      for (int i=0;i<res_p_num;i+=to_find_num) {
-        int endi = min(i + to_find_num-1, res_p_num - 1);
-        res_heap->Lock();;
-        float top = res_heap->top();
-        int need = res_heap->need();
-        res_heap->Unlock();
-        bool isbreak = false;
-        if (need == 0) {
-          if (top < res_p[endi].first) {
-            int l=i,r=endi;
-            while(l<r) {
-              int mid = (l+r)/2;
-              if(top < res_p[mid].first) r = mid;
-              else l = mid + 1;
-            }
-            endi = l-1;
-            isbreak = true;
-          }
-        }
-        int findsize = endi - i + 1;
-        if (!findsize) break;
-        //否则send
-        char* tmpinfo = add_info;
-        charcpy(tmpinfo, &need, sizeof(int));
-        charcpy(tmpinfo, &top, sizeof(float));
-        charcpy(tmpinfo, &findsize, sizeof(int));
-        for (int j=i;j<=endi;j++) charcpy(tmpinfo, &res_p[j].second, sizeof(void*));
-        size_t out_size;
-        char* out;
-        size_t to_find_size = to_find_size_leafkey + sizeof(void*) * findsize;
-        find_tskey(info, to_find_size, out, out_size, db_jvm);
-        ares* ares_out = (ares*) out;
-        // 写堆
-        res_heap->Lock();;
-        for (int j=0;j<out_size;j++) {
-          if (!res_heap->push(ares_out[j])) break;
-        }
-        res_heap->Unlock();
-        free(out);
-        if (isbreak) break;
-      }
-    }
-    else if (lookupi == 2){
 #if cha
       // 直接查一个叶
       res_heap->Lock();;
@@ -1790,12 +1707,10 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
       res_heap->subUse();
       res_heap->isfinish();
       free(res_leafkeys);
-      free(res_p);
-      free(info);
       res_heap->Unlock();
       return;
 #endif
-    }
+
   }
 
 #if cha==0
@@ -1803,11 +1718,15 @@ void DBImpl::Get_am(const aquery& aquery1, query_heap* res_heap,
   res_heap->subUse();
   res_heap->isfinish();
   free(res_leafkeys);
-  free(res_p);
-  free(info);
   res_heap->Unlock();
   return;
 #endif
+  auto res_p = (dist_p *)malloc(sizeof(dist_p)*Leaf_rebuildnum);
+  int res_p_num;
+  char* info = (char*)malloc(to_find_size_leafkey + sizeof(void*) * Leaf_rebuildnum);
+  char* add_info = info;
+  charcpy(add_info, &aquery1.rep, sizeof(aquery_rep));
+  charcpy(add_info, &aquery1.k, sizeof(int));
 
   bool isdel = false;
   bool isover = false;
@@ -2194,7 +2113,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
                     uint64_t st_number, Version* this_ver) {
 
 
-  LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum);
+  LeafKey* res_leafkeys = (LeafKey*)malloc(sizeof(LeafKey)*Leaf_rebuildnum*3);
   int res_leafkeys_num;
 
   uint64_t filesize = this_ver->GetSize(st_number);

@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 
 public class SearchBuffer implements Runnable{
@@ -99,6 +100,8 @@ public class SearchBuffer implements Runnable{
             dis += Math.sqrt(d);
 
             printDis.print(d);   // todo
+
+
 //            System.out.println(d);    // todo
 //            if (Math.sqrt(d) == oldDis) { // todo
 //                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));    // todo
@@ -127,6 +130,10 @@ public class SearchBuffer implements Runnable{
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             approAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
+
+//            byte[] saxTbytes = new byte[Parameters.saxTSize];   // todo
+//            DBUtil.dataBase.saxt_from_ts(tsBytes, saxTbytes);   // todo
+//            System.out.println("appro:" + Arrays.toString(saxTbytes));  // todo
         }
 
         ArrayList<Ts> exactAnsList = new ArrayList<>();
@@ -143,6 +150,10 @@ public class SearchBuffer implements Runnable{
             byte[] floatBytes = new byte[4];
             System.arraycopy(exactAns, i + Parameters.tsSize, floatBytes, 0, 4);
             exactAnsList.add(new Ts(tsBytes, SearchUtil.bytesToFloat(floatBytes)));
+
+//            byte[] saxTbytes = new byte[Parameters.saxTSize];   // todo
+//            DBUtil.dataBase.saxt_from_ts(tsBytes, saxTbytes);   // todo
+//            System.out.println("exact:" + Arrays.toString(saxTbytes));  // todo
         }
         approAnsList.sort(new Comparator<Ts>() {
             @Override
