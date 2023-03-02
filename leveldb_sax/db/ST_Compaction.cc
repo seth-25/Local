@@ -25,9 +25,15 @@ void ST_Compaction::doleaf(NonLeafKey* nonLeafKey) {
 }
 
 void ST_Compaction::dononleaf(NonLeafKey* nonLeafKey, bool isleaf) {
+  out("dononleaf");
+  for(int i=1;i<nonLeafKey->num;i++){
+    assert(((NonLeafKey*)(nonLeafKey->p))[i].lsaxt >= ((NonLeafKey*)(nonLeafKey->p))[i-1].rsaxt);
+  }
+
   tableBuilder->wait_snap_wan(snap_add);
   snap_pool->enqueue(std::bind(&TableBuilder::AddNonLeaf, tableBuilder, nonLeafKey, isleaf));
   snap_add++;
+  tableBuilder->wait_snap_wan(snap_add);
 //  tableBuilder->AddNonLeaf(nonLeafKey, isleaf);
 }
 

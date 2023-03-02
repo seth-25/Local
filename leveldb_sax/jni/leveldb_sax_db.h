@@ -9,6 +9,13 @@
 extern "C" {
 #endif
 
+/*
+ * Class:     leveldb_sax_db
+ * Method:    print_time
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_print_1time
+    (JNIEnv *, jobject);
 
 /*
  * Class:     leveldb_sax_db
@@ -29,9 +36,9 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_leaftimekey_1sort
 /*
  * Class:     leveldb_sax_db
  * Method:    put_buffer
- * Signature: (ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;IJ)V
+ * Signature: (ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;IJ)J
  */
-JNIEXPORT void JNICALL Java_leveldb_1sax_db_put_1buffer
+JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
     (JNIEnv *, jobject, jint, jobject, jobject, jint, jlong);
 
 /*

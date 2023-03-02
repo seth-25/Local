@@ -4,10 +4,7 @@ import com.local.Main;
 import com.local.domain.Parameters;
 import com.local.util.*;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -31,7 +28,6 @@ public class SearchBuffer implements Runnable{
         this.isExact = isExact;
         this.k = k;
         try {
-//            randomAccessFile = new RandomAccessFile(Parameters.FileSetting.queryFilePath, "r");//r: 只读模式 rw:读写模式
             fileChannel = new FileInputStream(Parameters.FileSetting.queryFilePath).getChannel();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -77,31 +73,40 @@ public class SearchBuffer implements Runnable{
     }
     private void computeDis(byte[] ans) {
         double dis = 0;
+        PrintUtil.PrintDis printDis = new PrintUtil.PrintDis("ApproximateDis.txt");   // todo
         for (int i = 0; i < ans.length - 4; i += Parameters.approximateResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
-            dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+            float d = SearchUtil.bytesToFloat(floatBytes);
+            dis += Math.sqrt(d);
 
-            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
+            printDis.print(d);  // todo
+
+//            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
         }
+        printDis.close(); // todo
         Main.oneDis = dis / k;
     }
 
     private void computeExactDis(byte[] ans) {
         double dis = 0;
-        double oldDis = 0;
+//        double oldDis = 0;
+        PrintUtil.PrintDis printDis = new PrintUtil.PrintDis("ExactDis.txt");
         for (int i = 0; i < ans.length; i += Parameters.exactResSize) {
             byte[] floatBytes = new byte[4];
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
-            dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+            float d = SearchUtil.bytesToFloat(floatBytes);
+            dis += Math.sqrt(d);
 
-            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
-            if (Math.sqrt(SearchUtil.bytesToFloat(floatBytes)) == oldDis) {
-                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));
-            }
+            printDis.print(d);   // todo
+//            System.out.println(d);    // todo
+//            if (Math.sqrt(d) == oldDis) { // todo
+//                System.out.println("重复 " + SearchUtil.bytesToFloat(floatBytes));    // todo
+//            }
 
-            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
+//            oldDis = Math.sqrt(d);
         }
+        printDis.close();    // todo
         Main.oneDis = dis / k;
     }
 

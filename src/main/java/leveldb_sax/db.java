@@ -19,6 +19,8 @@ public class db {
     }
     //sax
 
+    public native void print_time();
+
     @Deprecated
     public native byte[] leaftimekey_from_tskey(byte[] tskeys, int hash, long offset, boolean issort);
 
@@ -32,7 +34,7 @@ public class db {
      * @param hash
      * @param offset
      */
-    public native void put_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
+    public native long put_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
     /**
      * leaftimekeys 和 tskeys 要一样多，不然出错
      * @param tskeys

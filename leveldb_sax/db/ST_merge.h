@@ -16,6 +16,8 @@ namespace leveldb{
 
 //多线程合并
 class ST_merge_one {
+  LeafKey last1;
+  LeafKey last;
 
  public:
   ST_merge_one(TableCache* cache_);
@@ -33,7 +35,7 @@ class ST_merge_one {
 
 
     while (!is_can_get.load(memory_order_acquire)) {
-      if (isover.load(memory_order_relaxed)) {
+      if (isover.load(memory_order_acquire)) {
         leafKeys->clear();
         if (!key_buffer[to_get_id].empty()) {
           leafKeys = &(key_buffer[to_get_id]);
@@ -53,7 +55,7 @@ class ST_merge_one {
 //    cout<<"size_shiyong222222"+to_string(key_buffer[to_get_id].size())<<endl;
 //    cout<<"size_shiyong"+to_string(leafKeys->size())<<endl;
     to_get_id = (to_get_id + 1) % 3;
-    is_can_get.store(false, memory_order_relaxed);
+    is_can_get.store(false, memory_order_release);
     to_get.store(to_get_id, memory_order_release);
 //    cout<<"to_get_id"+to_string(to_get_id)<<endl;
 //    for(int i=0;i<(*leafKeys).size()-1;i++) {
@@ -111,6 +113,8 @@ class ST_merge_one {
 
 //用于归并排序
 class ST_merge {
+
+  LeafKey last;
 
  public:
   ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaction_);

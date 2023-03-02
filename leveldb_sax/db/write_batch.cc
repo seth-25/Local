@@ -115,6 +115,7 @@ void WriteBatch::Append(const WriteBatch& source) {
 }
 
 namespace {
+static int xxx = 0;
 class MemTableInserter : public WriteBatch::Handler {
  public:
 //  SequenceNumber sequence_;
@@ -127,10 +128,13 @@ class MemTableInserter : public WriteBatch::Handler {
       : mem_(mems[memId]), mems(mems), mutex_(mutex), memId(memId), versionSet(versionSet){}
 
   bool Put(LeafKey& key) override {
-//    char tmp[16] = {67, -62, 116, -32, -92, -3, 73, 62, -61, -67, 23, 79, 15, 3, -1, 0};
+//    unsigned char tmp[8] = {23 ,115 ,97 ,198, 124 ,242, 132 ,248 };
 //    if(key.asaxt == *(saxt_only*)tmp) {
-//      cout<<"you"<<endl;
-//      cout<<key.keytime_<<endl;
+//      xxx++;
+//      out("adsdd");
+//      printf("%ld\n", (long)key.p);
+//      if(xxx == 2 && 7772777 == (long)key.p) exit(10);
+//      if(xxx == 5) exit(11);
 //    }
     return mem_->Add(key);
   }

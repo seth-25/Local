@@ -32,6 +32,9 @@ public class Insert2 implements Runnable{
     private static int cntInsert = 0;
     public static long insertTime;
     public static long IOTime = 0;
+    public static long[] CPUTime = new long[Parameters.insertNumThread];
+
+    public static long[] saxtTime = new long[Parameters.insertNumThread];
     /**
      * 读文件和发送sax并行
      */
@@ -97,7 +100,7 @@ public class Insert2 implements Runnable{
             }
 
         }
-        public boolean consume(ByteBuffer leafTimeKeysBuffer, SearchLock searchLock, int searchStart, int interval, int eachSearchNum) throws InterruptedException {
+        public boolean consume(ByteBuffer leafTimeKeysBuffer, SearchLock searchLock, int i, int searchStart, int interval, int eachSearchNum) throws InterruptedException {
             TsReadBatch tsReadBatch;
             synchronized (this) {
                 while(cntGet <= 0) {
@@ -121,7 +124,10 @@ public class Insert2 implements Runnable{
 //            }
 //            System.out.println();
 
-            DBUtil.dataBase.put_buffer(Parameters.FileSetting.readTsNum, tsReadBatch.getTsBuffer(), leafTimeKeysBuffer, tsReadBatch.getFileNum(), tsReadBatch.getOffset());
+            long CPUTimeStart = System.currentTimeMillis();
+            saxtTime[i]+= DBUtil.dataBase.put_buffer(Parameters.FileSetting.readTsNum, tsReadBatch.getTsBuffer(),
+                    leafTimeKeysBuffer, tsReadBatch.getFileNum(), tsReadBatch.getOffset()) / 1000;
+            CPUTime[i] += System.currentTimeMillis() - CPUTimeStart;
 
             synchronized (this) {
                 cnt --; // insert完才-1，防止tsBytes被覆盖
@@ -158,13 +164,14 @@ public class Insert2 implements Runnable{
         // 先read再put，wait条件是等于capacity，所以至多同时存在capacity+1个tsBytes，故capacity设成2 * insertNumThread - 1
         TsToSaxChannel tsToSaxChannel = new TsToSaxChannel(2 * Parameters.insertNumThread - 1);
         for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+            int finalI = i;
             CacheUtil.insertThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {
                     ByteBuffer leafTimeKeysBuffer = ByteBuffer.allocateDirect(Parameters.FileSetting.readTsNum * Parameters.leafTimeKeysSize);
                     while(true) {
                         try {
-                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer, searchLock, searchStart, interval, eachSearchNum)) break;
+                            if (!tsToSaxChannel.consume(leafTimeKeysBuffer, searchLock, finalI, searchStart, interval, eachSearchNum)) break;
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
@@ -183,7 +190,8 @@ public class Insert2 implements Runnable{
 
         System.out.println("读完所有文件,退出\n");
         Main.hasInsert = true;
-        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime);
+        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime + "\tCPU时间：" + Arrays.toString(CPUTime));
+        System.out.println("Ts转化成saxT时间：" + Arrays.toString(saxtTime));
         CacheUtil.insertThreadPool.shutdown();
 
     }

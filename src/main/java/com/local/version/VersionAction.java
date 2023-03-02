@@ -194,6 +194,9 @@ public class VersionAction {
             PrintUtil.print("\trtree插入:" + "时间" + ver2.addMinTimes + " " + ver2.addMaxTimes + " 文件名" + ver2.addFileNums);
             // rtree增加
             for (int i = 0; i < ver2.addMaxSaxes.size(); i ++ ) {
+                PrintUtil.print(Arrays.toString(ver2.addMinSaxes.get(i)) + " " + Arrays.toString(ver2.addMaxSaxes.get(i)) + " " +
+                        VersionUtil.bytesToLong(ver2.addMinSaxes.get(i)) + " " + VersionUtil.bytesToLong(ver2.addMaxSaxes.get(i)) +
+                        VersionUtil.saxT2Double(ver2.addMinSaxes.get(i)) + " " + VersionUtil.saxT2Double(ver2.addMaxSaxes.get(i)));
                 tree = tree.add(new String(ver2.addMinSaxes.get(i), StandardCharsets.ISO_8859_1)  + new String(ver2.addMaxSaxes.get(i), StandardCharsets.ISO_8859_1) + ver2.addFileNums.get(i),
                         Geometries.rectangle (VersionUtil.saxT2Double(ver2.addMinSaxes.get(i)), (double) ver2.addMinTimes.get(i), VersionUtil.saxT2Double(ver2.addMaxSaxes.get(i)), (double) ver2.addMaxTimes.get(i)));
             }

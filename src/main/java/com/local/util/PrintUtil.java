@@ -3,6 +3,9 @@ package com.local.util;
 import com.local.domain.Parameters;
 import com.local.search.SearchUtil;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,5 +80,32 @@ public class PrintUtil {
             }
         }
         System.out.println("===============================\n");
+    }
+
+    public static class PrintDis{FileWriter fw;
+        public BufferedWriter bw;
+        public PrintDis(String fileName) {
+            try {
+                this.fw = new FileWriter(fileName, true);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            this.bw = new BufferedWriter(fw);
+        }
+        public void print(float dis) {
+            try {
+                fw.write(dis + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        public void close() {
+            try {
+                bw.close();
+                fw.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

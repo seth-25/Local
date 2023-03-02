@@ -88,8 +88,7 @@ public class MappedFileReaderBuffer {
 //        array = arraysList.poll();
         if (count >= number) {  // 文件读取完毕
             PrintUtil.print("清空读取文件的byte数组");
-//            resArray = null;
-//            arrays = null;
+            mappedBufArray = null;
             return null;
         }
 
@@ -143,28 +142,6 @@ public class MappedFileReaderBuffer {
             return mappedByteBuffer;
         }
     }
-//    public byte[] getArray() {
-//        if (!isRes) {
-//            return array;
-//        }
-//        else {
-//            return resArray;
-//        }
-//    }
-//    public void arraysListOffer(byte[] array) {
-//        arraysList.offer(array);
-//    }
-//    public byte[] readTs(long offset, int num) {
-//        try {
-//            fileChannel.read(readTsByteBuf, offset * Parameters.tsSize);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        readTsByteBuf.flip();
-//        readTsByteBuf.get(tsArrays[num]);
-//        readTsByteBuf.clear();
-//        return tsArrays[num];
-//    }
 
     public byte[] readTsNewByte(long offset) {
         try {
@@ -202,10 +179,6 @@ public class MappedFileReaderBuffer {
         operationList.clear();
 
         return byteBufferList;
-    }
-
-    public long getFileLength() {
-        return fileLength;
     }
 
     public long getOffset() {

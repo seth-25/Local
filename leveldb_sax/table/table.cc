@@ -58,15 +58,15 @@ Status Table::Open(const Options& options, RandomAccessFile* file,
 
   //先不读校验码
   NonLeafKey* real_rootkey = (NonLeafKey*)rootkey_input.data();
-  saxt_print(real_rootkey->lsaxt);
-  saxt_print(real_rootkey->rsaxt);
-  out(real_rootkey->num);
+//  saxt_print(real_rootkey->lsaxt);
+//  saxt_print(real_rootkey->rsaxt);
+//  out(real_rootkey->num);
 
   STpos* sTpos = (STpos*)&real_rootkey->p;
   size_t stNonLeaf_size = sTpos->GetSize();
   Slice stNonLeaf_input;
-  out(stNonLeaf_size);
-  out(sTpos->GetOffset());
+//  out(stNonLeaf_size);
+//  out(sTpos->GetOffset());
   //开了空间的
   STNonLeaf* stNonLeaf = new STNonLeaf(real_rootkey->num, real_rootkey->co_d, stNonLeaf_size);
   stNonLeaf->Setprefix(real_rootkey->lsaxt);
@@ -740,9 +740,9 @@ Table::ST_Iter::ST_Iter(Table* table) :rep_(table->rep_),top(0),leaftop(0) {
 static long long xx1 = 0;
 bool Table::ST_Iter::next(LeafKey& res) {
 //  if(++xx1 % 100000) {
-////      out2("next");
-////      out2(leaftop);
-////      out2(stLeaf->num);
+
+//      out1("num:",stLeaf->num);
+//      out1("top:",leaftop + 1);
 //      if(stLeaf->num > 3000) exit(1);
 //  }
 
@@ -764,9 +764,7 @@ bool Table::ST_Iter::next(LeafKey& res) {
 //          out2("有stleaf");
 //          out2((int)stLeaf->co_d);
 //          out2((int)stLeaf->num);
-//          saxt_print(stLeaf.prefix);
-//          saxt_print((saxt)stLeaf.Get_rep(0), stLeaf.prefix, stLeaf.co_d);
-//          saxt_print((saxt)stLeaf.Get_rep(stLeaf.num-1), stLeaf.prefix, stLeaf.co_d);
+//          saxt_print(stLeaf->prefix);
           break;
         } else {
           top--;
@@ -777,7 +775,8 @@ bool Table::ST_Iter::next(LeafKey& res) {
           getSTNonLeaf();
 //          out2("STNonLeaf");
 //          out2((int)st_nonleaf_stack[top]->co_d);
-//          saxt_print(st_nonleaf_stack[top]->prefix);
+//          out2((int)st_nonleaf_stack[top]->num);
+          saxt_print(st_nonleaf_stack[top]->prefix);
         } else {
           top--;
         }
@@ -798,10 +797,10 @@ bool Table::ST_Iter::next(LeafKey& res) {
 //  res.Set(stLeaf.prefix, stLeaf.Get_rep(leaftop), stLeaf.co_size, stLeaf.noco_size);
 
 //  out("next");
-//  out((int)stLeaf.noco_size);
+//  out((int)stLeaf->noco_size);
 //  saxt_print(res.asaxt);
-//  saxt_print(stLeaf.Get_rep(leaftop));
-//  saxt_print(stLeaf.prefix);
+//  saxt_print(stLeaf->Get_rep(leaftop) + 8);
+//  saxt_print(stLeaf->prefix);
 
   return true;
 }
@@ -810,6 +809,7 @@ bool Table::ST_Iter::getSTLeaf() {
   STNonLeaf &nonLeaf = *st_nonleaf_stack[top];
   int i = nonleaftops[top];
   if (nonLeaf.Getnum(i)==0) {
+//    exit(1);
     return false;
   }
   Slice slice;
@@ -817,6 +817,7 @@ bool Table::ST_Iter::getSTLeaf() {
   size_t stLeaf_size = sTpos.GetSize();
 //  out2((int)nonLeaf.co_d);
 //  out2((int)nonLeaf.Get_co_d(i));
+//  out((int)nonLeaf.Get_co_d(i));
   stLeaf->Set(nonLeaf.Getnum(i), nonLeaf.Get_co_d(i));
   stLeaf->Setprefix(nonLeaf.prefix, nonLeaf.Get_lsaxt(i), sizeof(saxt_only) - nonLeaf.co_size);
   if (stLeaf->ismmap) stLeaf->Setnewroom(sizeof(Leaf));
@@ -846,6 +847,10 @@ bool Table::ST_Iter::getSTLeaf() {
 #else
   stLeaf->Setrep(slice.data());
 #endif  // HAVE_SNAPPY
+//  out("stleaf");
+//  saxt_print(stLeaf->prefix);
+//  saxt_print(stLeaf->Get_rep(0) + 8);
+//  saxt_print(stLeaf->Get_rep(stLeaf->num-1) + 8);
   leaftop = -1;
   return true;
 }
@@ -856,9 +861,12 @@ void Table::ST_Iter::getSTNonLeaf() {
   Slice slice;
   STpos sTpos = nonLeaf.Get_pos(i);
   size_t stNonLeaf_size = sTpos.GetSize();
+//  out("qian");
 //  out2((int)nonLeaf.co_d);
 //  out2((int)nonLeaf.Get_co_d(i));
 //  out2((int)nonLeaf.Getnum(i));
+//  saxt_print(nonLeaf.Get_lsaxt(i));
+//  saxt_print(nonLeaf.Get_rsaxt(i));
   top++;
   if (top < st_nonleaf_stack.size()){
     if (st_nonleaf_stack[top]->ismmap) st_nonleaf_stack[top]->Setnewroom(sizeof(NonLeaf));
@@ -900,6 +908,10 @@ void Table::ST_Iter::getSTNonLeaf() {
   st_nonleaf_stack[top]->Setisleaf();
   nonleaftops[top] = -1;
 
+//  out((int)st_nonleaf_stack[top]->co_d);
+//  saxt_print(st_nonleaf_stack[top]->prefix);
+//  saxt_print(st_nonleaf_stack[top]->Get_lsaxt(0));
+//  saxt_print(st_nonleaf_stack[top]->Get_rsaxt(st_nonleaf_stack[top]->num-1));
 }
 
 Table::ST_Iter::~ST_Iter() {

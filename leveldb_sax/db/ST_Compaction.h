@@ -46,6 +46,14 @@ class ST_Compaction_Leaf {
     size_tocopy = num * noco_saxt_size;
     //把共享的压缩掉
     for(int i=0;i<num;i++){
+//      if(i>0 && leafKeys[i] < leafKeys[i-1]) {
+//        out(1);
+//        saxt_print(leafKeys[i].asaxt);
+//        saxt_print(leafKeys[i-1].asaxt);
+//        sleep(10);
+//        exit(1);
+//      }
+//      if(i > 0) assert(leafKeys[i] >= leafKeys[i-1]);
       charcpy(tmpbuffer, leafKeys + i, noco_saxt_size);
     }
   }

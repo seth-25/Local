@@ -14,6 +14,13 @@ static leveldb::ReadOptions readOptions;
 static JavaVM* gs_jvm;
 //static ThreadPool *pool;
 
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_print_1time
+    (JNIEnv *, jobject) {
+#if iscompaction_time
+  cout<<"压缩合并时间: "<<db->getTime()/1000<<endl;
+#endif
+}
+
 JNIEXPORT jbyteArray JNICALL Java_leveldb_1sax_db_leaftimekey_1from_1tskey
     (JNIEnv *env, jobject, jbyteArray tskeys, jint hash, jlong offset, jboolean issort) {
   size_t size = env->GetArrayLength(tskeys);
@@ -54,17 +61,22 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_leaftimekey_1sort
   free(leafTimeKeys);
 }
 
-JNIEXPORT void JNICALL Java_leveldb_1sax_db_put_1buffer
+
+JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
     (JNIEnv *env, jobject, jint tskeynum, jobject ts_buffer, jobject leaftimekeys_buffer, jint hash, jlong offset) {
   tsKey* tskeys_c = (tsKey*)env->GetDirectBufferAddress(ts_buffer);
   LeafTimeKey* leafTimeKeys = (LeafTimeKey*)env->GetDirectBufferAddress(leaftimekeys_buffer);
-
+  long stime = 0;
+#if iscompaction_time
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+#endif
   for(int i=0;i<tskeynum;i++) {
     saxt_from_ts(tskeys_c[i].ts, leafTimeKeys[i].leafKey.asaxt.asaxt);
 #if ishash
     leafTimeKeys[i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else
     leafTimeKeys[i].leafKey.p = (void*) (offset + i);
+
 #endif
 #if istime == 1
     leafTimeKeys[i].keytime = tskeys_c[i].tsTime;
@@ -72,7 +84,13 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_put_1buffer
     leafTimeKeys[i].leafKey.keytime_ = tskeys_c[i].tsTime;
 #endif
   }
+#if iscompaction_time
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+  stime = std::chrono::duration_cast<std::chrono::microseconds>( t2-t1 ).count();
+#endif
   for(int i=0;i<tskeynum;i++) db->Put(writeOptions, leafTimeKeys[i]);
+
+  return stime;
 }
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer
@@ -86,6 +104,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer
     leafTimeKeys[i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else
     leafTimeKeys[i].leafKey.p = (void*) (offset + i);
+
 #endif
 #if istime == 1
     leafTimeKeys[i].keytime = tskeys_c[i].tsTime;
@@ -111,6 +130,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
     leafTimeKeys[i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else
     leafTimeKeys[i].leafKey.p = (void*) (offset + i);
+
 #endif
 #if istime == 1
     leafTimeKeys[i].keytime = tskeys_c[i].tsTime;
@@ -125,6 +145,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
     leafTimeKeys[i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else
     leafTimeKeys[i].leafKey.p = (void*) (offset + i);
+
 #endif
 #if istime == 1
     leafTimeKeys[i].keytime = tskeys_c1[j].tsTime;

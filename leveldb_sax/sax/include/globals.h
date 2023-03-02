@@ -19,7 +19,7 @@
 #define isax_globals_h
 
 
-#define daxiao 0 // 0为16字节， 1为8字节
+#define daxiao 1 // 0为16字节， 1为8字节
 
 #define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
@@ -28,7 +28,7 @@
 // 是否使用贪心策略 0不使用 1使用
 #define isgreed 1
 // 是否print
-#define isprint 0
+#define isprint 1
 // 0, 1, 2 代表 一个，一部分，一个叶
 #define lookupi 2
 // 初始化时存入st
@@ -87,27 +87,31 @@ typedef unsigned char cod;
 #endif
 
 
+
+
 #define Ts_length 256
-#define Leaf_maxnum 2048
-#define Leaf_minnum Leaf_maxnum/2
+#define Leaf_maxnum 512
+#define Leaf_minnum (Leaf_maxnum/2)
 //最小
 #define Leaf_maxnum_rebalance 10
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 1000000
+#define init_num 2000000
 
 #define pool_size 1 // 几张表=几个插入线程
 
 //一个memtable存的数量
-#define Table_maxnum init_num/pool_size
+#define Table_maxnum (init_num/pool_size)
+
+#define iscompaction_time 1
 
 
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
-#define get_exact_multiThread_file_size 1000*1024*1024
+#define get_exact_multiThread_file_size (1000*1024*1024)
 
 #define pool_get_size 32  // 查询线程
-#define pool_compaction_size 2  // 压缩合并线程
+#define pool_compaction_size 1  // 压缩合并线程
 
 // 压缩合并申请的缓存大小， 几个leaf
 #define compaction_leaf_size 20
@@ -127,6 +131,7 @@ static const int compaction_buffer_size = Leaf_rebuildnum;
 static const int sax_offset = ((Cardinality - 1) * (Cardinality - 2)) / 2;
 static int sax_offset_i[Bit_cardinality+1] = {0,0,3,21,105,465,1953,8001,32385};
 static int cardinality_1_i[Bit_cardinality+1] = {0,1,3,7,15,31,63,127,255};
+
 
 typedef struct {
   ts_type ts[Ts_length];

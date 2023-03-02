@@ -44,6 +44,12 @@ class DBImpl : public DB {
 
   ~DBImpl() override;
 
+#if iscompaction_time
+  long getTime() override {
+    return compaction_time;
+  }
+#endif
+
   // Implementations of the DB interface
   Status Put(const WriteOptions&, LeafTimeKey& key) override;
   Status Init(LeafTimeKey* leafKeys, int leafKeysNum) override;
@@ -209,9 +215,9 @@ class DBImpl : public DB {
 //  uint64_t logfile_number_ GUARDED_BY(mutex_);
 //  log::Writer* log_;
 //  uint32_t seed_ GUARDED_BY(mutex_);  // For sampling.
-
-
-
+#if iscompaction_time
+  long compaction_time = 0;
+#endif
   const void* db_jvm;
   //磁盘版本锁
   port::Mutex mutex_;

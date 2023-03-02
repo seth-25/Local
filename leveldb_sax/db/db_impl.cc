@@ -797,6 +797,9 @@ void DBImpl::BackgroundCompaction() {
     if (imms.empty()) has_imm_.store(false, std::memory_order_release);
     return;
   }
+#if iscompaction_time
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+#endif
   out("进入压缩合并");
   //压缩合并sstable，这里写完读取sstable再来写
   Compaction* c;
@@ -858,7 +861,10 @@ void DBImpl::BackgroundCompaction() {
   } else {
     out(" 进入多文件合并");
     CompactionState* compact = new CompactionState(c);
+
+
     status = DoCompactionWork(compact);
+
     if (!status.ok()) {
       out(" DoCompactionWork错了");
 
@@ -878,19 +884,23 @@ void DBImpl::BackgroundCompaction() {
     Log(options_.info_log, "Compaction error: %s", status.ToString().c_str());
   }
 
-  if (is_manual) {
-    ManualCompaction* m = manual_compaction_;
-    if (!status.ok()) {
-      m->done = true;
-    }
-    if (!m->done) {
-      // We only compacted part of the requested range.  Update *m
-      // to the range that is left to be compacted.
-      m->tmp_storage = manual_end;
-      m->begin = &m->tmp_storage;
-    }
-    manual_compaction_ = nullptr;
-  }
+//  if (is_manual) {
+//    ManualCompaction* m = manual_compaction_;
+//    if (!status.ok()) {
+//      m->done = true;
+//    }
+//    if (!m->done) {
+//      // We only compacted part of the requested range.  Update *m
+//      // to the range that is left to be compacted.
+//      m->tmp_storage = manual_end;
+//      m->begin = &m->tmp_storage;
+//    }
+//    manual_compaction_ = nullptr;
+//  }
+#if iscompaction_time
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+  compaction_time += std::chrono::duration_cast<std::chrono::microseconds>( t2-t1 ).count();
+#endif
 }
 
 void DBImpl::CleanupCompaction(CompactionState* compact) {
@@ -1076,6 +1086,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
   } else {
     compact->smallest_snapshot = snapshots_.oldest()->sequence_number();
   }
+
+
 
   out("Merge");
 //  Iterator* input = versions_->MakeInputIterator(compact->compaction);
@@ -2942,7 +2954,7 @@ void DBImpl::ReleaseSnapshot(const Snapshot* snapshot) {
 }
 
 
-
+static long qq = 0;
 // Convenience methods
 //选表
 Status DBImpl::Put(const WriteOptions& o, LeafTimeKey& key) {
@@ -2976,6 +2988,7 @@ Status DBImpl::Put(const WriteOptions& o, LeafTimeKey& key) {
     //必须要插入这个表了
     write_mutex[l].Lock();
   }
+
 
 
   memNum_period[l]++;

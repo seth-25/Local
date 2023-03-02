@@ -10,7 +10,7 @@ public class Parameters {
     public static final int tsSize = (hasTimeStamp > 0) ? tsDataSize + timeStampSize : tsDataSize;
 
 
-    public static final int segmentSize  = 16;   // 分成几段
+    public static final int segmentSize  = 8;   // 分成几段
     public static final int paaNum = segmentSize; // paa个数,一段一个paa
     public static final int bitCardinality = 8; // paa离散化几位
     public static final int saxTSize = segmentSize * bitCardinality / 8; // saxT多少字节
@@ -29,8 +29,8 @@ public class Parameters {
     public static final int infoMaxPSize = 10000;   // 最多一次性查询多少个原始时间序列
     public static final boolean findOriTsSort = true; // 批量查询原始时间序列，是否排序
     ///////////////////////Init
-    public static final int initNum = 1;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
-    public static final int insertNumThread = 1;    // 插入的线程
+    public static final int initNum = 2;    // 初始化读取几次,保证initNum * readTsNum = leveldb/sax/include/globals.h的 init_num
+    public static final int insertNumThread = 1;    // 插入的线程，和leveldb/sax/include/globals.h的pool_size相同
 
 
     public static class FileSetting {
@@ -43,5 +43,5 @@ public class Parameters {
     }
 
     public static final boolean isSuffix = true;
-    public static final boolean debug = false;
+    public static final boolean debug = true;
 }
