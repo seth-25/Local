@@ -34,7 +34,9 @@ class BlockBuilder {
   inline void AddLeaf_(void* tocopy, size_t size_tocopy) {
     buffer_.append((char*)tocopy, size_tocopy);
   }
-  void AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf);
+  inline void AddNonLeaf(void* tocopy, size_t size_tocopy) {
+    buffer_.append((char*)tocopy, size_tocopy);
+  }
 
   void Add(Leaf* leaf, LeafKey* copyleaf);
 

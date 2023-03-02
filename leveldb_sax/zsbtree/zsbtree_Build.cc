@@ -72,7 +72,6 @@ void Zsbtree_Build::Emplace(int num, cod co_d, saxt_only lsaxt, saxt_only rsaxt,
 }
 
 void Zsbtree_Build::finish() {
-  out("finish");
   if (leafkeys.size_add()<=n && !leafkeys.empty_add()){
     saxt_only lsaxt = leafkeys.data()->asaxt;
     saxt_only rsaxt = leafkeys.back_add()->asaxt;
@@ -1044,24 +1043,6 @@ inline saxt_only Zsbtree_Build::get_saxt_i_r(const newVector<NonLeafKey> &leafKe
 //构造leaf和索引点
 inline void Zsbtree_Build::build_leaf_and_nonleafkey(const newVector<NonLeafKey> &leafKeys, int id,
                                       int num, cod co_d, saxt_only lsaxt, saxt_only rsaxt, int dep) {
-  out("b1");
-  saxt_print(lsaxt);
-  saxt_print(rsaxt);
-  out("b555");
-  for(int i=1;i<num;i++){
-    if((leafKeys.data()+id+i)->lsaxt < (leafKeys.data()+id+i-1)->rsaxt){
-      for(int j=0;j<num;j++){
-        cout<<i<<" "<<j<<endl;
-        saxt_print((leafKeys.data()+id+j)->lsaxt);
-        saxt_print((leafKeys.data()+id+j)->rsaxt);
-      }
-
-
-      break ;
-      }
-      assert((leafKeys.data()+id+i)->lsaxt >= (leafKeys.data()+id+i-1)->rsaxt);
-  }
-  out("b777");
   Emplace(num, co_d, lsaxt, rsaxt, leafKeys.data()+id, dep);
 }
 
@@ -1072,13 +1053,11 @@ inline void Zsbtree_Build::build_leaf_and_nonleafkey_two(const newVector<NonLeaf
   int tmpnum2 = num - tmpnum1;
   //构造leaf
   saxt_only tmpsaxt = leafKeys[id+tmpnum1-1].rsaxt;
-  out("b2");
   //构造nonleaf索引点
   Emplace(tmpnum1, get_co_d_from_saxt(lsaxt, tmpsaxt, co_d), lsaxt, tmpsaxt, leafKeys.data()+id, dep);
   //第二个叶
   //构造leaf
   tmpsaxt = leafKeys[id+tmpnum1].lsaxt;
-  out("b3");
   //构造nonleaf索引点
   Emplace(tmpnum2, get_co_d_from_saxt(tmpsaxt, rsaxt, co_d), tmpsaxt, rsaxt, leafKeys.data()+id+tmpnum1, dep);
 }
@@ -1086,7 +1065,6 @@ inline void Zsbtree_Build::build_leaf_and_nonleafkey_two(const newVector<NonLeaf
 //给一个叶子结点加一些key
 inline void Zsbtree_Build::add_nonleafkey(const newVector<NonLeafKey> &leafKeys, int id,
                            int num, cod co_d, saxt_only rsaxt, int dep) {
-  out("b5");
   NonLeafKey *nonLeafKey = nonleafkeys[dep].back_add();
   nonLeafKey->co_d = co_d;
   nonLeafKey->num += num;
@@ -1096,7 +1074,6 @@ inline void Zsbtree_Build::add_nonleafkey(const newVector<NonLeafKey> &leafKeys,
 //给一个叶子结点加一些key,到大于n了，平分
 inline void Zsbtree_Build::split_nonleafkey(const newVector<NonLeafKey> &leafKeys, int id, int allnum,
                              int num, cod co_d, saxt_only rsaxt, int dep) {
-  out("b4");
   NonLeafKey *nonLeafKey = nonleafkeys[dep].back_add();
   NonLeafKey *leafs = (NonLeafKey *)(nonLeafKey->p);
   int tmpnum1 = allnum / 2;

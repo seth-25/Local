@@ -58,7 +58,7 @@ class LEVELDB_EXPORT TableBuilder {
 #else
   void AddLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_tocopy);
 #endif
-  void AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf);
+  void AddNonLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_tocopy);
 
   void Addsnap(NonLeafKey* nonLeafKey);
 

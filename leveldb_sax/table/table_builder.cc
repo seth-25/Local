@@ -95,11 +95,11 @@ void TableBuilder::AddLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_toc
 }
 #endif
 
-void TableBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf) {
+void TableBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, void* tocopy, size_t size_tocopy) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-  r->data_block.AddNonLeaf(nonLeafKey, isleaf);
+  r->data_block.AddNonLeaf(tocopy, size_tocopy);
   Addsnap(nonLeafKey);
 }
 

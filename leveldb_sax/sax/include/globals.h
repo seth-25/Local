@@ -28,7 +28,7 @@
 // 是否使用贪心策略 0不使用 1使用
 #define isgreed 1
 // 是否print
-#define isprint 1
+#define isprint 0
 // 0, 1, 2 代表 一个，一部分，一个叶
 #define lookupi 2
 // 初始化时存入st
@@ -111,7 +111,7 @@ typedef unsigned char cod;
 #define get_exact_multiThread_file_size (1000*1024*1024)
 
 #define pool_get_size 32  // 查询线程
-#define pool_compaction_size 1  // 压缩合并线程
+#define pool_compaction_size 2  // 压缩合并线程
 
 // 压缩合并申请的缓存大小， 几个leaf
 #define compaction_leaf_size 20

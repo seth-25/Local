@@ -16,8 +16,8 @@ namespace leveldb{
 
 //多线程合并
 class ST_merge_one {
-  LeafKey last1;
-  LeafKey last;
+//  LeafKey last1;
+//  LeafKey last;
 
  public:
   ST_merge_one(TableCache* cache_);
@@ -114,7 +114,7 @@ class ST_merge_one {
 //用于归并排序
 class ST_merge {
 
-  LeafKey last;
+//  LeafKey last;
 
  public:
   ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaction_);

@@ -15,7 +15,7 @@ struct TableAndFile {
 
 
 ST_merge::ST_merge(VersionSet* ver, Compaction* c, ThreadPool* pool_compaciton_) : vec_size(0), pool_compaction(pool_compaciton_){
-  memset(&last, 0, sizeof(LeafKey));
+//  memset(&last, 0, sizeof(LeafKey));
 
   TableCache* cache = ver->table_cache_;
   vector<PII_saxt> st_iters;
@@ -116,8 +116,8 @@ bool ST_merge::next(LeafKey& leafKey) {
         key_buffer[i] = key_buffer[i+1];
       }
     }
-    assert(last <= leafKey);
-    last = leafKey;
+//    assert(last <= leafKey);
+//    last = leafKey;
 //    saxt_print(leafKey.asaxt);
 //    cout<<hh[0]<<endl;
 //    cout<<vec_size<<endl;
@@ -129,8 +129,8 @@ bool ST_merge::next(LeafKey& leafKey) {
 
 
 ST_merge_one::ST_merge_one(TableCache* cache_): cache(cache_), vec_size(0), cv_q(&mutex_q){
-  memset(&last, 0, sizeof(LeafKey));
-  memset(&last1, 0, sizeof(LeafKey));
+//  memset(&last, 0, sizeof(LeafKey));
+//  memset(&last1, 0, sizeof(LeafKey));
   to_get.store(0, memory_order_release);
   is_can_get.store(false, memory_order_release);
   isover.store(false, memory_order_release);
@@ -179,8 +179,8 @@ void ST_merge_one::start() {
 //    out("add");
 //    saxt_print(tmpkey.asaxt);
 //    saxt_print(tmpkey.asaxt);
-  assert(last1 <= tmpkey);
-  last1 = tmpkey;
+//  assert(last1 <= tmpkey);
+//  last1 = tmpkey;
 //    assert(to_get_id != (to_write_id + 1) % 3);
     key_vec->push_back(tmpkey);
 //    cout<<"写"+to_string(to_write_id)<<endl;
@@ -230,12 +230,12 @@ void ST_merge_one::start() {
 }
 
 bool ST_merge_one::next1(LeafKey& leafKey) {
-  LeafKey tmpkey;
+
   if (vec_size) {
     int res = 0;
-    tmpkey = vec[0].first;
+    leafKey = vec[0].first;
     for (int i=1;i<vec_size;i++) {
-      if (tmpkey > vec[i].first) tmpkey = vec[i].first, res = i;
+      if (leafKey > vec[i].first) leafKey = vec[i].first, res = i;
     }
 //    out1("res", res);
 //    saxt_print(leafKey.asaxt);
@@ -248,15 +248,15 @@ bool ST_merge_one::next1(LeafKey& leafKey) {
         vec[i] = vec[i+1];
       }
     }
-
-    if (last > tmpkey) {
-      out("cuole");
-      saxt_print(last.asaxt);
-      saxt_print(tmpkey.asaxt);
-      out(1111);
-    }
+//
+//    if (last > tmpkey) {
+//      out("cuole");
+//      saxt_print(last.asaxt);
+//      saxt_print(tmpkey.asaxt);
+//      out(1111);
+//    }
 //    assert(last <= tmpkey);
-    last = tmpkey;
+//    last = tmpkey;
 //    saxt_print(last.asaxt);
 //    saxt_print(leafKey.asaxt);
 //    if(last >= leafKey) {
@@ -266,7 +266,7 @@ bool ST_merge_one::next1(LeafKey& leafKey) {
 //    }
 //    assert(last < leafKey);
 //    last = leafKey;
-    leafKey = tmpkey;
+
     return true;
   }
   return false;

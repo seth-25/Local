@@ -43,5 +43,5 @@ public class Parameters {
     }
 
     public static final boolean isSuffix = true;
-    public static final boolean debug = true;
+    public static final boolean debug = false;
 }

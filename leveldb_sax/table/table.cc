@@ -737,7 +737,7 @@ Table::ST_Iter::ST_Iter(Table* table) :rep_(table->rep_),top(0),leaftop(0) {
   leaftop--;
 }
 
-static long long xx1 = 0;
+
 bool Table::ST_Iter::next(LeafKey& res) {
 //  if(++xx1 % 100000) {
 
@@ -776,7 +776,7 @@ bool Table::ST_Iter::next(LeafKey& res) {
 //          out2("STNonLeaf");
 //          out2((int)st_nonleaf_stack[top]->co_d);
 //          out2((int)st_nonleaf_stack[top]->num);
-          saxt_print(st_nonleaf_stack[top]->prefix);
+//          saxt_print(st_nonleaf_stack[top]->prefix);
         } else {
           top--;
         }
@@ -1251,7 +1251,6 @@ void Table::ST_finder_exact_appro::leaf_todo(STLeaf& leaf) {
 
   int res_size = 0;
   if (need) {
-    cout<<"wdaw"<<endl;
     //全看
     char* tmpinfo = add_info;
     charcpy(tmpinfo, &need, sizeof(int));

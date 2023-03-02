@@ -107,7 +107,7 @@ void BlockBuilder::Add(Leaf* leaf, LeafKey* copyleaf) {
 //    saxt_print(ls[i].asaxt);
 //    saxt_print(ls+i);
 //    leafkey_print(ls+i);
-  if(i > 0) assert(copyleaf[i] > copyleaf[i-1]);
+//  if(i > 0) assert(copyleaf[i] > copyleaf[i-1]);
     buffer_.append(((char*)(copyleaf + i)), noco_saxt_size);
   }
 //  exit(1);
@@ -118,8 +118,6 @@ void BlockBuilder::Add(NonLeaf* nonLeaf, vector<void*> &new_p) {
   size_t co_saxt_size = co_d * sizeof(saxt_type);
   size_t noco_saxt_size = sizeof(saxt_only) - co_saxt_size;
   for(int i=0;i<nonLeaf->num;i++){
-    if (i>0 && nonLeaf->nonLeafKeys[i].lsaxt < nonLeaf->nonLeafKeys[i-1].rsaxt) exit(13);
-
     NonLeafKey* nonLeafKey = nonLeaf->nonLeafKeys + i;
     STkeyinfo stkeyinfo(nonLeafKey->co_d, nonLeafKey->num);
     buffer_.append((char*)&stkeyinfo, sizeof(stkeyinfo));
@@ -146,23 +144,23 @@ void BlockBuilder::AddLeaf(NonLeafKey* nonLeafKey, void* tocopy) {
 
 
 
-void BlockBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf) {
-  cod co_d = nonLeafKey->co_d;
-  size_t co_saxt_size = co_d * sizeof(saxt_type);
-  size_t noco_saxt_size = sizeof(saxt_only) - co_saxt_size;
-  NonLeafKey* nonLeafKeys = (NonLeafKey*)nonLeafKey->p;
-  for(int i=0;i<nonLeafKey->num;i++){
-    if (i>0 && nonLeafKeys[i].lsaxt < nonLeafKeys[i-1].rsaxt) {
-      assert(nonLeafKeys[i].lsaxt >= nonLeafKeys[i-1].rsaxt);
-    }
-    NonLeafKey* nonLeafKey1 = nonLeafKeys + i;
-    STkeyinfo stkeyinfo(nonLeafKey1->co_d, nonLeafKey1->num);
-    buffer_.append((char*)&stkeyinfo, sizeof(stkeyinfo));
-    buffer_.append((char *)&(nonLeafKey1->p), sizeof(void*));
-    buffer_.append(((char*)nonLeafKey1->lsaxt.asaxt), noco_saxt_size);
-    buffer_.append(((char*)nonLeafKey1->rsaxt.asaxt), noco_saxt_size);
-  }
-  buffer_.append((char*)&isleaf,1);
-}
+//void BlockBuilder::AddNonLeaf(NonLeafKey* nonLeafKey, bool isleaf) {
+//  cod co_d = nonLeafKey->co_d;
+//  size_t co_saxt_size = co_d * sizeof(saxt_type);
+//  size_t noco_saxt_size = sizeof(saxt_only) - co_saxt_size;
+//  NonLeafKey* nonLeafKeys = (NonLeafKey*)nonLeafKey->p;
+//  for(int i=0;i<nonLeafKey->num;i++){
+////    if (i>0 && nonLeafKeys[i].lsaxt < nonLeafKeys[i-1].rsaxt) {
+////      assert(nonLeafKeys[i].lsaxt >= nonLeafKeys[i-1].rsaxt);
+////    }
+//    NonLeafKey* nonLeafKey1 = nonLeafKeys + i;
+//    STkeyinfo stkeyinfo(nonLeafKey1->co_d, nonLeafKey1->num);
+//    buffer_.append((char*)&stkeyinfo, sizeof(stkeyinfo));
+//    buffer_.append((char *)&(nonLeafKey1->p), sizeof(void*));
+//    buffer_.append(((char*)nonLeafKey1->lsaxt.asaxt), noco_saxt_size);
+//    buffer_.append(((char*)nonLeafKey1->rsaxt.asaxt), noco_saxt_size);
+//  }
+//  buffer_.append((char*)&isleaf,1);
+//}
 
 }  // namespace leveldb

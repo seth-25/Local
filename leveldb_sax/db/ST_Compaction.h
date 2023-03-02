@@ -21,8 +21,12 @@ class ST_Compaction_Leaf {
     LeafKey rep[Leaf_rebuildnum];
   } leaf_leafkey;
 
-  leaf_leafkey leafs[compaction_leaf_size];
+  typedef struct nonleaf_leafkey_rep{
+    NonLeafKey rep[Leaf_maxnum];
+  } nonleaf_leafkey;
 
+  leaf_leafkey leafs[compaction_leaf_size];
+  nonleaf_leafkey nonleafs[compaction_leaf_size];
 #if qiehuan
   void add(NonLeafKey* nonLeafKey, long snap_add, void*& tocopy) {
     snap_add %= compaction_leaf_size;
@@ -56,6 +60,30 @@ class ST_Compaction_Leaf {
 //      if(i > 0) assert(leafKeys[i] >= leafKeys[i-1]);
       charcpy(tmpbuffer, leafKeys + i, noco_saxt_size);
     }
+  }
+
+  void add1(NonLeafKey* nonLeafKey, bool isleaf, long snap_add, void*& tocopy, size_t& size_tocopy) {
+    snap_add %= compaction_leaf_size;
+    cod co_d = nonLeafKey->co_d;
+    size_t co_saxt_size = co_d * sizeof(saxt_type);
+    size_t noco_saxt_size = sizeof(saxt_only) - co_saxt_size;
+    NonLeafKey* nonLeafKeys = (NonLeafKey*)nonLeafKey->p;
+    char* tmpbuffer = (char*)leafs[snap_add].rep;
+    tocopy = tmpbuffer;
+    int num = nonLeafKey->num;
+    size_tocopy = num * (noco_saxt_size * 2 + sizeof(STkeyinfo) + sizeof(void*)) + 1;
+    for(int i=0;i<nonLeafKey->num;i++){
+      //    if (i>0 && nonLeafKeys[i].lsaxt < nonLeafKeys[i-1].rsaxt) {
+      //      assert(nonLeafKeys[i].lsaxt >= nonLeafKeys[i-1].rsaxt);
+      //    }
+      NonLeafKey* nonLeafKey1 = nonLeafKeys + i;
+      STkeyinfo stkeyinfo(nonLeafKey1->co_d, nonLeafKey1->num);
+      charcpy(tmpbuffer, &stkeyinfo, sizeof(STkeyinfo));
+      charcpy(tmpbuffer, &(nonLeafKey1->p), sizeof(void*));
+      charcpy(tmpbuffer, nonLeafKey1->lsaxt.asaxt, noco_saxt_size);
+      charcpy(tmpbuffer, nonLeafKey1->rsaxt.asaxt, noco_saxt_size);
+    }
+    charcpy(tmpbuffer, &isleaf, 1);
   }
 #endif
 };
