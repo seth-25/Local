@@ -64,13 +64,15 @@ void ZsbTree_finder::leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num) {
   oneId = id;
 
   // 根据id和cod,判断是否该查找左右两个点
-
+#if ischaone
+  return ;
+#endif
   NonLeaf& nonLeaf = *to_find_nonleaf;
   if (id > 0) {
 #if ischalr
     leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id - 1].p, res, res_num);
 #else
-    if (nonLeaf.nonLeafKeys[id - 1].co_d == leaf->co_d)
+    if (nonLeaf.nonLeafKeys[id - 1].co_d >= leaf->co_d)
       leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id - 1].p, res, res_num);
 #endif
   }
@@ -79,7 +81,7 @@ void ZsbTree_finder::leaf_Get(Leaf *leaf, int id, LeafKey* res, int& res_num) {
 #if ischalr
     leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id + 1].p, res, res_num);
 #else
-    if (nonLeaf.nonLeafKeys[id + 1].co_d == leaf->co_d)
+    if (nonLeaf.nonLeafKeys[id + 1].co_d >= leaf->co_d)
       leaf_Get1((Leaf*)nonLeaf.nonLeafKeys[id + 1].p, res, res_num);
 #endif
   }

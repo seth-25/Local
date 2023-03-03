@@ -22,15 +22,20 @@ public class CacheUtil {
     public static ExecutorService insertThreadPool = Executors.newFixedThreadPool(Parameters.insertNumThread + 1);
 //    public static ExecutorService searchThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
 //
-//    public static class clearCache {
-//        public static void run() throws IOException {
-//            String cmd = "sync && echo 1 > /proc/sys/vm/drop_caches";
-//            Process process = Runtime.getRuntime().exec(new String[] {"sudo", "-S", "sh", "-c", cmd});
-//            OutputStream outputStream = process.getOutputStream();
-//            outputStream.write((Parameters.password + "\n").getBytes());
-//            outputStream.write("sudo sh -c 'sync && echo 2 > /proc/sys/vm/drop_caches'\n".getBytes());
-//            outputStream.write("sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'\n".getBytes());
-//            outputStream.flush();
-//        }
-//    }
+    public static class clearCache {
+        public static void run() {
+            String cmd = "sync && echo 1 > /proc/sys/vm/drop_caches";
+            try {
+                Process process = Runtime.getRuntime().exec(new String[] {"sudo", "-S", "sh", "-c", cmd});
+                OutputStream outputStream = process.getOutputStream();
+                outputStream.write(("45641146"+ "\n").getBytes());
+                outputStream.write("sudo sh -c 'sync && echo 2 > /proc/sys/vm/drop_caches'\n".getBytes());
+                outputStream.write("sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'\n".getBytes());
+                outputStream.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+    }
 }

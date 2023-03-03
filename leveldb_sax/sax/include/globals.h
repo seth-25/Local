@@ -19,7 +19,7 @@
 #define isax_globals_h
 
 
-#define daxiao 1 // 0为16字节， 1为8字节
+#define is8s 1 // 0为16字节， 1为8字节
 
 #define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
@@ -61,7 +61,7 @@ typedef unsigned char sax_type;
 typedef sax_type* sax;
 
 //段数为16，为8变为char
-#if daxiao
+#if is8s
 typedef unsigned char saxt_type;
 #else
 typedef unsigned short saxt_type;
@@ -76,7 +76,7 @@ typedef unsigned char cod;
 
 #define Cardinality 256
 #define Bit_cardinality 8
-#if daxiao
+#if is8s
 #define Segments 8
 #define nchuw 32 // Ts_length / Segments
 #define Ts_values_per_segment 32
@@ -120,7 +120,9 @@ typedef unsigned char cod;
 
 #define input_buffer_size 2048  // 缓冲区
 
-#define ischalr 0 //不管必须查左右兄弟结点
+#define ischaone 1 //1 只查一个节点
+#define ischalr 0 // 1不管必须查左右兄弟结点,0相距度一样时查兄弟节点
+#define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
 
 //超过这个重构叶结点
@@ -149,7 +151,7 @@ typedef struct saxt_only_rep{
   }
 
   bool operator< (const saxt_only_rep& a) const {
-#if daxiao
+#if is8s
     return *(uint64_t*)asaxt < *(uint64_t*)a.asaxt;
 #else
     return *(((uint64_t*)asaxt)+1) == *(((uint64_t*)a.asaxt)+1) ?
@@ -157,7 +159,7 @@ typedef struct saxt_only_rep{
 #endif
   }
   bool operator> (const saxt_only_rep& a) const {
-#if daxiao
+#if is8s
     return *(uint64_t*)asaxt > *(uint64_t*)a.asaxt;
 #else
     return *(((uint64_t*)asaxt)+1) == *(((uint64_t*)a.asaxt)+1) ?
@@ -166,7 +168,7 @@ typedef struct saxt_only_rep{
   }
 
   bool operator<= (const saxt_only_rep& a) const {
-#if daxiao
+#if is8s
     return *(uint64_t*)asaxt <= *(uint64_t*)a.asaxt;
 #else
     return *(((uint64_t*)asaxt)+1) == *(((uint64_t*)a.asaxt)+1) ?
@@ -174,7 +176,7 @@ typedef struct saxt_only_rep{
 #endif
   }
   bool operator>= (const saxt_only_rep& a) const {
-#if daxiao
+#if is8s
     return *(uint64_t*)asaxt >= *(uint64_t*)a.asaxt;
 #else
     return *(((uint64_t*)asaxt)+1) == *(((uint64_t*)a.asaxt)+1) ?
@@ -183,7 +185,7 @@ typedef struct saxt_only_rep{
   }
 
   bool operator== (const saxt_only_rep& a) const {
-#if daxiao
+#if is8s
     return *(uint64_t*)asaxt == *(uint64_t*)a.asaxt;
 #else
     return *(((uint64_t*)asaxt)+1) == *(((uint64_t*)a.asaxt)+1) && *(uint64_t*)asaxt == *(uint64_t*)a.asaxt;

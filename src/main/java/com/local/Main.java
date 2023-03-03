@@ -14,6 +14,8 @@ import java.util.*;
 
 public class Main {
     public static void init() {
+        CacheUtil.clearCache.run();
+
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
 
@@ -82,10 +84,10 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
 //        int isExact = scan.nextInt();
-        int isExact = 0;
+        int isExact = 1;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
-        int queryNum = 10;
+        int queryNum = 100;
         System.out.println("k: ");
 //        int k = scan.nextInt();
         int k = 100;
@@ -108,18 +110,18 @@ public class Main {
          */
         SearchLock searchLock = new SearchLock();
          // Search after insert
-        Insert insert = new Insert(queryNum, searchLock);
+//        Insert insert = new Insert(queryNum, searchLock);
 
          // Search while insert
-        int eachSearchNum = 10; // 一轮查询有几个查询
-//        int interval = 10;    // 读几次进行一轮查询
-//        int readLimit = 500;   // 读多少次停止
-//        int searchStart = 100;  // 读多少次开始查询,确保大于initNum
+        int eachSearchNum = 1; // 一轮查询有几个查询
+        int interval = 1;    // 读几次进行一轮查询
+        int readLimit = 1000;   // 读多少次停止
+        int searchStart = 100;  // 读多少次开始查询,确保大于initNum
 
-//        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
-//        if ((readLimit - searchStart) / interval * eachSearchNum < queryNum) throw new RuntimeException("请减少queryNum或interval");
+        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
+        if ((readLimit - searchStart) / interval * eachSearchNum < queryNum) throw new RuntimeException("请减少queryNum或interval");
 
-//        Insert2 insert = new Insert2(queryNum, searchLock, readLimit, searchStart, interval, eachSearchNum);
+        Insert2 insert = new Insert2(queryNum, searchLock, readLimit, searchStart, interval, eachSearchNum);
         CacheUtil.insertThreadPool.execute(insert);
 
         /**
@@ -143,7 +145,7 @@ public class Main {
             if (searchLock.searchNum == 0) searchLock.condition.await();
             eachSearchNum = searchLock.searchNum;
             searchLock.lock.unlock();
-            System.out.println("查询" + eachSearchNum);
+            System.out.println("一轮查询个数：" + eachSearchNum);
 //            Thread.sleep(1000);
             // 运行查询
             for (int i = 0; i < eachSearchNum; i ++ ) {
@@ -153,12 +155,13 @@ public class Main {
 //                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
 //                System.out.println("-----------------------------------------------");
                 totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis; totalSearchTime += searchTime;
-                if ((i + 1) % 1000 == 0) {
-                    System.out.println(i + 1);
-                }
+//                if ((i + 1) % 1000 == 0) {
+//                    System.out.println("查询次数" + (i + 1));
+//                }
+                System.out.println("查询次数" + (i + 1));
             }
             totalSearchNum += eachSearchNum;
-            System.out.println("查询完" + totalSearchNum);
+            System.out.println("总共查询次数" + totalSearchNum);
 
             searchLock.lock.lock();
             searchLock.searchNum = 0;

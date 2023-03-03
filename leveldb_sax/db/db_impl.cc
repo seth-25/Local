@@ -2117,13 +2117,14 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
   int res_leafkeys_num;
 
   uint64_t filesize = this_ver->GetSize(st_number);
+  bool level_0 = this_ver->iszero(st_number);
   Cache::Handle* file_handle = nullptr;
   Table* t = versions_->table_cache_->Get(st_number, filesize, file_handle);
 
 #if istime == 2
   Table::ST_finder Finder(t, aquery1.asaxt, aquery1.rep.startTime, aquery1.rep.endTime, (ts_type*)aquery1.paa);
 #else
-  Table::ST_finder Finder(t, aquery1.asaxt, (ts_type*)aquery1.paa);
+  Table::ST_finder Finder(t, aquery1.asaxt, (ts_type*)aquery1.paa, level_0);
 #endif
   Finder.root_Get();
 

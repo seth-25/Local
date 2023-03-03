@@ -220,7 +220,7 @@ public class SearchActionBuffer {
         ByteBuffer paaBuffer = ByteBuffer.allocateDirect(Parameters.paaNum * 4);
 
         DBUtil.dataBase.paa_saxt_from_ts_buffer(searchTsBuffer, saxTBuffer, paaBuffer);
-        PrintUtil.printTsBuffer(searchTsBuffer);
+//        PrintUtil.printTsBuffer(searchTsBuffer);
 
         ByteBuffer aQuery;
         if (Parameters.hasTimeStamp > 0) {

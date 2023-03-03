@@ -584,7 +584,12 @@ uint64_t Version::GetSize(uint64_t number) {
   }
   return 0;
 }
-
+bool Version::iszero(uint64_t number) {
+  for(auto& item : files_[0]){
+    if (item->number == number) return true;
+  }
+  return false;
+}
 
 // A helper class so we can efficiently apply a whole sequence
 // of edits to a particular state without creating intermediate

@@ -203,8 +203,8 @@ void saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out) {
 //                              (((((t) & 0x0202020202020202) * 0x2040810204081) & 0x03fc000000000000) >> 42) |
 //                              (((((t) & 0x0101010101010101) * 0x2040810204081) & 0x01fe000000000000) >> 49);
 
-#if daxiao
-  uint64_t t = (*(uint64_t*)sax_out);
+#if is8s
+    uint64_t t = (*(uint64_t*)sax_out);
   (*(uint64_t*)saxt_out) = ((t & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000 |
                            (((((t<<1) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 8) |
                            (((((t<<2) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 16) |
@@ -267,7 +267,7 @@ void paa_saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out, ts_type *paa) {
     sax_out[i] = (d << 5) + (d1 << 2) + sax_c1[bit_mask];
   }
 
-#if daxiao
+#if is8s
   uint64_t t = (*(uint64_t*)sax_out);
   (*(uint64_t*)saxt_out) = ((t & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000 |
                            (((((t<<1) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 8) |
@@ -287,7 +287,7 @@ void paa_saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out, ts_type *paa) {
 }
 
 void saxt_from_sax(sax_type *sax_in, saxt_type *saxt_out) {
-#if daxiao
+#if is8s
   uint64_t t = (*(uint64_t*)sax_in);
   (*(uint64_t*)saxt_out) = ((t & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000 |
                            (((((t<<1) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 8) |
@@ -308,7 +308,7 @@ void saxt_from_sax(sax_type *sax_in, saxt_type *saxt_out) {
 void sax_from_saxt(saxt_type *saxt_in, sax_type *sax_out) {
 //  uint64_t t = 0;
 //  memcpy(&t, saxt_in, sizeof(uint64_t));
-#if daxiao
+#if is8s
   uint64_t t = (*(uint64_t*)saxt_in);
   (*(uint64_t*)sax_out) = ((t & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000 |
                           (((((t<<1) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 8) |
@@ -449,8 +449,8 @@ float minidist_paa_to_saxt(const float* paa, saxt saxt_, cod co_d) {
     sax_type sax[Segments];
     // For each sax record find the break point
 
-#if daxiao
-  uint64_t t = 0;
+#if is8s
+    uint64_t t = 0;
     memcpy(&t, saxt_, sizeof(saxt_type) * co_d);
     (*(uint64_t*)sax) = ((t & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000 |
                         (((((t<<1) & 0x8080808080808080) * 0x2040810204081) & 0xff00000000000000) >> 8) |
@@ -509,7 +509,7 @@ float minidist_paa_to_saxt(const float* paa, saxt saxt_, cod co_d) {
     }
 //
 //    float distance1 = 0;
-#if daxiao
+#if is8s
   __m256 dis8 = _mm256_setzero_ps();
   __m256 paa8 = _mm256_loadu_ps(paa);
 

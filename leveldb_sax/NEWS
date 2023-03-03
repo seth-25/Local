@@ -5,7 +5,7 @@ Fixes for larger databases (tested up to one billion 100-byte entries,
 i.e., ~100GB).
 
 (1) Place hard limit on number of level-0 files.  This fixes errors
-of the form "too many open files".
+of the form "tool many open files".
 
 (2) Fixed memtable management.  Before the fix, a heavy write burst
 could cause unbounded memory usage.

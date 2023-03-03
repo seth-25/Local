@@ -90,7 +90,7 @@ level-(L+1) files. We switch to producing a new level-(L+1) file after the
 current output file has reached the target file size (2MB). We also switch to a
 new output file when the key range of the current output file has grown enough
 to overlap more than ten level-(L+2) files.  This last rule ensures that a later
-compaction of a level-(L+1) file will not pick up too much data from
+compaction of a level-(L+1) file will not pick up tool much data from
 level-(L+2).
 
 The old files are discarded and the new files are added to the serving state.

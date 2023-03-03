@@ -106,7 +106,7 @@ class LEVELDB_EXPORT Table {
     }
 #else
 
-    ST_finder(Table* rep, saxt_only saxt_, ts_type* paa_) : rep_(rep->rep_), isdel(true) {
+    ST_finder(Table* rep, saxt_only saxt_, ts_type* paa_, bool level_0) : rep_(rep->rep_), isdel(true), level_0(level_0) {
       leafkey = saxt_;
       memcpy(paa, paa_, sizeof(ts_type) * Segments);
     }
@@ -156,6 +156,7 @@ class LEVELDB_EXPORT Table {
     bool isdel;
     int oneId;//叶子在非叶结点中的位置
     Rep* const rep_;
+    bool level_0;
   };
 
   class ST_finder_exact {

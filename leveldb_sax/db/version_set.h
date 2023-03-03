@@ -115,6 +115,8 @@ class Version {
 
   uint64_t GetSize(uint64_t number);
 
+  bool iszero(uint64_t number);
+
  private:
   friend class Compaction;
   friend class VersionSet;

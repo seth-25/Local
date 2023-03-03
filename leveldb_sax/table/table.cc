@@ -400,6 +400,12 @@ int Table::ST_finder::leaf_Get(STLeaf& leaf, LeafKey* res) {
   returnnum = leafnum;
 #endif
 
+#if ischaone
+  return returnnum;
+#endif
+#if islevel0
+  if (level_0) return returnnum;
+#endif
   STNonLeaf& nonLeaf = *to_find_nonleaf;
   if(oneId > 0) {
 #if ischalr
