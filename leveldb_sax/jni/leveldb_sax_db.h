@@ -41,6 +41,31 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_leaftimekey_1sort
 JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
     (JNIEnv *, jobject, jint, jobject, jobject, jint, jlong);
 
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    init_malloc
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1malloc
+    (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    init_putbuffer
+ * Signature: (IILjava/nio/ByteBuffer;IJ)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1putbuffer
+    (JNIEnv *, jobject, jint, jint, jobject, jint, jlong);
+
+/*
+ * Class:     leveldb_sax_db
+ * Method:    init_finish
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1finish
+    (JNIEnv *, jobject, jint);
+
 /*
  * Class:     leveldb_sax_db
  * Method:    init_buffer

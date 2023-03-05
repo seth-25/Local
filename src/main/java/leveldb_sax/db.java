@@ -35,6 +35,21 @@ public class db {
      * @param offset
      */
     public native long put_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
+
+    /**
+     * 初始化需要的数目
+     * @param tskeys_num 总数
+     */
+    public native void init_malloc(int tskeys_num);
+
+    public native void init_putbuffer(int tskeys_num, int this_num, ByteBuffer tskeys, int hash, long offset);
+
+    /**
+     * 整个初始化放入完后，最后调用
+     * @param tskeys_num 总数
+     */
+    public native void init_finish(int tskeys_num);
+
     /**
      * leaftimekeys 和 tskeys 要一样多，不然出错
      * @param tskeys
@@ -42,8 +57,9 @@ public class db {
      * @param hash
      * @param offset
      */
+    @Deprecated
     public native void init_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
-
+    @Deprecated
     public native void init_buffer1(int tskeys_num, ByteBuffer tskeys, int tskeys_num1, ByteBuffer tskeys1, ByteBuffer leaftimekeys, int hash, long offset);
 
     @Deprecated

@@ -442,6 +442,7 @@ void saxt_print(saxt_type *saxt, saxt_type *prefix, cod co_d) {
 }
 
 float minidist_paa_to_saxt(const float* paa, saxt saxt_, cod co_d) {
+
     ts_type distance = 0;
     // TODO: Store offset in index settings. and pass index settings as parameter.
 

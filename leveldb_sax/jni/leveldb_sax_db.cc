@@ -12,6 +12,8 @@ static leveldb::DB* db;
 static leveldb::WriteOptions writeOptions;
 static leveldb::ReadOptions readOptions;
 static JavaVM* gs_jvm;
+static LeafTimeKey* initkeys;
+static uint64_t saxt_nums_ = 0;
 //static ThreadPool *pool;
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_print_1time
@@ -93,6 +95,29 @@ JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
   return stime;
 }
 
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1malloc
+    (JNIEnv *env, jobject, jint tskeynum) {
+  initkeys = (LeafTimeKey*)malloc(sizeof(LeafTimeKey) * tskeynum);
+}
+
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1putbuffer
+    (JNIEnv *env, jobject, jint tskeynum, jint this_num, jobject ts_buffer, jint hash, jlong offset) {
+  tsKey* tskeys_c = (tsKey*)env->GetDirectBufferAddress(ts_buffer);
+  for(int i=0;i<this_num;i++) {
+    saxt_from_ts(tskeys_c[i].ts, initkeys[tskeynum + i].leafKey.asaxt.asaxt);
+#if ishash
+    initkeys[tskeynum + i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
+#else
+    initkeys[tskeynum + i].leafKey.p = (void*) (offset + i);
+#endif
+#if istime == 1
+    initkeys[tskeynum + i].keytime = tskeys_c[i].tsTime;
+#elif istime == 2
+    initkeys[tskeynum + i].leafKey.keytime_ = tskeys_c[i].tsTime;
+#endif
+  }
+}
+
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer
     (JNIEnv *env, jobject, jint tskeynum, jobject ts_buffer, jobject leaftimekeys_buffer, jint hash, jlong offset) {
   tsKey* tskeys_c = (tsKey*)env->GetDirectBufferAddress(ts_buffer);
@@ -115,6 +140,13 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer
   sort(leafTimeKeys, leafTimeKeys + tskeynum);
 
   db->Init(leafTimeKeys, tskeynum);
+}
+
+JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1finish
+    (JNIEnv *, jobject, jint tskeynum) {
+  sort(initkeys, initkeys + tskeynum);
+  db->Init(initkeys, tskeynum);
+  free(initkeys);
 }
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1buffer1
@@ -291,8 +323,10 @@ JNIEXPORT jint JNICALL Java_leveldb_1sax_db_Get_1exact
   jniVector<ares_exact> results(exact_res_, 0);
   char* info_ = (char*)env->GetDirectBufferAddress(info);
   jniInfo info1 = {info_, info};
-  db->Get_exact(*aquery1, am_version_id, st_version_id, st_numbers, appro, results, appro_am_id, appro_st_numbers, info1);
-
+  db->Get_exact(*aquery1, am_version_id, st_version_id, st_numbers, appro, results, appro_am_id, appro_st_numbers, info1, saxt_nums_);
+#if iscount_saxt_for_exact
+  cout<<"总saxt_num"<<saxt_nums_<<endl;
+#endif
   return results.size();
 }
 

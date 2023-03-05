@@ -515,9 +515,13 @@ int buildtree_window(newVector<LeafKey> &leafKeys, vector<NonLeafKey> &nonLeafKe
 #else
 
 
-  build_leaf_and_nonleafkey_two(leafKeys, nonLeafKeys, 0, n*2, window_co_d, first_saxt, last_saxt);
+  last_saxt = get_saxt_i(leafKeys, n-1);
+  window_co_d = get_co_d_from_saxt(first_saxt, last_saxt);
+  build_leaf_and_nonleafkey(leafKeys, nonLeafKeys, 0, n, window_co_d, first_saxt, last_saxt);
 
-  return n*2;
+
+//  build_leaf_and_nonleafkey_two(leafKeys, nonLeafKeys, 0, n*2, window_co_d, first_saxt, last_saxt);
+  return n;
 #endif
 }
 

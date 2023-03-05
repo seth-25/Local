@@ -598,8 +598,11 @@ int Zsbtree_Build::buildtree_window(newVector<LeafKey> &leafKeys) {
   return todoid;
 #else
 
-  build_leaf_and_nonleafkey_two(leafKeys, 0, n*2, window_co_d, first_saxt, last_saxt);
-  return 2*n;
+  last_saxt = get_saxt_i(leafKeys, n-1);
+  window_co_d = get_co_d_from_saxt(first_saxt, last_saxt);
+  build_leaf_and_nonleafkey(leafKeys, 0, n, window_co_d, first_saxt, last_saxt);
+//  build_leaf_and_nonleafkey_two(leafKeys, 0, n*2, window_co_d, first_saxt, last_saxt);
+  return n;
 #endif
 }
 
@@ -1506,8 +1509,11 @@ int Zsbtree_Build::buildtree_window(const newVector<NonLeafKey> &leafKeys, int d
   return todoid;
 #else
 
-  build_leaf_and_nonleafkey_two(leafKeys, 0, n*2, window_co_d, first_saxt, last_saxt, dep);
-  return n*2;
+  last_saxt = get_saxt_i_r(leafKeys, n-1);
+  window_co_d = get_co_d_from_saxt(first_saxt, last_saxt);
+  build_leaf_and_nonleafkey(leafKeys, 0, n, window_co_d, first_saxt, last_saxt, dep);
+//  build_leaf_and_nonleafkey_two(leafKeys, 0, n*2, window_co_d, first_saxt, last_saxt, dep);
+  return n;
 #endif
 }
 

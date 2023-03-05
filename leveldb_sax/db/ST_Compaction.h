@@ -68,7 +68,7 @@ class ST_Compaction_Leaf {
     size_t co_saxt_size = co_d * sizeof(saxt_type);
     size_t noco_saxt_size = sizeof(saxt_only) - co_saxt_size;
     NonLeafKey* nonLeafKeys = (NonLeafKey*)nonLeafKey->p;
-    char* tmpbuffer = (char*)leafs[snap_add].rep;
+    char* tmpbuffer = (char*)nonleafs[snap_add].rep;
     tocopy = tmpbuffer;
     int num = nonLeafKey->num;
     size_tocopy = num * (noco_saxt_size * 2 + sizeof(STkeyinfo) + sizeof(void*)) + 1;

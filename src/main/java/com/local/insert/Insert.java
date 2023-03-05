@@ -72,7 +72,9 @@ public class Insert implements Runnable{
                     IOTime += System.currentTimeMillis() - IOTimeStart;
 
                     put(tsReadBatch);
-                    System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
+                    if (offset % 1000000 == 0) {
+                        System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
+                    }
 
                     ++cntRead;
 
@@ -116,8 +118,9 @@ public class Insert implements Runnable{
                 cnt --; // insert完才-1，防止tsBytes被覆盖
 //                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
-
-                System.out.println("插入次数：" + ++cntInsert);
+                if (++cntInsert % 10 == 0) {
+                    System.out.println("插入次数：" + cntInsert);
+                }
             }
             return true;
         }

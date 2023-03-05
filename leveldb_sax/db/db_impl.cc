@@ -1524,6 +1524,7 @@ Status DBImpl::Get(const aquery& aquery1,
       if (isdel) delete res_heap;
 #endif
 //      free(info);
+
       return Status();
     } else {
       out("时间范围没对上");
@@ -1627,6 +1628,7 @@ Status DBImpl::Get(const aquery& aquery1,
   if (isdel) delete res_heap;
 #endif
 //  free(info);
+
   return Status();
 }
 
@@ -2609,7 +2611,7 @@ void DBImpl::Get_st(const aquery& aquery1, query_heap* res_heap,
 Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
                          int st_version_id, jniVector<uint64_t>& st_number,
                          jniVector<ares>& appro_res, jniVector<ares_exact>& results,
-                         int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_) {
+                         int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_, uint64_t & saxt_num) {
 
 //  cout<<"精确"<<endl;
   out("开始查询精确=========================");
@@ -2745,7 +2747,8 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   bool isdel = res_heap->subOver();
 #if iscount_saxt_for_exact
   res_heap->mutex_saxt_num.lock();
-  out1("计算下界距离saxt的数量:", res_heap->saxt_num_exact);
+  cout<<"计算下界距离saxt的数量:"<<res_heap->saxt_num_exact<<endl;
+  saxt_num += res_heap->saxt_num_exact;
   res_heap->mutex_saxt_num.unlock();
 #endif
   res_heap->Unlock();
@@ -2753,6 +2756,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
 
 
 //  free(info);
+
   return Status();
 }
 
@@ -2776,9 +2780,9 @@ void DBImpl::Get_am_exact(const aquery& aquery1, query_heap_exact* res_heap,
     Finder.start();
 
 #if iscount_saxt_for_exact
-    mutex_saxt_num.Lock();
-  saxt_num_exact += Finder.saxt_num;
-  mutex_saxt_num.Unlock();
+    res_heap->mutex_saxt_num.lock();
+    res_heap->saxt_num_exact += Finder.saxt_num;
+    res_heap->mutex_saxt_num.unlock();
 #endif
 
   } else {
@@ -2788,9 +2792,9 @@ void DBImpl::Get_am_exact(const aquery& aquery1, query_heap_exact* res_heap,
     Finder.start();
 
 #if iscount_saxt_for_exact
-    mutex_saxt_num.Lock();
-  saxt_num_exact += Finder.saxt_num;
-  mutex_saxt_num.Unlock();
+    res_heap->mutex_saxt_num.lock();
+  res_heap->saxt_num_exact += Finder.saxt_num;
+  res_heap->mutex_saxt_num.unlock();
 #endif
 
   }
@@ -2919,6 +2923,7 @@ Status DBImpl::Put(const WriteOptions& o, LeafTimeKey& key) {
 
 
 Status DBImpl::Init(LeafTimeKey* leafKeys, int leafKeysNum) {
+//  CRsax
 
   Status status;
   LeafKey* leafkeys_rep = (LeafKey*)malloc(leafKeysNum*sizeof(LeafKey));

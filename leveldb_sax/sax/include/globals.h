@@ -15,16 +15,17 @@
 #include "cstring"
 #include "sax_bsearch.h"
 #include "immintrin.h"
+#include "atomic"
 #ifndef isax_globals_h
 #define isax_globals_h
 
 
-#define is8s 1 // 0为16字节， 1为8字节
+#define is8s 0 // 0为16字节， 1为8字节
 
 #define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
 // 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
-#define iscount_saxt_for_exact 0
+#define iscount_saxt_for_exact 1
 // 是否使用贪心策略 0不使用 1使用
 #define isgreed 1
 // 是否print
@@ -40,10 +41,11 @@
 // 只有一个文件不考虑hash 0 不考虑 1考虑
 #define ishash 0
 
+
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
 #define Get_div 20
 // 一个info最多带多少p
-#define info_p_max_size 10000
+#define info_p_max_size 1024
 
 ///// TYPES /////
 #if isprint
@@ -90,14 +92,14 @@ typedef unsigned char cod;
 
 
 #define Ts_length 256
-#define Leaf_maxnum 2048
+#define Leaf_maxnum 256
 #define Leaf_minnum (Leaf_maxnum/2)
 //最小
 #define Leaf_maxnum_rebalance 10
 #define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
-#define init_num 2000000
+#define init_num 1000000
 
 #define pool_size 1 // 几张表=几个插入线程
 
@@ -120,9 +122,11 @@ typedef unsigned char cod;
 
 #define input_buffer_size 2048  // 缓冲区
 
-#define ischaone 1 //1 只查一个节点
+#define ischaone 0 //1 只查一个节点
 #define ischalr 0 // 1不管必须查左右兄弟结点,0相距度一样时查兄弟节点
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
+
+
 
 
 //超过这个重构叶结点

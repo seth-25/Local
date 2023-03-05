@@ -103,7 +103,7 @@ class LEVELDB_EXPORT DB {
 
   virtual Status Get_exact(const aquery &aquery1, int am_version_id, int st_version_id,
                            jniVector<uint64_t> &st_number, jniVector<ares> &appro_res,
-                           jniVector<ares_exact>& results, int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_) = 0;
+                           jniVector<ares_exact>& results, int appro_am_id, jniVector<uint64_t> &appro_st_number, jniInfo jniInfo_, uint64_t & saxt_num) = 0;
   //返回什么暂时不确定
   //近似，会得到一个叶子结点
   //查am
