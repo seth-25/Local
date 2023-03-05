@@ -45,42 +45,6 @@ public class Main {
             DBUtil.dataBase.init_putbuffer(i*Parameters.FileSetting.readTsNum, Parameters.FileSetting.readTsNum, tsBuffer, 0, offset);
         }
         DBUtil.dataBase.init_finish(initTsNum);
-
-//
-//
-//        if (initTsNum <= 2000000) {
-//            ByteBuffer initTsBuffer = ByteBuffer.allocateDirect(initTsNum * Parameters.tsSize);
-//            for (int i = 0; i < Parameters.initNum; i ++ ) {
-//                long offset = reader.getOffset();
-//                ByteBuffer tsBuffer = reader.read();
-//                initTsBuffer.put(tsBuffer);
-//                tsBuffer.flip();
-//                System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
-//            }
-//            DBUtil.dataBase.init_buffer(initTsNum, initTsBuffer, leafTimeKeyBuffer, 0, 0);
-//        }
-//        else if (initTsNum <= 4000000) {
-//            ByteBuffer initTsBuffer = ByteBuffer.allocateDirect(2000000 * Parameters.tsSize);
-//            ByteBuffer initTsBuffer1 = ByteBuffer.allocateDirect((initTsNum - 2000000) * Parameters.tsSize);
-//            for (int i = 0; i < Parameters.initNum; i ++ ) {
-//
-//                long offset = reader.getOffset();
-//                ByteBuffer tsBuffer = reader.read();
-////                System.out.println(i + " " + tsBuffer.capacity() + " " + i * Parameters.FileSetting.readTsNum );
-//                if (i * Parameters.FileSetting.readTsNum < 2000000) {
-//                    initTsBuffer.put(tsBuffer);
-//                }
-//                else {
-//                    initTsBuffer1.put(tsBuffer);
-//                }
-//                tsBuffer.flip();
-//                System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
-//            }
-//            DBUtil.dataBase.init_buffer1(2000000, initTsBuffer, initTsNum - 2000000, initTsBuffer1, leafTimeKeyBuffer, 0, 0);
-//        }
-//        else {
-//            throw new RuntimeException("init大小超过限制");
-//        }
         PrintUtil.print("初始化成功==========================");
     }
 
@@ -104,7 +68,7 @@ public class Main {
         int isExact = 1;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
-        int queryNum = 50;
+        int queryNum = 100;
         System.out.println("k: ");
 //        int k = scan.nextInt();
         int k = 100;

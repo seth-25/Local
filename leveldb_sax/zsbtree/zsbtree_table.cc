@@ -23,7 +23,7 @@ void zsbtree_table::BuildTree(newVector<NonLeafKey>& nonLeafKeys) {
 
 zsbtree_table_mem zsbtree_table::Rebalance(int tmp_leaf_maxnum,
                                            int tmp_leaf_minnum, int Nt) {
-//  out("rebanlance");
+  out("rebanlance");
   vector<LeafKey> sortleafKeys;
   sortleafKeys.reserve(Nt);
 //  out("dfs1");

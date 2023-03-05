@@ -13,7 +13,7 @@ typedef struct {
   NonLeaf* root;
   int leafNum;
 } zsbtree_table_mem;
-
+//static int depth = 0;
 static NonLeaf* build_tree_from_leaf(newVector<LeafKey> &leafKeys, const int n, const int m, int &leafNum) {
   vector<NonLeafKey> nonLeafKeys[2];
 
@@ -24,6 +24,7 @@ static NonLeaf* build_tree_from_leaf(newVector<LeafKey> &leafKeys, const int n, 
   bool isleaf = true;
   int out_1 = 0;
   while (isleaf || nonLeafKeys[out_1].size()>Leaf_maxnum) {
+//    depth++;
     newVector<NonLeafKey> nonleafKeys_in(nonLeafKeys[out_1]);
 
     nonleaf_method::buildtree(nonleafKeys_in, nonLeafKeys[1-out_1], isleaf, Leaf_maxnum, Leaf_minnum);
@@ -38,11 +39,13 @@ static NonLeaf* build_tree_from_leaf(newVector<LeafKey> &leafKeys, const int n, 
 //        }
   }
   if (nonLeafKeys[out_1].size() == 1) {
+//    cout<<"depth"<<++depth<<endl;
     return (NonLeaf*)nonLeafKeys[out_1][0].p;
   } else {
     saxt_only lsaxt = nonLeafKeys[out_1][0].lsaxt;
     saxt_only rsaxt = nonLeafKeys[out_1].back().rsaxt;
     cod co_d = get_co_d_from_saxt(lsaxt, rsaxt);
+//    cout<<"depth"<<++depth<<endl;
     return new NonLeaf(nonLeafKeys[out_1].size(), co_d, isleaf, lsaxt, rsaxt, nonLeafKeys[out_1].data());
   }
 }

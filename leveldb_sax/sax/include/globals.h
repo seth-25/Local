@@ -24,10 +24,9 @@
 
 #define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
-// 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
-#define iscount_saxt_for_exact 1
-// 是否使用贪心策略 0不使用 1使用
-#define isgreed 1
+// 是否统计精确查询所计算下界距离的saxt 0不统计 1统计（严重影响性能）
+#define iscount_saxt_for_exact 0
+
 // 是否print
 #define isprint 0
 // 0, 1, 2 代表 一个，一部分，一个叶
@@ -88,15 +87,18 @@ typedef unsigned char cod;
 #define Ts_values_per_segment 16
 #endif
 
-
-
+#define isgreed 1 // 是否使用贪心策略 0不使用 1使用
+#define ischaone 0 //1 只查一个节点，0 使用下面两种策略
+#define ischalr 0 // 1必须查左右兄弟结点,0相距度一样时查兄弟节点
+#define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
 #define Ts_length 256
-#define Leaf_maxnum 256
+#define Leaf_maxnum 64
+//#define Leaf_maxnum (int)(512 * 0.82)
 #define Leaf_minnum (Leaf_maxnum/2)
+
 //最小
 #define Leaf_maxnum_rebalance 10
-#define Leaf_minnum_rebalance 5
 
 //初始化的数量==内存表中存的数量
 #define init_num 1000000
@@ -106,13 +108,14 @@ typedef unsigned char cod;
 //一个memtable存的数量
 #define Table_maxnum (init_num/pool_size)
 
+// 记录压缩合并时间
 #define iscompaction_time 1
 
 
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
 #define get_exact_multiThread_file_size (1000*1024*1024)
 
-#define pool_get_size 32  // 查询线程
+#define pool_get_size 24  // 查询线程
 #define pool_compaction_size 2  // 压缩合并线程
 
 // 压缩合并申请的缓存大小， 几个leaf
@@ -122,9 +125,7 @@ typedef unsigned char cod;
 
 #define input_buffer_size 2048  // 缓冲区
 
-#define ischaone 0 //1 只查一个节点
-#define ischalr 0 // 1不管必须查左右兄弟结点,0相距度一样时查兄弟节点
-#define islevel0 1  // 1不合并不查，合并了才查，0都要查
+
 
 
 

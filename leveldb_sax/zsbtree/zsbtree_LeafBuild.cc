@@ -4,8 +4,6 @@
 
 #include "zsbtree_LeafBuild.h"
 
-
-
 namespace leaf_method {
 //method2使用的临时数据结构
 typedef struct {
