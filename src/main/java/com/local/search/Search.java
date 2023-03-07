@@ -174,6 +174,7 @@ public class Search implements Runnable{
             // Get_exact返回若干个ares_exact, 这个ares_exact没有p也不用空4位
             ans = SearchAction.searchExactTs(searchTsBytes, startTime, endTime, k);
             Main.searchTime = System.currentTimeMillis() - searchTimeStart;
+
             computeExactDis(ans);
         }
         else {

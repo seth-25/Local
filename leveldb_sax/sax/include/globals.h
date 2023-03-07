@@ -22,10 +22,10 @@
 
 #define is8s 0 // 0为16字节， 1为8字节
 
-#define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
+#define istime 2  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
-// 是否统计精确查询所计算下界距离的saxt 0不统计 1统计（严重影响性能）
-#define iscount_saxt_for_exact 0
+// 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
+#define iscount_saxt_for_exact 1
 
 // 是否print
 #define isprint 0
@@ -93,7 +93,7 @@ typedef unsigned char cod;
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
 #define Ts_length 256
-#define Leaf_maxnum 64
+#define Leaf_maxnum 512
 //#define Leaf_maxnum (int)(512 * 0.82)
 #define Leaf_minnum (Leaf_maxnum/2)
 

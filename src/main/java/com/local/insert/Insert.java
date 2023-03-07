@@ -166,14 +166,13 @@ public class Insert implements Runnable{
         // todo todo
         Scanner scan = new Scanner(System.in);
         System.out.println("清理缓存:");
-//        scan.nextInt();
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        scan.next();
+//        try {
+//            Thread.sleep(10000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
         DBUtil.dataBase.print_time();
-        scan.nextInt();
 
 
 
