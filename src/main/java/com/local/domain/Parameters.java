@@ -37,11 +37,11 @@ public class Parameters {
         public static final int readTsNum = 100000; // 读取文件时一次读的ts数量
         public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字 节数
         public static final String inputPath = "../ts/"; // 存储ts的文件夹
-        public static final String queryFilePath = "../query/query_t.bin"; // 存储查询的ts的文件
+        public static final String queryFilePath = "../query/query.bin"; // 存储查询的ts的文件
         public static final int queueSize = 32; // 随机读写队列长度
 
     }
 
     public static final boolean isSuffix = true;
-    public static final boolean debug = true;
+    public static final boolean debug = false;
 }

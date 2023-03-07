@@ -205,7 +205,13 @@ public class SearchActionBuffer {
 
         // Get返回若干个ares,ares的最后有一个4字节的id,用于标记近似查的是当前am版本中的哪个表(一个am版本有多个表并行维护不同的saxt树),用于精准查询的appro_res(去重)
         ByteBuffer approRes = ByteBuffer.allocateDirect(k * Parameters.approximateResSize + 4).order(ByteOrder.LITTLE_ENDIAN);   // 空的ByteBuffer给C写
-        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        ByteBuffer infoBuffer;
+        if (Parameters.hasTimeStamp > 0) {
+            infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 32 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        }
+        else {
+            infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        }
         int numAres = DBUtil.dataBase.Get(aQuery, isUseAm, amVersionID, stVersionID,
                 sstableNumBuffer.capacity() / 8, sstableNumBuffer, approRes, infoBuffer);
 //        PrintUtil.print("近似查询结果长度" + approRes.capacity());
@@ -371,7 +377,14 @@ public class SearchActionBuffer {
 //        PrintUtil.printSSTableBuffer(approSSTableNum);
 
         ByteBuffer exactRes = ByteBuffer.allocateDirect(k * Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);   // 空的ByteBuffer给C写
-        ByteBuffer infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        ByteBuffer infoBuffer;
+        if (Parameters.hasTimeStamp > 0) {
+            infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 32 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        }
+        else {
+            infoBuffer = ByteBuffer.allocateDirect(Parameters.tsSize + 24 + Parameters.infoMaxPSize * 8).order(ByteOrder.LITTLE_ENDIAN); // 空的ByteBuffer给C写
+        }
+
         int numExactRes = DBUtil.dataBase.Get_exact(aQuery, amVersionID, stVersionID,
                 sstableNumList.size(), sstableNumBuffer, numAres, approRes,
                 approSSTableNum.capacity() / 8, approSSTableNum, exactRes, infoBuffer);
