@@ -76,8 +76,8 @@ public class SearchActionBuffer {
     }
     static ByteBuffer ares = ByteBuffer.allocateDirect(Parameters.approximateResSize).order(ByteOrder.LITTLE_ENDIAN);
     static ByteBuffer exactRes = ByteBuffer.allocateDirect(Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);
-    public static void searchOriTsHeapQueue(ByteBuffer info, boolean isExact) {
-        long searchOriTsTimeStart = System.currentTimeMillis(); // todo
+    public static void searchRawTsHeapQueue(ByteBuffer info, boolean isExact) {
+        long searchRawTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列 info长度" + info.capacity() + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
         long readTime = 0;   // todo
         long readLockTime = 0;   // todo
@@ -89,7 +89,7 @@ public class SearchActionBuffer {
         } else {
             SearchUtil.analysisInfoNoTimeHeap(info, aQuery);
         }
-        if (Parameters.findOriTsSort) {
+        if (Parameters.findRawTsSort) {
             aQuery.sortPList();
         }
 
@@ -148,7 +148,7 @@ public class SearchActionBuffer {
         }
 
         PrintUtil.print(" 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                " 查询个数：" + aQuery.pList.size() + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchOriTsTimeStart) +
+                " 查询个数：" + aQuery.pList.size() + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchRawTsTimeStart) +
                 " 线程：" + Thread.currentThread().getName() + "\n");  // todo
     }
 

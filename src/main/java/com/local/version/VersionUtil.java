@@ -52,7 +52,7 @@ public class VersionUtil {
                 l <<= 8;
                 l |= (saxBytes[i] & 0xff);
             }
-            // 翻转首位
+            // 翻转末位
             if ((saxBytes[saxBytes.length - 1] & 0x80) == 0) {
                 l |= 0x8000000000000000L;
             }

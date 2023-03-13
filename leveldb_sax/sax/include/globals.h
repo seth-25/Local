@@ -1,13 +1,3 @@
-//
-//  defines.h
-//  isaxlib
-//
-//  Created by Kostas Zoumpatianos on 3/19/12.
-//  Copyright 2012 University of Trento. All rights reserved.
-//
-
-
-
 #include "bitset"
 #include "config.h"
 #include "iostream"
@@ -22,10 +12,10 @@
 
 #define is8s 0 // 0为16字节， 1为8字节
 
-#define istime 2  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
+#define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
 
 // 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
-#define iscount_saxt_for_exact 1
+#define iscount_saxt_for_exact 0
 
 // 是否print
 #define isprint 0

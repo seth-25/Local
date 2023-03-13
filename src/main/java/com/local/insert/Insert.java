@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class Insert implements Runnable{
     private int queryNum;
-    SearchLock searchLock;
+    private SearchLock searchLock;
     public Insert(int queryNum, SearchLock searchLock) {
         this.queryNum = queryNum;
         this.searchLock = searchLock;
@@ -77,7 +77,12 @@ public class Insert implements Runnable{
                     }
 
                     ++cntRead;
-
+                    if (cntRead == Parameters.FileSetting.readLimit - Parameters.initNum) {   // 提前结束
+                        for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
+                            put(new TsReadBatch(null, -1, -1)); // 结束标识
+                        }
+                        return ;
+                    }
                 }
             }
             for (int i = 0; i < Parameters.insertNumThread; i ++ ) {

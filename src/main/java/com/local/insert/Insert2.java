@@ -14,15 +14,13 @@ import java.util.*;
  */
 public class Insert2 implements Runnable{
     private int queryNum;
-    private int readLimit;
     private int searchStart;
     private int interval;
     private int eachSearchNum;
     SearchLock searchLock;
-    public Insert2(int queryNum, SearchLock searchLock, int readLimit, int searchStart, int interval, int eachSearchNum) {
+    public Insert2(int queryNum, SearchLock searchLock, int searchStart, int interval, int eachSearchNum) {
         this.queryNum = queryNum;
         this.searchLock = searchLock;
-        this.readLimit = readLimit;
         this.searchStart = searchStart;
         this.interval = interval;
         this.eachSearchNum = eachSearchNum;
@@ -59,7 +57,7 @@ public class Insert2 implements Runnable{
             cntGet ++ ;
             notifyAll();
         }
-        public void produce(int readLimit) throws InterruptedException {
+        public void produce() throws InterruptedException {
             boolean flag = true;
             while(flag) {
                 for (Map.Entry<Integer, MappedFileReaderBuffer> entry: CacheUtil.mappedFileReaderMapBuffer.entrySet()) {
@@ -87,7 +85,7 @@ public class Insert2 implements Runnable{
 
                     ++cntRead;
 
-                    if (cntRead == readLimit - Parameters.initNum) {   // 提前结束
+                    if (cntRead == Parameters.FileSetting.readLimit - Parameters.initNum) {   // 提前结束
                         for (int i = 0; i < Parameters.insertNumThread; i ++ ) {
                             put(new TsReadBatch(null, -1, -1)); // 结束标识
                         }
@@ -182,7 +180,7 @@ public class Insert2 implements Runnable{
 
         PrintUtil.print("开始插入======================");
         try {
-            tsToSaxChannel.produce(readLimit);
+            tsToSaxChannel.produce();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

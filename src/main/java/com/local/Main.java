@@ -89,11 +89,11 @@ public class Main {
          * Insert
          */
         SearchLock searchLock = new SearchLock();
+        int eachSearchNum = 1; // 一轮查询有几个查询
          // Search after insert
         Insert insert = new Insert(queryNum, searchLock);
 //
 //         // Search while insert
-        int eachSearchNum = 1; // 一轮查询有几个查询
 //        int interval = 1;    // 读几次进行一轮查询
 //        int readLimit = 1000;   // 读多少次停止
 //        int searchStart = 100;  // 读多少次开始查询,确保大于initNum
@@ -132,8 +132,8 @@ public class Main {
                 cntP = 0;   cntRes = 0;
                 search.run();
 //                System.out.println("查询时间：" + searchTime);
-//                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
-//                System.out.println("-----------------------------------------------");
+                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
+                System.out.println("-----------------------------------------------");
                 totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis; totalSearchTime += searchTime;
 //                if ((i + 1) % 1000 == 0) {
 //                    System.out.println("查询次数" + (i + 1));
