@@ -9,7 +9,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 public class SearchBuffer implements Runnable{
@@ -86,7 +85,7 @@ public class SearchBuffer implements Runnable{
 //            System.out.println(SearchUtil.bytesToFloat(floatBytes));    // todo
         }
         printDis.close(); // todo
-        Main.oneDis = dis / k;
+        Main.searchDis = dis / k;
     }
 
     private void computeExactDis(byte[] ans) {
@@ -110,7 +109,7 @@ public class SearchBuffer implements Runnable{
 //            oldDis = Math.sqrt(d);
         }
         printDis.close();    // todo
-        Main.oneDis = dis / k;
+        Main.searchDis = dis / k;
     }
 
     static class Ts {

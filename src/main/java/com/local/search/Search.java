@@ -68,7 +68,7 @@ public class Search implements Runnable{
             System.arraycopy(ans, i + Parameters.tsSize, floatBytes, 0, 4);
             dis += Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
-        Main.oneDis = dis / k;
+        Main.searchDis = dis / k;
     }
 
     private void computeExactDis(byte[] ans) {
@@ -84,7 +84,7 @@ public class Search implements Runnable{
 //            }
 //            oldDis = Math.sqrt(SearchUtil.bytesToFloat(floatBytes));
         }
-        Main.oneDis = dis / k;
+        Main.searchDis = dis / k;
     }
 
     static class Ts {

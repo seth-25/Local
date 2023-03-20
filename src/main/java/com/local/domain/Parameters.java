@@ -34,11 +34,16 @@ public class Parameters {
 
 
     public static class FileSetting {
-        public static final int readLimit = 10000;  // 读取文件至多读几次停止
+        public static final int readLimit = 5000;  // 读取文件至多读几次停止
         public static final int readTsNum = 100000; // 读取文件时一次读的ts数量
         public static final int readSize = tsSize * readTsNum; // 读取文件时一次读取字 节数
         public static final String inputPath = "../ts/"; // 存储ts的文件夹
-        public static final String queryFilePath = "../query/query.bin"; // 存储查询的ts的文件
+//        public static final String inputPath = "/media/hh/新加卷/ts"; // 存储ts的文件夹
+//        public static final String queryFilePath = "../query/deep1b_query_var005.bin"; // 存储查询的ts的文件
+//        public static final String queryFilePath = "../ts/deep1b line.bin"; // 存储查询的ts的文件
+        public static final String queryFilePath = "../query/100_query.bin"; // 存储查询的ts的文件
+//        public static final String queryFilePath = "../ts/shift1b.bin"; // 存储查询的ts的文件
+//        public static final String queryFilePath = "/media/hh/新加卷/ts/1000.bin"; // 存储查询的ts的文件
         public static final int queueSize = 32; // 随机读写队列长度
 
     }

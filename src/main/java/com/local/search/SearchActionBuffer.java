@@ -141,7 +141,7 @@ public class SearchActionBuffer {
         if (Main.isRecord) {
             synchronized (SearchAction.class) { // todo
                 Main.cntP += aQuery.pList.size();
-                Main.totalReadTime += readTime;
+                Main.readTime += readTime;
                 Main.totalReadLockTime += readLockTime;
                 Main.cntRes += cnt;
             }

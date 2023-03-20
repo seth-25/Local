@@ -6,8 +6,6 @@ import com.local.insert.Insert2;
 import com.local.search.SearchBuffer;
 import com.local.util.*;
 import com.local.version.VersionAction;
-import sun.misc.Cleaner;
-import sun.nio.ch.DirectBuffer;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -44,6 +42,7 @@ public class Main {
             }
             DBUtil.dataBase.init_putbuffer(i*Parameters.FileSetting.readTsNum, Parameters.FileSetting.readTsNum, tsBuffer, 0, offset);
         }
+        System.out.println("初始化插入次数：" + Parameters.initNum);
         DBUtil.dataBase.init_finish(initTsNum);
         PrintUtil.print("初始化成功==========================");
     }
@@ -55,9 +54,9 @@ public class Main {
     public static long searchTime = 0;
     public static long cntP = 0;
     public static long cntRes = 0;
-    public static long totalReadTime = 0;
+    public static long readTime = 0;
     public static long totalReadLockTime = 0;
-    public static double oneDis = 0;
+    public static double searchDis = 0;
     public static double totalRecall = 0;
     public static double totalError = 0;
 
@@ -91,23 +90,21 @@ public class Main {
         SearchLock searchLock = new SearchLock();
         int eachSearchNum = 1; // 一轮查询有几个查询
          // Search after insert
-        Insert insert = new Insert(queryNum, searchLock);
+//        Insert insert = new Insert(queryNum, searchLock);
 //
 //         // Search while insert
-//        int interval = 1;    // 读几次进行一轮查询
-//        int readLimit = 1000;   // 读多少次停止
-//        int searchStart = 100;  // 读多少次开始查询,确保大于initNum
-//
-//        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
-//        if ((readLimit - searchStart) / interval * eachSearchNum < queryNum) throw new RuntimeException("请减少queryNum或interval");
-//
-//        Insert2 insert = new Insert2(queryNum, searchLock, readLimit, searchStart, interval, eachSearchNum);
+        int interval = 40;    // 读几次进行一轮查询
+        int searchStart = 1000;  // 读多少次开始查询,确保大于initNum
+
+        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
+
+        Insert2 insert = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
         CacheUtil.insertThreadPool.execute(insert);
 
         /**
          * Search
          */
-        long totalCntP = 0, totalCntRes = 0, totalSearchTime = 0;
+        long totalCntP = 0, totalCntRes = 0, totalSearchTime = 0, totalReadTime = 0;
         double totalDis = 0;
 
         SearchBuffer search;
@@ -129,12 +126,12 @@ public class Main {
 //            Thread.sleep(1000);
             // 运行查询
             for (int i = 0; i < eachSearchNum; i ++ ) {
-                cntP = 0;   cntRes = 0;
+                cntP = 0;   cntRes = 0; readTime = 0;
                 search.run();
-//                System.out.println("查询时间：" + searchTime);
-                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes + "\t读取原始时间序列总时间：" + totalReadTime + "\t平均距离" + oneDis);
+                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes +
+                        "\t读取原始时间序列时间：" + readTime + "\t查询时间：" + searchTime + "\t平均距离" + searchDis);
                 System.out.println("-----------------------------------------------");
-                totalCntP += cntP;  totalCntRes += cntRes;  totalDis += oneDis; totalSearchTime += searchTime;
+                totalCntP += cntP;  totalCntRes += cntRes;  totalDis += searchDis; totalSearchTime += searchTime; totalReadTime += readTime;
 //                if ((i + 1) % 1000 == 0) {
 //                    System.out.println("查询次数" + (i + 1));
 //                }

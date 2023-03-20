@@ -69,12 +69,8 @@ typedef unsigned char cod;
 #define Bit_cardinality 8
 #if is8s
 #define Segments 8
-#define nchuw 32 // Ts_length / Segments
-#define Ts_values_per_segment 32
 #else
 #define Segments 16
-#define nchuw 16 // Ts_length / Segments
-#define Ts_values_per_segment 16
 #endif
 
 #define isgreed 1 // 是否使用贪心策略 0不使用 1使用
@@ -83,6 +79,8 @@ typedef unsigned char cod;
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
 #define Ts_length 256
+#define nchuw (Ts_length / Segments) // Ts_length / Segments
+#define Ts_values_per_segment (Ts_length / Segments)
 #define Leaf_maxnum 512
 //#define Leaf_maxnum (int)(512 * 0.82)
 #define Leaf_minnum (Leaf_maxnum/2)

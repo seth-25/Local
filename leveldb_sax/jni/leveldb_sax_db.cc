@@ -105,6 +105,7 @@ JNIEXPORT void JNICALL Java_leveldb_1sax_db_init_1putbuffer
   tsKey* tskeys_c = (tsKey*)env->GetDirectBufferAddress(ts_buffer);
   for(int i=0;i<this_num;i++) {
     saxt_from_ts(tskeys_c[i].ts, initkeys[tskeynum + i].leafKey.asaxt.asaxt);
+
 #if ishash
     initkeys[tskeynum + i].leafKey.p = (void*) ( (offset + i) | ((uint64_t)hash) << 56);
 #else

@@ -152,6 +152,7 @@ void saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out) {
     float paa[Segments];
     sax_type sax_out[Segments];
 
+#if Ts_values_per_segment >= 16
     __m256 xfsSum;
     __m256 a;
     for (int i=0; i<Segments; i++) {
@@ -164,6 +165,18 @@ void saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out) {
       const auto* q = (const float*)&xfsSum;
       paa[i] = (q[0] + q[1] + q[2] + q[3] + q[4] + q[5] + q[6] + q[7]) / Ts_values_per_segment;
     }
+#else
+  for(int i=0;i<Segments;i++) {
+    int off = i * Ts_values_per_segment;
+    float sum = 0;
+    for(int j=0;j<Ts_values_per_segment;j++) {
+      sum += ts_in[off + j];
+    }
+    sum /= Ts_values_per_segment;
+    paa[i] = sum;
+  }
+
+#endif
 
     // Convert PAA to SAX
     // Note: Each cardinality has cardinality - 1 break points if c is cardinality
@@ -226,6 +239,7 @@ void paa_saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out, ts_type *paa) {
   // Create PAA representation
   sax_type sax_out[Segments];
 
+#if Ts_values_per_segment >= 16
   __m256 xfsSum;
   __m256 a;
   for (int i=0; i<Segments; i++) {
@@ -238,6 +252,18 @@ void paa_saxt_from_ts(ts_type *ts_in, saxt_type *saxt_out, ts_type *paa) {
     const auto* q = (const float*)&xfsSum;
     paa[i] = (q[0] + q[1] + q[2] + q[3] + q[4] + q[5] + q[6] + q[7]) / Ts_values_per_segment;
   }
+#else
+  for(int i=0;i<Segments;i++) {
+    int off = i * Ts_values_per_segment;
+    float sum = 0;
+    for(int j=0;j<Ts_values_per_segment;j++) {
+      sum += ts_in[off + j];
+    }
+    sum /=  Ts_values_per_segment;
+    paa[i] = sum;
+  }
+
+#endif
 
   // Convert PAA to SAX
   // Note: Each cardinality has cardinality - 1 break points if c is cardinality
