@@ -32,9 +32,11 @@
 
 
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
-#define Get_div 20
+#define Get_div 2
+//#define Get_div 20
 // 一个info最多带多少p
-#define info_p_max_size 1024
+#define info_p_max_size 250000000
+//#define info_p_max_size 10240
 
 ///// TYPES /////
 #if isprint
@@ -78,7 +80,7 @@ typedef unsigned char cod;
 #define ischalr 0 // 1必须查左右兄弟结点,0相距度一样时查兄弟节点
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
-#define Ts_length 256
+#define Ts_length 96
 #define nchuw (Ts_length / Segments) // Ts_length / Segments
 #define Ts_values_per_segment (Ts_length / Segments)
 #define Leaf_maxnum 512
@@ -91,7 +93,7 @@ typedef unsigned char cod;
 //初始化的数量==内存表中存的数量
 #define init_num 1000000
 
-#define pool_size 1 // 几张表=几个插入线程
+#define pool_size 2 // 几张表=几个插入线程
 
 //一个memtable存的数量
 #define Table_maxnum (init_num/pool_size)

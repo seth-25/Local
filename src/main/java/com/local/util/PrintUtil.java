@@ -52,11 +52,11 @@ public class PrintUtil {
     public static void printWorkerVersion() {
         if (!Parameters.debug)  return ;
         System.out.println("===============================");
-        System.out.println("内版本");
+        System.out.println("memory version");
         for (Map.Entry<String, HashMap<Integer, Integer>> oneWorkerInVer: CacheUtil.workerInVerRef.entrySet()) {
             String hostName = oneWorkerInVer.getKey();
             HashMap<Integer, Integer> workerInVersionMap = oneWorkerInVer.getValue();
-            System.out.println(hostName + "内版本:");
+            System.out.println(hostName + "memory version:");
             Iterator<Map.Entry<Integer, Integer>> iterator = workerInVersionMap.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Integer> entry = iterator.next();
@@ -66,11 +66,11 @@ public class PrintUtil {
             }
         }
 
-        System.out.println("外版本");
+        System.out.println("disk version");
         for (Map.Entry<String, HashMap<Integer, Integer>> oneWorkerOutVer: CacheUtil.workerOutVerRef.entrySet()) {
             String hostName = oneWorkerOutVer.getKey();
             HashMap<Integer, Integer> workerOutVersionMap = oneWorkerOutVer.getValue();
-            System.out.println(hostName + "外版本:");
+            System.out.println(hostName + "disk version:");
             Iterator<Map.Entry<Integer, Integer>> iterator = workerOutVersionMap.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Integer, Integer> entry = iterator.next();

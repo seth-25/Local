@@ -67,10 +67,10 @@ public class Main {
         int isExact = 1;
         System.out.println("Number of queries: ");
 //        int queryNum = scan.nextInt();
-        int queryNum = 100;
+        int queryNum = 10;
         System.out.println("k: ");
 //        int k = scan.nextInt();
-        int k = 100;
+        int k = 5;
 
         /**
          * init
@@ -88,17 +88,17 @@ public class Main {
          * Insert
          */
         SearchLock searchLock = new SearchLock();
-        int eachSearchNum = 1; // 一轮查询有几个查询
+        int eachSearchNum = 10; // 一轮查询有几个查询
          // Search after insert
-//        Insert insert = new Insert(queryNum, searchLock);
+        Insert insert = new Insert(queryNum, searchLock);
 //
 //         // Search while insert
-        int interval = 40;    // 读几次进行一轮查询
+        int interval = 400;    // 读几次进行一轮查询
         int searchStart = 1000;  // 读多少次开始查询,确保大于initNum
 
         // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
 
-        Insert2 insert = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
+//        Insert2 insert = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
         CacheUtil.insertThreadPool.execute(insert);
 
         /**

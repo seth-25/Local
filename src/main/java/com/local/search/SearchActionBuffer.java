@@ -78,22 +78,29 @@ public class SearchActionBuffer {
     static ByteBuffer exactRes = ByteBuffer.allocateDirect(Parameters.exactResSize).order(ByteOrder.LITTLE_ENDIAN);
     public static void searchRawTsHeapQueue(ByteBuffer info, boolean isExact) {
         long searchRawTsTimeStart = System.currentTimeMillis(); // todo
-        PrintUtil.print("查询原始时间序列 info长度" + info.capacity() + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
+        PrintUtil.print("查询原始时间序列" + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
         long readTime = 0;   // todo
         long readLockTime = 0;   // todo
 
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
+
+        long analysisInfoTimeStart = System.currentTimeMillis();
 
         if (Parameters.hasTimeStamp > 0) {
             SearchUtil.analysisInfoHeap(info, aQuery);
         } else {
             SearchUtil.analysisInfoNoTimeHeap(info, aQuery);
         }
+
+        long analysisInfoTime = System.currentTimeMillis() - analysisInfoTimeStart;
+        long sortTimeStart = System.currentTimeMillis();
+
         if (Parameters.findRawTsSort) {
             aQuery.sortPList();
         }
 
-//        System.out.println("aQuery时间:" + aQuery.startTime + " " + aQuery.endTime);
+        long sortTime = System.currentTimeMillis() - sortTimeStart;
+        PrintUtil.print("pList长度:" + aQuery.pList.size() + " pTime:" + analysisInfoTime + " sortTIme:" + sortTime);
 
         ByteBuffer res;
         if(isExact) res = exactRes;

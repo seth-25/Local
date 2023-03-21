@@ -27,7 +27,7 @@ public class Insert2 implements Runnable{
     }
 
     private static int cntRead = 0;
-    private static int cntInsert = 0;
+    private static int cntInsert = Parameters.initNum;
     public static long insertTime;
     public static long IOTime = 0;
     public static long[] CPUTime = new long[Parameters.insertNumThread];
