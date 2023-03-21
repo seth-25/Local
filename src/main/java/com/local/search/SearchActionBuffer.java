@@ -96,11 +96,11 @@ public class SearchActionBuffer {
         long sortTimeStart = System.currentTimeMillis();
 
         if (Parameters.findRawTsSort) {
-            aQuery.sortPList();
+            Arrays.sort(aQuery.pArray);
         }
 
         long sortTime = System.currentTimeMillis() - sortTimeStart;
-        PrintUtil.print("pList长度:" + aQuery.pList.size() + " pTime:" + analysisInfoTime + " sortTIme:" + sortTime);
+        PrintUtil.print("pList长度:" + aQuery.pArray.length + " pTime:" + analysisInfoTime + " sortTIme:" + sortTime);
 
         ByteBuffer res;
         if(isExact) res = exactRes;
@@ -109,8 +109,8 @@ public class SearchActionBuffer {
 
         int cnt = 0;
         Set<MappedFileReaderBuffer> readerSet = new HashSet<>();
-        for (int i = 0; i < aQuery.pList.size(); i ++ ) {
-            Long p = aQuery.pList.get(i);
+        for (int i = 0; i < aQuery.pArray.length; i ++ ) {
+            long p = aQuery.pArray[i];
             int p_hash = (int) (p >> 56);   // 文件名
 
 //            // todo todo
@@ -147,7 +147,7 @@ public class SearchActionBuffer {
         }
         if (Main.isRecord) {
             synchronized (SearchAction.class) { // todo
-                Main.cntP += aQuery.pList.size();
+                Main.cntP += aQuery.pArray.length;
                 Main.readTime += readTime;
                 Main.totalReadLockTime += readLockTime;
                 Main.cntRes += cnt;
@@ -155,7 +155,7 @@ public class SearchActionBuffer {
         }
 
         PrintUtil.print(" 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                " 查询个数：" + aQuery.pList.size() + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchRawTsTimeStart) +
+                " 查询个数：" + aQuery.pArray.length + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchRawTsTimeStart) +
                 " 线程：" + Thread.currentThread().getName() + "\n");  // todo
     }
 
