@@ -19,11 +19,11 @@ import java.util.*;
 
 public class SearchActionBuffer {
     static byte[] empty4Bytes = new byte[4];
-    public static int pushHeap(List<ByteBuffer> byteBufferList, ByteBuffer res, List<Long> pList, SearchUtil.SearchContent aQuery, boolean isExact) {
+    public static int pushHeap(ByteBuffer[] byteBufferArray, ByteBuffer res, List<Long> pList, SearchUtil.SearchContent aQuery, boolean isExact) {
         float dis;
         int cnt = 0;
         for (int i = 0; i < pList.size(); i ++ ) {
-            ByteBuffer tsBuffer = byteBufferList.get(i);
+            ByteBuffer tsBuffer = byteBufferArray[i];
             if (Parameters.hasTimeStamp == 1) { // 有时间戳才需要判断原始时间序列的时间范围
                 tsBuffer.position(Parameters.tsDataSize);
                 long timestamps = tsBuffer.getLong();
@@ -80,7 +80,6 @@ public class SearchActionBuffer {
         long searchRawTsTimeStart = System.currentTimeMillis(); // todo
         PrintUtil.print("查询原始时间序列" + " " + Thread.currentThread().getName() + " isExact " + isExact);  // todo
         long readTime = 0;   // todo
-        long readLockTime = 0;   // todo
 
         SearchUtil.SearchContent aQuery = new SearchUtil.SearchContent();
 
@@ -121,44 +120,38 @@ public class SearchActionBuffer {
             MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(p_hash);
             readerSet.add(reader);
 
-            long readLockTimeStart = System.currentTimeMillis();    // todo
-            synchronized (reader) {
-                List<Long> pList = reader.getPList();
-                pList.add(p);
-                if (pList.size() >= Parameters.FileSetting.queueSize) {
-                    long readTimeStart = System.currentTimeMillis();   // todo
-                    List<ByteBuffer> byteBufferList = reader.readTsQueue();
-                    readTime += (System.currentTimeMillis() - readTimeStart);   // todo
+            List<Long> pList = reader.getPList();
+            pList.add(p);
+            if (pList.size() >= Parameters.FileSetting.queueSize) {
+                long readTimeStart = System.currentTimeMillis();   // todo
+                ByteBuffer[] byteBufferArray = reader.readTsQueue();
+                readTime += (System.currentTimeMillis() - readTimeStart);   // todo
 
-                    cnt += pushHeap(byteBufferList, res, pList, aQuery, isExact);
+                cnt += pushHeap(byteBufferArray, res, pList, aQuery, isExact);
 //                    System.out.println("push heap 成功");
-                    reader.clearPList();
-                }
+                reader.clearPList();
             }
-            readLockTime += System.currentTimeMillis() - readLockTimeStart; // todo
         }
         for (MappedFileReaderBuffer reader : readerSet) { // 剩下不足Parameters.FileSetting.queueSize的
             long readTimeStart = System.currentTimeMillis();   // todo
-            List<ByteBuffer> byteBufferList = reader.readTsQueue();
+            ByteBuffer[] byteBufferArray = reader.readTsQueue();
             readTime += (System.currentTimeMillis() - readTimeStart);   // todo
             List<Long> pList = reader.getPList();
-            cnt += pushHeap(byteBufferList, res, pList, aQuery, isExact);
+            cnt += pushHeap(byteBufferArray, res, pList, aQuery, isExact);
             reader.clearPList();
         }
         if (Main.isRecord) {
             synchronized (SearchAction.class) { // todo
                 Main.cntP += aQuery.pArray.length;
                 Main.readTime += readTime;
-                Main.totalReadLockTime += readLockTime;
                 Main.cntRes += cnt;
             }
         }
 
-        PrintUtil.print(" 读取时间：" + readTime + " readLockTime：" + readLockTime +
-                " 查询个数：" + aQuery.pArray.length + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchRawTsTimeStart) +
+        PrintUtil.print(" 读取时间：" + readTime +
+                " 访问ts个数：" + aQuery.pArray.length + " 查询原始时间序列总时间：" + (System.currentTimeMillis() - searchRawTsTimeStart) +
                 " 线程：" + Thread.currentThread().getName() + "\n");  // todo
     }
-
 
 
     public static ByteBuffer searchRtree(RTree<String, Rectangle> rTree, long startTime, long endTime, byte[] minSaxT, byte[] maxSaxT) {

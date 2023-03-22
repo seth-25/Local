@@ -20,7 +20,7 @@ public class CacheUtil {
     public static Map<Integer, MappedFileReaderBuffer> mappedFileReaderMapBuffer = new HashMap<>();
 //    public static Map<Integer, MappedFileReader> mappedFileReaderMap = new HashMap<>();
     public static ExecutorService insertThreadPool = Executors.newFixedThreadPool(Parameters.insertNumThread + 1);
-//    public static ExecutorService searchThreadPool = Executors.newFixedThreadPool(Parameters.numThread);
+    public static ExecutorService searchThreadPool = Executors.newFixedThreadPool(3);
 //
     public static class clearCache {
         public static void run() {

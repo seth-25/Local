@@ -70,7 +70,7 @@ public class Main {
         int queryNum = 10;
         System.out.println("k: ");
 //        int k = scan.nextInt();
-        int k = 5;
+        int k = 10;
 
         /**
          * init
@@ -88,12 +88,12 @@ public class Main {
          * Insert
          */
         SearchLock searchLock = new SearchLock();
-        int eachSearchNum = 10; // 一轮查询有几个查询
+        int eachSearchNum = 1; // 一轮查询有几个查询
          // Search after insert
         Insert insert = new Insert(queryNum, searchLock);
 //
 //         // Search while insert
-        int interval = 400;    // 读几次进行一轮查询
+        int interval = 40;    // 读几次进行一轮查询
         int searchStart = 1000;  // 读多少次开始查询,确保大于initNum
 
         // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum

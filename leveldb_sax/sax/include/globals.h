@@ -84,7 +84,7 @@ typedef unsigned char cod;
 #define nchuw (Ts_length / Segments) // Ts_length / Segments
 #define Ts_values_per_segment (Ts_length / Segments)
 #define Leaf_maxnum 512
-//#define Leaf_maxnum (int)(512 * 0.82)
+//#define Leaf_maxnum (int)(2048 * 0.82)
 #define Leaf_minnum (Leaf_maxnum/2)
 
 //最小

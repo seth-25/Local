@@ -38,7 +38,8 @@ public class MappedFileReaderBuffer {
 
     private AsynchronousFileChannel asynchronousFileChannel;
     private List<Long> pList = new ArrayList<>();
-    private List<ByteBuffer> byteBufferList = new ArrayList<>();
+//    private List<ByteBuffer> byteBufferList = new ArrayList<>();
+    private ByteBuffer[] byteBufferArray;
     private List<Future<Integer>> operationList = new ArrayList<>();
 
     private long offset = 0;
@@ -77,8 +78,11 @@ public class MappedFileReaderBuffer {
 
         Path path = Paths.get(filePath);
         asynchronousFileChannel = AsynchronousFileChannel.open(path, StandardOpenOption.READ);
+
+        byteBufferArray = new ByteBuffer[Parameters.FileSetting.queueSize];
         for (int i = 0; i < Parameters.FileSetting.queueSize; i ++ ) {
-            byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize).order(ByteOrder.LITTLE_ENDIAN));
+//            byteBufferList.add(ByteBuffer.allocateDirect(Parameters.tsSize).order(ByteOrder.LITTLE_ENDIAN));
+            byteBufferArray[i] = ByteBuffer.allocateDirect(Parameters.tsSize).order(ByteOrder.LITTLE_ENDIAN);
         }
 //        this.tsArrays = new byte[Parameters.FileSetting.queueSize][Parameters.tsSize];// new byte时间消耗很大，预先开好空间
         this.fileNum = fileNum;
@@ -162,11 +166,11 @@ public class MappedFileReaderBuffer {
     public void clearPList() {
         pList.clear();
     }
-    public List<ByteBuffer> readTsQueue() {
+    public ByteBuffer[] readTsQueue() {
         int num = pList.size();
         for (int i = 0; i < num; i ++ ) {
             long offset = pList.get(i) & 0x00ffffffffffffffL;  // ts在文件中的位置
-            ByteBuffer byteBuf = byteBufferList.get(i);
+            ByteBuffer byteBuf = byteBufferArray[i];
             byteBuf.clear();
             Future<Integer> operation = asynchronousFileChannel.read(byteBuf, offset* Parameters.tsSize);   // 异步读取构成队列
             operationList.add(operation);
@@ -174,11 +178,12 @@ public class MappedFileReaderBuffer {
         for (int i = 0; i < num; i ++ ) {
             Future<Integer> operation = operationList.get(i);
             while (!operation.isDone()) ;   // 等待读完
-            byteBufferList.get(i).rewind();
+            byteBufferArray[i].rewind();
+//            byteBufferList.get(i).rewind();
         }
         operationList.clear();
 
-        return byteBufferList;
+        return byteBufferArray;
     }
 
     public long getOffset() {
