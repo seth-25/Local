@@ -86,7 +86,7 @@ public class Main {
         /**
          * Insert
          * Default query after inserting all data
-         * If you want to insert while searching (update workload), replace insertThreadPool.execute(insert) with insert2
+         * If you want to insert while searching (update workload), replace Insert.insert with insert2.insert
          * And make sure (Parameters.FileSetting.readLimit - searchStart) / interval * eachSearchNum >= queryNum
          */
         SearchLock searchLock = new SearchLock();
@@ -94,13 +94,13 @@ public class Main {
 
         // Search after inserting
         Insert insert = new Insert(queryNum, searchLock);
-        CacheUtil.insertThreadPool.execute(insert);
 
         // Search while inserting
-        int interval = 400;    // How many times to insert between two rounds of search
-        int searchStart = 1000;  // How many times to read before starting search, make sure searchStart > Parameters.initNum
-//        Insert2 insert2 = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
-//        CacheUtil.insertThreadPool.execute(insert2);
+        int interval = 4;    // How many times to insert between two rounds of search
+        int searchStart = 10;  // How many times to read before starting search, make sure searchStart > Parameters.initNum
+//        Insert2 insert = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
+
+        CacheUtil.insertThreadPool.execute(insert);
 
         /**
          * Search
