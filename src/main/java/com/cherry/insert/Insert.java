@@ -21,7 +21,7 @@ public class Insert implements Runnable{
 
     private static int cntRead = 0;
     private static int cntInsert = Parameters.initNum;
-    public static long insertTime;
+    public static long insertTimeStart;
     public static long IOTime = 0;
     public static long[] CPUTime = new long[Parameters.insertNumThread];
 
@@ -54,7 +54,6 @@ public class Insert implements Runnable{
             boolean flag = true;
             while(flag) {
                 for (Map.Entry<Integer, MappedFileReaderBuffer> entry: CacheUtil.mappedFileReaderMapBuffer.entrySet()) {
-//                for (Map.Entry<Integer, FileChannelReader> entry: CacheUtil.fileChannelReaderMap.entrySet()) {
                     flag = false;
 
                     // 从文件读ts
@@ -73,7 +72,7 @@ public class Insert implements Runnable{
 
                     put(tsReadBatch);
                     if (offset % 1000000 == 0) {
-                        System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
+                        System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset);
                     }
 
                     ++cntRead;
@@ -124,7 +123,7 @@ public class Insert implements Runnable{
 //                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
                 if (++cntInsert % 10 == 0) {
-                    System.out.println("插入次数：" + cntInsert);
+                    System.out.println("number of insertions：" + cntInsert);
                 }
             }
             return true;
@@ -132,7 +131,7 @@ public class Insert implements Runnable{
     }
     @Override
     public void run() {
-        insertTime = System.currentTimeMillis();
+        insertTimeStart = System.currentTimeMillis();
 
         // 不同的consumer可能同时结束，除了consumer占用的tsBytes，还要再预留consumer个tsBytes，共2*insertNumThread个
         // 先read再put，wait条件是等于capacity，所以至多同时存在capacity+1个tsBytes，故capacity设成2 * insertNumThread - 1
@@ -154,7 +153,7 @@ public class Insert implements Runnable{
             });
         }
 
-        PrintUtil.print("开始插入======================");
+        PrintUtil.print("====================== Start insert ======================");
         try {
             tsToSaxChannel.produce();
         } catch (InterruptedException e) {
@@ -162,21 +161,17 @@ public class Insert implements Runnable{
         }
 
 
-        System.out.println("读完所有文件,退出\n");
+        System.out.println("Has read all files, exit\n");
         Main.hasInsert = true;
-        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTime) + "\tIO时间：" + IOTime + "\tCPU时间：" + Arrays.toString(CPUTime));
-        System.out.println("Ts转化成saxT时间：" + Arrays.toString(saxtTime));
+        System.out.println("Total insert time: " + (System.currentTimeMillis() - insertTimeStart) + " ms;\tIO time：" + IOTime + " ms;\tCPU time：" + Arrays.toString(CPUTime) + " ms");
+        System.out.println("TS convert to saxT time：" + Arrays.toString(saxtTime) + " ms");
         CacheUtil.insertThreadPool.shutdown();
 
-        // todo todo
-        Scanner scan = new Scanner(System.in);
-        System.out.println("清理缓存:");
-        scan.next();
-//        try {
-//            Thread.sleep(10000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
+//        // todo todo
+//        Scanner scan = new Scanner(System.in);
+//        System.out.println("clear cache:");
+//        scan.next();
+
         DBUtil.dataBase.print_time();
 
 

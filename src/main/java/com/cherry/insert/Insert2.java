@@ -82,7 +82,8 @@ public class Insert2 implements Runnable{
 
                     put(tsReadBatch);
                     if (offset % 1000000 == 0) {
-                        System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
+//                        System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
+                        System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset);
                     }
                     ++cntRead;
 
@@ -132,7 +133,8 @@ public class Insert2 implements Runnable{
                 cnt --; // insert完才-1，防止tsBytes被覆盖
                 notifyAll();
                 if (++cntInsert % 10 == 0) {
-                    System.out.println("插入次数：" + cntInsert);
+//                    System.out.println("插入次数：" + cntInsert);
+                    System.out.println("number of insertions：" + cntInsert);
                 }
                 if (cntInsert + Parameters.initNum > searchStart && (cntInsert + Parameters.initNum) % interval == 0) {
                     searchLock.lock.lock();
@@ -180,7 +182,7 @@ public class Insert2 implements Runnable{
             });
         }
 
-        PrintUtil.print("开始插入======================");
+        PrintUtil.print("====================== Start insert ======================");
         try {
             tsToSaxChannel.produce();
         } catch (InterruptedException e) {
@@ -188,10 +190,13 @@ public class Insert2 implements Runnable{
         }
 
 
-        System.out.println("读完所有文件,退出\n");
+//        System.out.println("读完所有文件,退出\n");
+        System.out.println("Has read all files, exit\n");
         Main.hasInsert = true;
-        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTimeStart) + "\tIO时间：" + IOTime + "\tCPU时间：" + Arrays.toString(CPUTime));
-        System.out.println("Ts转化成saxT时间：" + Arrays.toString(saxtTime));
+//        System.out.println("插入总时间: " + (System.currentTimeMillis() - insertTimeStart) + "\tIO时间：" + IOTime + "\tCPU时间：" + Arrays.toString(CPUTime));
+//        System.out.println("Ts转化成saxT时间：" + Arrays.toString(saxtTime));
+        System.out.println("Total insert time: " + (System.currentTimeMillis() - insertTimeStart) + " ms;\tIO time：" + IOTime + " ms;\tCPU time：" + Arrays.toString(CPUTime) + " ms");
+        System.out.println("TS convert to saxT time：" + Arrays.toString(saxtTime) + " ms");
         CacheUtil.insertThreadPool.shutdown();
 
     }

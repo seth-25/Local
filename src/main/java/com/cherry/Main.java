@@ -36,11 +36,11 @@ public class Main {
             ByteBuffer tsBuffer = reader.read();
             tsBuffer.flip();
             if (offset % 1000000 == 0) {
-                System.out.println("read file:" + reader.getFileNum() + " offset:" + offset + " for init");
+                System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset + ";\tfor init");
             }
             DBUtil.dataBase.init_putbuffer(i*Parameters.FileSetting.readTsNum, Parameters.FileSetting.readTsNum, tsBuffer, 0, offset);
         }
-        System.out.println("init number of insertions：" + Parameters.initNum);
+        System.out.println("number of insertions (init): " + Parameters.initNum);
         DBUtil.dataBase.init_finish(initTsNum);
         PrintUtil.print("===================== init success =====================");
     }
@@ -65,7 +65,7 @@ public class Main {
 //        int isExact = 1;
         System.out.println("Number of queries: ");
         int queryNum = scan.nextInt();
-//        int queryNum = 10;
+//        int queryNum = 100;
         System.out.println("k: ");
         int k = scan.nextInt();
 //        int k = 100;
@@ -128,18 +128,18 @@ public class Main {
             for (int i = 0; i < eachSearchNum; i ++ ) {
                 cntP = 0;   cntRes = 0; readTime = 0;
                 search.run();
-                System.out.println("Number of accesses to raw data:" + cntP + "\tNumber of returns of raw data:" + cntRes +
-                        "\tTime of reading raw data:" + readTime + "\tTime of querying:" + searchTime + "\tAverage Distance:" + searchDis);
 //                if ((i + 1) % 1000 == 0) {
 //                    System.out.println("Number of queries" + (i + 1));
 //                }
-                System.out.println("Number of queries:" + (i + 1));
+                System.out.println("Number of queries: " + (i + 1));
+                System.out.println("Number of accesses to raw data: " + cntP + ";\tNumber of returns of raw data: " + cntRes);
+                System.out.println("Time of reading raw data: " + readTime + " ms;\tTime of querying: " + searchTime + " ms;\tAverage Distance: " + searchDis);
                 System.out.println("-----------------------------------------------");
                 totalCntP += cntP;  totalCntRes += cntRes;  totalDis += searchDis; totalSearchTime += searchTime; totalReadTime += readTime;
 
             }
             totalSearchNum += eachSearchNum;
-            System.out.println("Total number of queries:" + totalSearchNum);
+            System.out.println("Total number of queries: " + totalSearchNum);
 
             searchLock.lock.lock();
             searchLock.searchNum = 0;
@@ -150,12 +150,12 @@ public class Main {
                     // need to uncomment computeRecallAndError in Search.class
 //                    System.out.println("Recall rate：" + (totalRecall / queryNum) + "\terror rate" + (totalError / queryNum));
 //                }
-                System.out.println("Total time of querying: " + totalSearchTime + "\tAverage Time" + ((double)totalSearchTime /queryNum));
-                System.out.println("Total time of reading raw data: " + totalReadTime + "\tAverage Time" + ((double)totalReadTime/queryNum));
-                System.out.println("Total Distance: :" + totalDis + "\tAverage Distance: " + (totalDis / queryNum));
-                System.out.println("Total/Average number of accesses to raw data:" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-                        "\tTotal/Average number of returns of raw data:" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
-                        "\treturn/access rate：" + ((double) totalCntRes / totalCntP));
+                System.out.println("Total time of querying: " + totalSearchTime + " ms;\tAverage Time: " + ((double)totalSearchTime /queryNum) + " ms");
+                System.out.println("Total time of reading raw data: " + totalReadTime + " ms;\tAverage Time: " + ((double)totalReadTime/queryNum) + " ms");
+                System.out.println("Total Distance: " + totalDis + ";\tAverage Distance: " + (totalDis / queryNum));
+                System.out.println("Total/Average number of accesses to raw data: " + totalCntP + "/" + ((double)totalCntP / queryNum) +
+                        ";\tTotal/Average number of returns of raw data: " + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
+                        ";\treturn/access rate: " + ((double) totalCntRes / totalCntP));
 
 
 //                System.out.println("Total time of update workload:" + (System.currentTimeMillis() - Insert2.insertTimeStart));

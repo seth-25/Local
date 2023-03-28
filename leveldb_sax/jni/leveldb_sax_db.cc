@@ -19,7 +19,7 @@ static uint64_t saxt_nums_ = 0;
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_print_1time
     (JNIEnv *, jobject) {
 #if iscompaction_time
-  cout<<"压缩合并时间: "<<db->getTime()/1000<<endl;
+  cout<<"compaction time: "<<db->getTime()/1000<<endl;
 #endif
 }
 
