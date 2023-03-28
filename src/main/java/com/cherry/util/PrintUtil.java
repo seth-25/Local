@@ -82,9 +82,11 @@ public class PrintUtil {
         System.out.println("===============================\n");
     }
 
-    public static class PrintDis{FileWriter fw;
+    public static class PrintDis{
+        FileWriter fw;
         public BufferedWriter bw;
         public PrintDis(String fileName) {
+            if (!Parameters.debug) return ;
             try {
                 this.fw = new FileWriter(fileName, true);
             } catch (IOException e) {
@@ -93,6 +95,7 @@ public class PrintUtil {
             this.bw = new BufferedWriter(fw);
         }
         public void print(float dis) {
+            if (!Parameters.debug) return ;
             try {
                 fw.write(dis + "\n");
             } catch (IOException e) {
@@ -100,6 +103,7 @@ public class PrintUtil {
             }
         }
         public void close() {
+            if (!Parameters.debug) return ;
             try {
                 bw.close();
                 fw.close();

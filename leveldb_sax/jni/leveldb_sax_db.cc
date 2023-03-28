@@ -326,7 +326,7 @@ JNIEXPORT jint JNICALL Java_leveldb_1sax_db_Get_1exact
   jniInfo info1 = {info_, info};
   db->Get_exact(*aquery1, am_version_id, st_version_id, st_numbers, appro, results, appro_am_id, appro_st_numbers, info1, saxt_nums_);
 #if iscount_saxt_for_exact
-  cout<<"总saxt_num:"<<saxt_nums_<<endl;
+  cout<<"Total number of SAXT:"<<saxt_nums_<<endl;
 #endif
   return results.size();
 }

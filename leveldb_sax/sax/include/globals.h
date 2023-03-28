@@ -83,12 +83,11 @@
 
 
 
-
-
-
-
-
 /////////////// The following parameters do not need to be modified /////////////////
+
+
+
+
 #define shunxu 0  // 1为不进行筛选，测试顺序时用，需令sort_p = 1
 // 0, 1, 2 代表 一个，一部分，一个叶
 #define lookupi 2
