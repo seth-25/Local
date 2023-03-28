@@ -105,8 +105,17 @@ class query_heap_rep {
 #endif
   }
 
+  static bool cmpp(pair<float, void*>& a, pair<float, void*>& b) {
+    return a.second < b.second;
+  }
+
   void sort_dist_p() {
     sort(to_sort_dist_p.begin(), to_sort_dist_p.end());
+  }
+
+
+  void sort_dist_p1() {
+    sort(to_sort_dist_p.begin(), to_sort_dist_p.end(), cmpp);
   }
 
  protected:

@@ -32,10 +32,16 @@
 
 
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
+// 访问大半部分可用
+#define quan 1  // 1为按p排序，0为按ldb排序
+#define shunxu 0  // 1为测试顺序时用，需令quan = 1
+
+//改成quan = 1 就无所谓了
 #define Get_div 2
 //#define Get_div 20
 // 一个info最多带多少p
 #define info_p_max_size 250000000
+//#define info_p_max_size 50000000
 //#define info_p_max_size 10240
 
 ///// TYPES /////
@@ -91,9 +97,9 @@ typedef unsigned char cod;
 #define Leaf_maxnum_rebalance 10
 
 //初始化的数量==内存表中存的数量
-#define init_num 1000000
+#define init_num (4 * (int)4e6)
 
-#define pool_size 2 // 几张表=几个插入线程
+#define pool_size 4 // 几张表=几个插入线程
 
 //一个memtable存的数量
 #define Table_maxnum (init_num/pool_size)

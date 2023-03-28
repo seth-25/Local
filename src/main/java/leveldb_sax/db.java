@@ -1,16 +1,7 @@
 package leveldb_sax;
 
-import com.local.util.DBUtil;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.*;
 
 public class db {
 
@@ -21,11 +12,11 @@ public class db {
 
     public native void print_time();
 
-    @Deprecated
-    public native byte[] leaftimekey_from_tskey(byte[] tskeys, int hash, long offset, boolean issort);
-
-    @Deprecated
-    public native void leaftimekey_sort(byte[] leaftimekeys);
+//    @Deprecated
+//    public native byte[] leaftimekey_from_tskey(byte[] tskeys, int hash, long offset, boolean issort);
+//
+//    @Deprecated
+//    public native void leaftimekey_sort(byte[] leaftimekeys);
 
     /**
      * leaftimekeys 和 tskeys 要一样多，不然出错
@@ -50,25 +41,23 @@ public class db {
      */
     public native void init_finish(int tskeys_num);
 
-    /**
-     * leaftimekeys 和 tskeys 要一样多，不然出错
-     * @param tskeys
-     * @param leaftimekeys
-     * @param hash
-     * @param offset
-     */
-    @Deprecated
-    public native void init_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
-    @Deprecated
-    public native void init_buffer1(int tskeys_num, ByteBuffer tskeys, int tskeys_num1, ByteBuffer tskeys1, ByteBuffer leaftimekeys, int hash, long offset);
+//    /**
+//     * leaftimekeys 和 tskeys 要一样多，不然出错
+//     */
+//    @Deprecated
+//    public native void init_buffer(int tskeys_num, ByteBuffer tskeys, ByteBuffer leaftimekeys, int hash, long offset);
+//    @Deprecated
+//    public native void init_buffer1(int tskeys_num, ByteBuffer tskeys, int tskeys_num1, ByteBuffer tskeys1, ByteBuffer leaftimekeys, int hash, long offset);
 
-    @Deprecated
-    public native void saxt_from_ts(byte[] ts, byte[] saxt);
+//    @Deprecated
+//    public native void saxt_from_ts(byte[] ts, byte[] saxt);
 
+
+//    @Deprecated
+    public native void paa_saxt_from_ts(byte[] ts, byte[] saxt, float[] paa);
     public native void paa_saxt_from_ts_buffer(ByteBuffer ts, ByteBuffer saxt, ByteBuffer paa);
 
-    @Deprecated
-    public native void paa_saxt_from_ts(byte[] ts, byte[] saxt, float[] paa);
+
 
     //db
     public native void open(String dbname);
@@ -76,14 +65,13 @@ public class db {
     public native void close();
 
 
-    @Deprecated
-    public native void init(byte[] leafTimeKeys, int leafKeysNum);
+//    @Deprecated
+//    public native void init(byte[] leafTimeKeys, int leafKeysNum);
 
+//    @Deprecated
+//    public native void put(byte[] leafTimeKey);
 
-    @Deprecated
-    public native void put(byte[] leafTimeKey);
-
-    @Deprecated
+//    @Deprecated
     public native byte[] Get(byte[] aquery, boolean is_use_am, int am_version_id, int st_version_id, long[] st_number);
     // st_number, 选择的sstable
     // aquery(有时间戳): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
@@ -100,7 +88,7 @@ public class db {
                           int st_number_num, ByteBuffer st_number, ByteBuffer appro_res, ByteBuffer info);
 
 
-    @Deprecated
+//    @Deprecated
     public native byte[] Get_exact(byte[] aquery, int am_version_id, int st_version_id, long[] st_number, byte[] appro_res, long[] appro_num);
     // exact_res(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // exact_res(有时间戳): ts 256*4, float dist 4
@@ -118,19 +106,17 @@ public class db {
     public native float heap_push_exact_buffer(ByteBuffer ares_exact, byte[] heap);
 
     // 向堆push ts，ares里只含一个ts，push后c返回topdis, 更新topdis
-    @Deprecated
-    public native float heap_push(byte[] ares, byte[] heap);
-
-    @Deprecated
-    public native float heap_push_exact(byte[] ares_exact, byte[] heap);
+//    @Deprecated
+//    public native float heap_push(byte[] ares, byte[] heap);
+//    @Deprecated
+//    public native float heap_push_exact(byte[] ares_exact, byte[] heap);
     public native void unref_am(int version_id);
 
     public native void unref_st(int version_id);
 
-    public native float dist_ts_buffer(ByteBuffer ts1, ByteBuffer ts2);
-
-    @Deprecated
+//    @Deprecated
     public native float dist_ts(byte[] ts1, byte[] ts2);
+    public native float dist_ts_buffer(ByteBuffer ts1, ByteBuffer ts2);
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
