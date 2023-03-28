@@ -2686,7 +2686,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   //等待结果
   res_heap->wait();
   // 按dist排序，分成20份依次查询
-#if quan
+#if sort_p
   res_heap->sort_dist_p1();
 #else
   res_heap->sort_dist_p();
@@ -2711,7 +2711,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
 
   bool isover = false;
   for(int i=0;i<div;i++) {
-#if quan
+#if sort_p
 
     int num_one = min((i+1)*num_per, (int)res_heap->to_sort_dist_p.size()) - i*num_per;
     char* tmpinfo = add_info;

@@ -1,6 +1,7 @@
 package com.cherry;
 
 import com.cherry.insert.Insert;
+import com.cherry.insert.Insert2;
 import com.cherry.search.Search;
 import com.cherry.util.*;
 import com.cherry.version.VersionAction;
@@ -12,7 +13,7 @@ import java.util.*;
 
 public class Main {
     public static void init() {
-//        CacheUtil.clearCache.run(); // 清除缓存
+//        CacheUtil.clearCache.run(); // clear cache
 
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
@@ -22,7 +23,7 @@ public class Main {
             throw new RuntimeException("No files under the ts folder");
         }
 
-        CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
+        CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>());
         CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
         VersionAction.initVersion();
 
@@ -35,13 +36,13 @@ public class Main {
             ByteBuffer tsBuffer = reader.read();
             tsBuffer.flip();
             if (offset % 1000000 == 0) {
-                System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset + " 用于初始化");
+                System.out.println("read file:" + reader.getFileNum() + " offset:" + offset + " for init");
             }
             DBUtil.dataBase.init_putbuffer(i*Parameters.FileSetting.readTsNum, Parameters.FileSetting.readTsNum, tsBuffer, 0, offset);
         }
-        System.out.println("初始化插入次数：" + Parameters.initNum);
+        System.out.println("init number of insertions：" + Parameters.initNum);
         DBUtil.dataBase.init_finish(initTsNum);
-        PrintUtil.print("初始化成功==========================");
+        PrintUtil.print("===================== init success =====================");
     }
 
     public static boolean hasInsert = false;
@@ -60,14 +61,14 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scan = new Scanner(System.in);
         System.out.println("Please enter:   0: Approximate query    1: Accurate query");
-//        int isExact = scan.nextInt();
-        int isExact = 1;
+        int isExact = scan.nextInt();
+//        int isExact = 1;
         System.out.println("Number of queries: ");
-//        int queryNum = scan.nextInt();
-        int queryNum = 10;
+        int queryNum = scan.nextInt();
+//        int queryNum = 10;
         System.out.println("k: ");
-//        int k = scan.nextInt();
-        int k = 100;
+        int k = scan.nextInt();
+//        int k = 100;
 
         /**
          * init
@@ -81,22 +82,25 @@ public class Main {
         }
         init();
         FileUtil.checkFileExists(Parameters.FileSetting.queryFilePath);
+
         /**
          * Insert
+         * Default query after inserting all data
+         * If you want to insert while searching (update workload), replace insertThreadPool.execute(insert) with insert2
+         * And make sure (Parameters.FileSetting.readLimit - searchStart) / interval * eachSearchNum >= queryNum
          */
         SearchLock searchLock = new SearchLock();
-        int eachSearchNum = 10; // 一轮查询有几个查询
-         // Search after insert
+        int eachSearchNum = 10; // A round of searching has several queries
+
+        // Search after inserting
         Insert insert = new Insert(queryNum, searchLock);
-//
-//         // Search while insert
-        int interval = 400;    // 读几次进行一轮查询
-        int searchStart = 1000;  // 读多少次开始查询,确保大于initNum
-
-        // 确保(readLimit - searchStart) / interval * eachSearchNum >= queryNum
-
-//        Insert2 insert = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
         CacheUtil.insertThreadPool.execute(insert);
+
+        // Search while inserting
+        int interval = 400;    // How many times to insert between two rounds of search
+        int searchStart = 1000;  // How many times to read before starting search, make sure searchStart > Parameters.initNum
+//        Insert2 insert2 = new Insert2(queryNum, searchLock, searchStart, interval, eachSearchNum);
+//        CacheUtil.insertThreadPool.execute(insert2);
 
         /**
          * Search
@@ -119,41 +123,42 @@ public class Main {
             if (searchLock.searchNum == 0) searchLock.condition.await();
             eachSearchNum = searchLock.searchNum;
             searchLock.lock.unlock();
-            System.out.println("一轮查询个数：" + eachSearchNum);
-//            Thread.sleep(1000);
-            // 运行查询
+            System.out.println("Number of queries included in a search round: " + eachSearchNum);
+            // Run search
             for (int i = 0; i < eachSearchNum; i ++ ) {
                 cntP = 0;   cntRes = 0; readTime = 0;
                 search.run();
-                System.out.println("访问原始时间序列个数：" + cntP + "\t返回原始时间序列个数：" + cntRes +
-                        "\t读取原始时间序列时间：" + readTime + "\t查询时间：" + searchTime + "\t平均距离" + searchDis);
+                System.out.println("Number of accesses to raw data:" + cntP + "\tNumber of returns of raw data:" + cntRes +
+                        "\tTime of reading raw data:" + readTime + "\tTime of querying:" + searchTime + "\tAverage Distance:" + searchDis);
+//                if ((i + 1) % 1000 == 0) {
+//                    System.out.println("Number of queries" + (i + 1));
+//                }
+                System.out.println("Number of queries:" + (i + 1));
                 System.out.println("-----------------------------------------------");
                 totalCntP += cntP;  totalCntRes += cntRes;  totalDis += searchDis; totalSearchTime += searchTime; totalReadTime += readTime;
-//                if ((i + 1) % 1000 == 0) {
-//                    System.out.println("查询次数" + (i + 1));
-//                }
-                System.out.println("查询次数" + (i + 1));
+
             }
             totalSearchNum += eachSearchNum;
-            System.out.println("总共查询次数" + totalSearchNum);
+            System.out.println("Total number of queries:" + totalSearchNum);
 
             searchLock.lock.lock();
             searchLock.searchNum = 0;
             searchLock.condition.signal();
             searchLock.lock.unlock();
-
             if (totalSearchNum >= queryNum) {
-                if (isExact != 1) {
-                    System.out.println("召回率：" + (totalRecall / queryNum) + "\t错误率" + (totalError / queryNum));
-                }
-                System.out.println("查询总时间：" + totalSearchTime + "\t平均时间" + ((double)totalSearchTime /queryNum));
-                System.out.println("读取原始时间序列总时间：" + totalReadTime + "\t平均时间" + ((double)totalReadTime/queryNum));
-                System.out.println("查询总距离:" + totalDis + "\t平均距离" + (totalDis / queryNum));
-                System.out.println("总共/平均返回原始时间序列：" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
-                        "\t总共/平均访问原始时间序列：" + totalCntP + "/" + ((double)totalCntP / queryNum) +
-                        "\t返回/访问比例：" + ((double) totalCntRes / totalCntP));
+//                if (isExact != 1) {
+                    // need to uncomment computeRecallAndError in Search.class
+//                    System.out.println("Recall rate：" + (totalRecall / queryNum) + "\terror rate" + (totalError / queryNum));
+//                }
+                System.out.println("Total time of querying: " + totalSearchTime + "\tAverage Time" + ((double)totalSearchTime /queryNum));
+                System.out.println("Total time of reading raw data: " + totalReadTime + "\tAverage Time" + ((double)totalReadTime/queryNum));
+                System.out.println("Total Distance: :" + totalDis + "\tAverage Distance: " + (totalDis / queryNum));
+                System.out.println("Total/Average number of accesses to raw data:" + totalCntP + "/" + ((double)totalCntP / queryNum) +
+                        "\tTotal/Average number of returns of raw data:" + totalCntRes + "/" + ((double) totalCntRes / queryNum) +
+                        "\treturn/access rate：" + ((double) totalCntRes / totalCntP));
 
-//                System.out.println("更新负载总时间:" + (System.currentTimeMillis() - Insert2.insertTimeStart));
+
+//                System.out.println("Total time of update workload:" + (System.currentTimeMillis() - Insert2.insertTimeStart));
                 break;
             }
         }

@@ -94,7 +94,7 @@ public class SearchAction {
         long analysisInfoTime = System.currentTimeMillis() - analysisInfoTimeStart;
         long sortTimeStart = System.currentTimeMillis();
 
-        if (Parameters.findRawTsSort) {
+        if (Parameters.SortPos) {
             Arrays.sort(aQuery.pArray);
         }
 
