@@ -19,7 +19,7 @@ public class Main {
 
         MappedFileReaderBuffer reader = CacheUtil.mappedFileReaderMapBuffer.get(0);
         if (reader == null) {
-            throw new RuntimeException("ts文件夹下没有文件");
+            throw new RuntimeException("No files under the ts folder");
         }
 
         CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>()); // 初始化创建worker的时候添加
@@ -80,7 +80,7 @@ public class Main {
             CacheUtil.mappedFileReaderMapBuffer.put(fileNum, reader);
         }
         init();
-
+        FileUtil.checkFileExists(Parameters.FileSetting.queryFilePath);
         /**
          * Insert
          */
