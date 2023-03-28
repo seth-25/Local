@@ -183,7 +183,7 @@ Status WriteBatchInternal::InsertInto(vector<LeafTimeKey>& b, vector<MemTable*>&
       out("重组"+to_string(memId));
 //      out(memNum + found);
       int Nt = memNum + found;
-      int nt = max(Nt * Leaf_maxnum / Table_maxnum, Leaf_maxnum_rebalance);
+      int nt = max(Nt * Leaf_maxnum / memtable_size, Leaf_maxnum_rebalance);
 
       inserter.Rebalance(nt, nt/2, Nt);
       out(to_string(memId)+"重组成功");

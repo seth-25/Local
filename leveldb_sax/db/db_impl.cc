@@ -797,7 +797,7 @@ void DBImpl::BackgroundCompaction() {
     if (imms.empty()) has_imm_.store(false, std::memory_order_release);
     return;
   }
-#if iscompaction_time
+#if is_compaction_time
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #endif
   out("进入压缩合并");
@@ -897,7 +897,7 @@ void DBImpl::BackgroundCompaction() {
 //    }
 //    manual_compaction_ = nullptr;
 //  }
-#if iscompaction_time
+#if is_compaction_time
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
   compaction_time += std::chrono::duration_cast<std::chrono::microseconds>( t2-t1 ).count();
 #endif
@@ -2776,7 +2776,7 @@ Status DBImpl::Get_exact(const aquery& aquery1, int am_version_id,
   bool isdel = res_heap->subOver();
 #if iscount_saxt_for_exact
   res_heap->mutex_saxt_num.lock();
-  cout<<"计算下界距离saxt的数量:"<<res_heap->saxt_num_exact<<endl;
+  cout<<"The number of SAXTs involved in computing the lower bound distance:"<<res_heap->saxt_num_exact<<endl;
   saxt_num += res_heap->saxt_num_exact;
   res_heap->mutex_saxt_num.unlock();
 #endif
@@ -2982,7 +2982,7 @@ Status DBImpl::Init(LeafTimeKey* leafKeys, int leafKeysNum) {
 //  exit(1);
   free(leafkeys_rep);
 
-  int drangesNum = leafKeysNum / Table_maxnum;
+  int drangesNum = leafKeysNum / memtable_size;
   //这个range的总数。
   int averageNum = leafKeysNum / drangesNum  - Leaf_minnum;
   //创建一个边界版本
@@ -3332,7 +3332,7 @@ Status DBImpl::MakeRoomForWrite(bool force, int memId) {
       allow_delay = false;  // Do not delay a single write more than once
       write_mutex[memId].Lock();
     } else if (!force &&
-               (memNum[memId] <= Table_maxnum - Leaf_minnum)) {
+               (memNum[memId] <= memtable_size - Leaf_minnum)) {
 //      if (memNum[memId]>99995){
 //        out("memId");
 //        out(memId);

@@ -100,7 +100,7 @@ void test_st_compaction_0(vector<LeafTimeKey>& leafKeys){
   leveldb::WriteOptions writeOptions;
 
   for(int i=0;i<10000;i++) {
-    for(int j=i;j<leafKeys.size();j+=Table_maxnum)
+    for(int j=i;j<leafKeys.size();j+= memtable_size)
       pool.enqueue(std::bind(&leveldb::DB::Put, db, writeOptions, leafKeys[j]));
   }
 //  leveldb::WriteOptions writeOptions;

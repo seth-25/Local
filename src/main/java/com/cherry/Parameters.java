@@ -38,7 +38,7 @@ public class Parameters {
         public static final int readLimit = 100;
         // The size (in bytes) to read at once when reading a file.
         public static final int readSize = tsSize * readTsNum;
-        // The length of the queue for random reads.
+        // The length of the queue for random reads. (GAL step3)
         public static final int queueSize = 1024;
     }
 
@@ -65,6 +65,7 @@ public class Parameters {
 
     // Sort the Pos before accessing time series. When `sort_p` in `leveldb/sax/include/globals.h` is 1, it should be false.
     // Because sort_p=1, the incoming request has already been sorted by Pos, so there is no need to sort it again.
+    // GAL(step 2)
     public static final boolean SortPos = true;
 
 
@@ -79,7 +80,7 @@ public class Parameters {
     // exact_res(no timestamp): ts 256*4, float dist 4
     public static final int exactResSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
 
-    // Print debug information
+    // Whether to print debug information
     public static final boolean debug = false;
 
     // Whether to store saxT in little-endian

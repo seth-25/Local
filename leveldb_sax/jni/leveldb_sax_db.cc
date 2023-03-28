@@ -18,7 +18,7 @@ static uint64_t saxt_nums_ = 0;
 
 JNIEXPORT void JNICALL Java_leveldb_1sax_db_print_1time
     (JNIEnv *, jobject) {
-#if iscompaction_time
+#if is_compaction_time
   cout<<"compaction time: "<<db->getTime()/1000<<endl;
 #endif
 }
@@ -69,7 +69,7 @@ JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
   tsKey* tskeys_c = (tsKey*)env->GetDirectBufferAddress(ts_buffer);
   LeafTimeKey* leafTimeKeys = (LeafTimeKey*)env->GetDirectBufferAddress(leaftimekeys_buffer);
   long stime = 0;
-#if iscompaction_time
+#if is_compaction_time
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #endif
   for(int i=0;i<tskeynum;i++) {
@@ -86,7 +86,7 @@ JNIEXPORT jlong JNICALL Java_leveldb_1sax_db_put_1buffer
     leafTimeKeys[i].leafKey.keytime_ = tskeys_c[i].tsTime;
 #endif
   }
-#if iscompaction_time
+#if is_compaction_time
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
   stime = std::chrono::duration_cast<std::chrono::microseconds>( t2-t1 ).count();
 #endif

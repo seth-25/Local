@@ -60,7 +60,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Scanner scan = new Scanner(System.in);
-        System.out.println("Please enter:   0: Approximate query    1: Accurate query");
+        System.out.println("Please enter:   0: Approximate query    1: Exact query");
         int isExact = scan.nextInt();
 //        int isExact = 1;
         System.out.println("Number of queries: ");

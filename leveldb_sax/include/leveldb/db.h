@@ -62,7 +62,7 @@ class LEVELDB_EXPORT DB {
 
   virtual ~DB();
 
-#if iscompaction_time
+#if is_compaction_time
   virtual long getTime() = 0;
 #endif
 

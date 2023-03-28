@@ -13,14 +13,83 @@
 // 0 is 16, 1 is 8
 #define is8_segment 0
 
+#define Cardinality 256
+#define Bit_cardinality 8
+#if is8_segment
+#define Segments 8
+#else
+#define Segments 16
+#endif
+
+
 // Whether the data contains a timestamp, 0:No timestamp, 1:has timestamp but not store, 2: has timestamp and store
 #define istime 0
 
-// 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
+
+// The size of time series (float)
+#define Ts_length 256
+#define nchuw (Ts_length / Segments)
+#define Ts_values_per_segment (Ts_length / Segments)
+
+// Maximum number of keys stored in a node. NN in the paper.
+#define Leaf_maxnum 512
+//#define Leaf_maxnum (int)(128* 0.82)
+
+// Minimum number of keys stored in a node. NM in the paper.
+#define Leaf_minnum (Leaf_maxnum/2)
+
+// Number of memtables (Number of insert threads)
+#define pool_size 1
+
+// Number of time series inserted in the initialization process
+// init_num = pool_size * memtable_size
+#define init_num (1 * (int)1e6)
+
+// Size of memtable
+#define memtable_size (init_num/pool_size)
+
+// Number of compaction threads
+#define pool_compaction_size 2
+
+// Number of query threads
+#define pool_get_size 24
+
+// Divide the ones batch of SAXTs which less than topdis into several parts and query the raw time series for each part.
+//#define Get_div 2
+#define Get_div1 5 // approximate query
+#define Get_div 20 // exact query
+
+// The maximum number of Pos stored in the queue for accessing time series.
+// When the number of time series accessed during each exact query is high, it is necessary to increase the value.
+//#define info_p_max_size 250000000
+//#define info_p_max_size 50000000
+#define info_p_max_size 10240
+
+// When the number of time series accessed during each exact query is high, it is necessary to set sort_p=1, to enable sequential disk access.
+// 1 to sort by pos, 0 to sort by ldb.
+// GAL(step 1)
+#define sort_p 0
+
+
+// Whether to record the time of compaction.
+#define is_compaction_time 1
+
+// Whether to count the number of SAXTs involved in computing the lower bound distance. 0 Not count, 1 count.
 #define iscount_saxt_for_exact 1
 
-// 是否print
+// Whether to print debug information
 #define isprint 0
+
+
+
+
+
+
+
+
+
+/////////////// The following parameters do not need to be modified /////////////////
+#define shunxu 0  // 1为不进行筛选，测试顺序时用，需令sort_p = 1
 // 0, 1, 2 代表 一个，一部分，一个叶
 #define lookupi 2
 // 初始化时存入st
@@ -32,22 +101,6 @@
 // 只有一个文件不考虑hash 0 不考虑 1考虑
 #define ishash 0
 
-
-// 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
-// 访问大半部分可用
-#define sort_p 0  // 1为按p排序，0为按ldb排序
-#define shunxu 0  // 1为测试顺序时用，需令quan = 1
-
-//改成quan = 1 就无所谓了
-//#define Get_div 2
-#define Get_div1 5 //近似
-#define Get_div 20
-// 一个info最多带多少p
-//#define info_p_max_size 250000000
-//#define info_p_max_size 50000000
-#define info_p_max_size 10240
-
-///// TYPES /////
 #if isprint
 #define out(a) std::cout<<a<<std::endl
 #define out1(a,b) std::cout<<a<<" "<<to_string(b)<<std::endl
@@ -76,46 +129,20 @@ typedef time_t ts_time;
 
 typedef unsigned char cod;
 
-#define Cardinality 256
-#define Bit_cardinality 8
-#if is8_segment
-#define Segments 8
-#else
-#define Segments 16
-#endif
 
 #define isgreed 1 // 是否使用贪心策略 0不使用 1使用
 #define ischaone 0 //1 只查一个节点，0 使用下面两种策略
 #define ischalr 0 // 1必须查左右兄弟结点,0相距度一样时查兄弟节点
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
-#define Ts_length 256
-#define nchuw (Ts_length / Segments) // Ts_length / Segments
-#define Ts_values_per_segment (Ts_length / Segments)
-#define Leaf_maxnum 512
-//#define Leaf_maxnum (int)(128* 0.82)
-#define Leaf_minnum (Leaf_maxnum/2)
 
 //最小
 #define Leaf_maxnum_rebalance 10
-
-//初始化的数量==内存表中存的数量
-#define init_num (1 * (int)1e6)
-
-#define pool_size 1 // 几张表=几个插入线程
-
-//一个memtable存的数量
-#define Table_maxnum (init_num/pool_size)
-
-// 记录压缩合并时间
-#define iscompaction_time 1
 
 
 // 精确查询时，不同表大小不同，将大的表拆分给多个线程。拆分边界大小
 #define get_exact_multiThread_file_size (1000*1024*1024)
 
-#define pool_get_size 24  // 查询线程
-#define pool_compaction_size 2  // 压缩合并线程
 
 // 压缩合并申请的缓存大小， 几个leaf
 #define compaction_leaf_size 20
