@@ -1,6 +1,6 @@
 package com.cherry.util;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 import com.cherry.domain.Version;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class CacheUtil {
             try {
                 Process process = Runtime.getRuntime().exec(new String[] {"sudo", "-S", "sh", "-c", cmd});
                 OutputStream outputStream = process.getOutputStream();
-                outputStream.write(("45641146"+ "\n").getBytes());
+                outputStream.write(("your password"+ "\n").getBytes());
                 outputStream.write("sudo sh -c 'sync && echo 2 > /proc/sys/vm/drop_caches'\n".getBytes());
                 outputStream.write("sudo sh -c 'sync && echo 3 > /proc/sys/vm/drop_caches'\n".getBytes());
                 outputStream.flush();

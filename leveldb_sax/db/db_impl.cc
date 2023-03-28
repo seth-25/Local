@@ -1460,7 +1460,7 @@ Status DBImpl::Get(const aquery& aquery1,
       // 按dist排序，分成20份依次查询
       res_heap->sort_dist_p();
 
-      int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+      int div = min(Get_div1, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
       if(res_heap->to_sort_dist_p.empty()) {
         out(0);
         delete res_heap;
@@ -1564,7 +1564,7 @@ Status DBImpl::Get(const aquery& aquery1,
   // 按dist排序，分成20份依次查询
   res_heap->sort_dist_p();
 
-  int div = min(Get_div, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
+  int div = min(Get_div1, (int)(res_heap->to_sort_dist_p.size() -1)/ aquery1.k + 1);
   if(res_heap->to_sort_dist_p.empty()) {
     out(0);
     delete res_heap;

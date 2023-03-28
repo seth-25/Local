@@ -1,9 +1,9 @@
 package leveldb_sax;
 
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
+import com.cherry.search.SearchActionOld;
 import com.cherry.search.SearchAction;
-import com.cherry.search.SearchActionBuffer;
 import com.cherry.version.VersionAction;
 
 import java.nio.ByteBuffer;
@@ -27,7 +27,7 @@ public class db_send {
     // ares(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐), p 8
     // ares(没时间戳): ts 256*4, float dist 4, 空4位(p是long,对齐), p 8
     public static byte[] find_tskey(byte[] info) {
-        return SearchAction.searchRawTs(info, false);
+        return SearchActionOld.searchRawTs(info, false);
 //        return null;
     }
 
@@ -38,7 +38,7 @@ public class db_send {
     // ares_exact(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // ares_exact(没时间戳): ts 256*4, float dist 4
     public static byte[] find_tskey_exact(byte[] info) {
-        return SearchAction.searchRawTs(info, true);
+        return SearchActionOld.searchRawTs(info, true);
 //        return null;
     }
 
@@ -46,13 +46,13 @@ public class db_send {
     public static void find_tskey_ap_buffer(ByteBuffer info) {
 //        System.out.println("查询原始时间序列");
 //        SearchAction.searchRawTsHeap(info, false);
-        SearchActionBuffer.searchRawTsHeapQueue(info, false);
+        SearchAction.searchRawTsHeapQueue(info, false);
     }
 
     public static void find_tskey_exact_ap_buffer(ByteBuffer info) {
 //        System.out.println("查询原始时间序列");
 //        SearchAction.searchRawTsHeap(info, true);
-        SearchActionBuffer.searchRawTsHeapQueue(info, true);
+        SearchAction.searchRawTsHeapQueue(info, true);
     }
 
 

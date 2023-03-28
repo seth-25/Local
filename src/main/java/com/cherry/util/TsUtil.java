@@ -1,6 +1,6 @@
 package com.cherry.util;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 
 public class TsUtil {
 //    public static int computeHash(TimeSeries timeSeries) {

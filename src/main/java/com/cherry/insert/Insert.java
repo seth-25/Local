@@ -2,7 +2,7 @@ package com.cherry.insert;
 
 import com.cherry.Main;
 import com.cherry.SearchLock;
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 import com.cherry.util.*;
 
 import java.nio.ByteBuffer;

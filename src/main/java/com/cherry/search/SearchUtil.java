@@ -1,6 +1,6 @@
 package com.cherry.search;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

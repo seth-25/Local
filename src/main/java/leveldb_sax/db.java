@@ -53,7 +53,7 @@ public class db {
 //    public native void saxt_from_ts(byte[] ts, byte[] saxt);
 
 
-//    @Deprecated
+    //    @Deprecated
     public native void paa_saxt_from_ts(byte[] ts, byte[] saxt, float[] paa);
     public native void paa_saxt_from_ts_buffer(ByteBuffer ts, ByteBuffer saxt, ByteBuffer paa);
 
@@ -71,7 +71,7 @@ public class db {
 //    @Deprecated
 //    public native void put(byte[] leafTimeKey);
 
-//    @Deprecated
+    //    @Deprecated
     public native byte[] Get(byte[] aquery, boolean is_use_am, int am_version_id, int st_version_id, long[] st_number);
     // st_number, 选择的sstable
     // aquery(有时间戳): ts 256*4, startTime 8, endTime 8, k 4，paa 4*paa大小, saxt 8/16, 空4位(因为time是long,需对齐)
@@ -88,15 +88,15 @@ public class db {
                           int st_number_num, ByteBuffer st_number, ByteBuffer appro_res, ByteBuffer info);
 
 
-//    @Deprecated
+    //    @Deprecated
     public native byte[] Get_exact(byte[] aquery, int am_version_id, int st_version_id, long[] st_number, byte[] appro_res, long[] appro_num);
     // exact_res(有时间戳): ts 256*4, time 8, float dist 4, 空4位(time是long,对齐)
     // exact_res(有时间戳): ts 256*4, float dist 4
     // Get_exact返回若干个exact_res, 这个exact_res没有p也不用空4位
     //返回数量
     public native int Get_exact(ByteBuffer aquery, int am_version_id, int st_version_id,
-                                        int st_number_num, ByteBuffer st_number, int appro_res_num, ByteBuffer appro_res,
-                                       int appro_st_number_num, ByteBuffer appro_st_number, ByteBuffer exact_res, ByteBuffer info);
+                                int st_number_num, ByteBuffer st_number, int appro_res_num, ByteBuffer appro_res,
+                                int appro_st_number_num, ByteBuffer appro_st_number, ByteBuffer exact_res, ByteBuffer info);
 
 
 
@@ -114,7 +114,7 @@ public class db {
 
     public native void unref_st(int version_id);
 
-//    @Deprecated
+    //    @Deprecated
     public native float dist_ts(byte[] ts1, byte[] ts2);
     public native float dist_ts_buffer(ByteBuffer ts1, ByteBuffer ts2);
 

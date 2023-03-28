@@ -33,16 +33,17 @@
 
 // 精确查询原始时间序列，小于topdis的saxt分成几份查询原始时间序列
 // 访问大半部分可用
-#define quan 1  // 1为按p排序，0为按ldb排序
+#define quan 0  // 1为按p排序，0为按ldb排序
 #define shunxu 0  // 1为测试顺序时用，需令quan = 1
 
 //改成quan = 1 就无所谓了
-#define Get_div 2
-//#define Get_div 20
+//#define Get_div 2
+#define Get_div1 5 //近似
+#define Get_div 20
 // 一个info最多带多少p
-#define info_p_max_size 250000000
+//#define info_p_max_size 250000000
 //#define info_p_max_size 50000000
-//#define info_p_max_size 10240
+#define info_p_max_size 10240
 
 ///// TYPES /////
 #if isprint
@@ -86,20 +87,20 @@ typedef unsigned char cod;
 #define ischalr 0 // 1必须查左右兄弟结点,0相距度一样时查兄弟节点
 #define islevel0 1  // 1不合并不查，合并了才查，0都要查
 
-#define Ts_length 96
+#define Ts_length 256
 #define nchuw (Ts_length / Segments) // Ts_length / Segments
 #define Ts_values_per_segment (Ts_length / Segments)
 #define Leaf_maxnum 512
-//#define Leaf_maxnum (int)(2048 * 0.82)
+//#define Leaf_maxnum (int)(128* 0.82)
 #define Leaf_minnum (Leaf_maxnum/2)
 
 //最小
 #define Leaf_maxnum_rebalance 10
 
 //初始化的数量==内存表中存的数量
-#define init_num (4 * (int)4e6)
+#define init_num (1 * (int)1e6)
 
-#define pool_size 4 // 几张表=几个插入线程
+#define pool_size 1 // 几张表=几个插入线程
 
 //一个memtable存的数量
 #define Table_maxnum (init_num/pool_size)
@@ -129,9 +130,6 @@ typedef unsigned char cod;
 //超过这个重构叶结点
 static const int Leaf_rebuildnum = Leaf_maxnum * 2;
 static const int compaction_buffer_size = Leaf_rebuildnum;
-//static int cardinality = 256;
-//static int bit_cardinality = 8;
-//static int segments = 8;
 
 static const int sax_offset = ((Cardinality - 1) * (Cardinality - 2)) / 2;
 static int sax_offset_i[Bit_cardinality+1] = {0,0,3,21,105,465,1953,8001,32385};
@@ -301,257 +299,4 @@ enum buffer_cleaning_mode {FULL_CLEAN, TMP_ONLY_CLEAN, TMP_AND_TS_CLEAN};
 enum node_cleaning_mode {DO_NOT_INCLUDE_CHILDREN = 0,
                          INCLUDE_CHILDREN = 1};
 
-//
-/////// DEFINITIONS /////
-//#define MINVAL -2000000
-//#define MAXVAL 2000000
-//#define DELIMITER ' '
-//#define TRUE 1
-//#define FALSE 0
-//#define BUFFER_REALLOCATION_RATE  2
-//
-/////// GLOBAL VARIABLES /////
-//int FLUSHES;
-//
-/////// MACROS /////
-//#define CREATE_MASK(mask, index, sax_array)\
-//	int mask__i; \
-//	for (mask__i=0; mask__i < index->settings->paa_segments; mask__i++) \
-//		if(index->settings->bit_masks[index->settings->sax_bit_cardinality - 1] & sax_array[mask__i]) \
-//			mask |= index->settings->bit_masks[index->settings->paa_segments - mask__i - 1];
-//
-/////// BNECHMARKING /////
-////#ifdef BENCHMARK
-//		#include <time.h>
-//		#include <sys/time.h>
-//
-//        double tS;
-//        double tE;
-//
-//        struct timeval total_time_start;
-//        struct timeval parse_time_start;
-//        struct timeval input_time_start;
-//        struct timeval output_time_start;
-//        struct timeval load_node_start;
-//        struct timeval current_time;
-//        struct timeval fetch_start;
-//        struct timeval fetch_check_start;
-//        double total_input_time;
-//        double load_node_time;
-//        double total_output_time;
-//        double total_parse_time;
-//        double total_time;
-//
-///*
-//        int total_tree_nodes;
-//        int loaded_nodes;
-//        int checked_nodes;
-//        file_position_type loaded_records;
-//*/
-//
-//
-//        struct timeval partial_time_start;
-//        struct timeval partial_input_time_start;
-//        struct timeval partial_output_time_start;
-//        struct timeval partial_load_node_time_start;
-//
-//        double partial_time;
-//        double partial_input_time;
-//        double partial_output_time;
-//        double partial_load_node_time;
-//
-//        unsigned long long partial_seq_input_count;
-//        unsigned long long partial_seq_output_count;
-//        unsigned long long partial_rand_input_count;
-//        unsigned long long partial_rand_output_count;
-//
-//        unsigned long total_nodes_count;
-//        unsigned long leaf_nodes_count;
-//        unsigned long empty_leaf_nodes_count;
-//        unsigned long loaded_nodes_count;
-//        unsigned long checked_nodes_count;
-//        unsigned long loaded_ts_count;
-//        unsigned long checked_ts_count;
-//        unsigned long total_ts_count;
-//        unsigned long total_queries_count;
-//        ts_type total_node_tlb;
-//        ts_type total_data_tlb;
-//
-//        #define INIT_STATS() total_input_time = 0;\
-//                             total_output_time = 0;\
-//                             total_time = 0;\
-//                             total_parse_time = 0;\
-//                             load_node_time= 0;\
-//			     partial_time = 0;\
-//			     partial_input_time = 0;\
-//			     partial_output_time = 0;\
-//			     partial_load_node_time = 0;\
-//                             partial_seq_input_count = 0;\
-//                             partial_seq_output_count = 0;\
-//                             partial_rand_input_count = 0;\
-//                             partial_rand_output_count = 0;\
-//			     total_nodes_count = 0;\
-//			     leaf_nodes_count = 0;\
-//			     empty_leaf_nodes_count = 0;\
-//			     loaded_nodes_count = 0;\
-//			     loaded_ts_count = 0;\
-//			     checked_ts_count = 0;\
-//                             checked_nodes_count = 0;\
-//			     total_ts_count = 0;
-//
-//
-///*
-//        #define INIT_STATS() total_input_time = 0;\
-//                             total_output_time = 0;\
-//                             total_time = 0;\
-//                             total_parse_time = 0;\
-//                             total_tree_nodes = 0;\
-//                             loaded_nodes = 0;\
-//                             checked_nodes = 0;\
-//                             load_node_time=0;\
-//                             loaded_records = 0; \
-//        printf("input\t output\t parse\t nodes\t checked_nodes\t loaded_nodes\t loaded_records\t distance\t load_node_time\t total\n");
-//        #define PRINT_STATS(result_distance) printf("%lf\t %lf\t %lf\t %d\t %d\t %d\t %lld\t %lf\t %lf\t %lf\n", \
-//        total_input_time, total_output_time, \
-//        total_parse_time, total_tree_nodes, \
-//        checked_nodes, loaded_nodes, \
-//        loaded_records, result_distance, load_node_time, total_time);
-//
-//        #define COUNT_NEW_NODE() total_tree_nodes++;
-//        #define COUNT_LOADED_NODE() loaded_nodes++;
-//        #define COUNT_CHECKED_NODE() checked_nodes++;
-//
-//        #define COUNT_LOADED_RECORD() loaded_records++;
-//
-//        #define COUNT_INPUT_TIME_START gettimeofday(&input_time_start, NULL);
-//        #define COUNT_OUTPUT_TIME_START gettimeofday(&output_time_start, NULL);
-//        #define COUNT_TOTAL_TIME_START gettimeofday(&total_time_start, NULL);
-//        #define COUNT_PARSE_TIME_START gettimeofday(&parse_time_start, NULL);
-//        #define COUNT_LOAD_NODE_START gettimeofday(&load_node_start, NULL);
-//        #define COUNT_INPUT_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = input_time_start.tv_sec*1000000 + (input_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000 + (current_time.tv_usec); \
-//                                      total_input_time += (tE - tS);
-//        #define COUNT_OUTPUT_TIME_END gettimeofday(&current_time, NULL); \
-//                                      tS = output_time_start.tv_sec*1000000 + (output_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_output_time += (tE - tS);
-//        #define COUNT_TOTAL_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = total_time_start.tv_sec*1000000 + (total_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_time += (tE - tS);
-//        #define COUNT_PARSE_TIME_END  gettimeofday(&current_time, NULL);  \
-//                                      tS = parse_time_start.tv_sec*1000000 + (parse_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_parse_time += (tE - tS);
-//        #define COUNT_LOAD_NODE_END   gettimeofday(&current_time, NULL);  \
-//                                      tS = load_node_start.tv_sec*1000000 + (load_node_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      load_node_time += (tE - tS);
-//
-//*/
-//
-//
-//        #define COUNT_NEW_NODE ++total_nodes_count;
-//        #define COUNT_LEAF_NODE ++leaf_nodes_count;
-//        #define COUNT_EMPTY_LEAF_NODE ++empty_leaf_nodes_count;
-//        #define COUNT_EMPTY_LEAF_NODE_CANCEL --empty_leaf_nodes_count;
-//        #define COUNT_TOTAL_TS(num_ts) total_ts_count+=num_ts; //actual ts inserted in index
-//
-//        #define COUNT_CHECKED_NODE ++checked_nodes_count;
-//        #define COUNT_LOADED_NODE ++loaded_nodes_count;
-//        #define COUNT_LOADED_TS(num_ts) loaded_ts_count +=num_ts; //ts loaded to answer query
-//        #define COUNT_CHECKED_TS(num_ts) checked_ts_count +=num_ts; //ts loaded to answer query
-//
-//
-//      #define RESET_QUERY_COUNTERS() loaded_nodes_count = 0;\
-//                                     loaded_ts_count = 0;\
-//                                     checked_nodes_count = 0;\
-//                                     checked_ts_count = 0;
-//
-//      #define RESET_PARTIAL_COUNTERS() partial_seq_output_count = 0;\
-//                                       partial_seq_input_count = 0;\
-//                                       partial_rand_output_count = 0;\
-//                                       partial_rand_input_count = 0;\
-//				       partial_input_time = 0;\
-//				       partial_output_time = 0;\
-//				       partial_load_node_time = 0;\
-//				       partial_time = 0;
-//
-//       #define PRINT_QUERY_COUNTERS() printf("loaded_nodes and checked_ts = %lu and %lu\n", loaded_nodes_count, checked_ts_count);
-//       #define PRINT_PARTIAL_COUNTERS() printf("seq_output and partial_time = %llu and %f\n",partial_seq_output_count,  partial_time);
-//
-//        #define COUNT_PARTIAL_SEQ_INPUT ++partial_seq_input_count;
-//        #define COUNT_PARTIAL_SEQ_OUTPUT ++partial_seq_output_count;
-//        #define COUNT_PARTIAL_RAND_INPUT ++partial_rand_input_count;
-//        #define COUNT_PARTIAL_RAND_OUTPUT ++partial_rand_output_count;
-//
-//
-//        #define COUNT_INPUT_TIME_START gettimeofday(&input_time_start, NULL);
-//        #define COUNT_OUTPUT_TIME_START gettimeofday(&output_time_start, NULL);
-//        #define COUNT_TOTAL_TIME_START gettimeofday(&total_time_start, NULL);
-//
-//        #define COUNT_PARTIAL_TIME_START gettimeofday(&partial_time_start, NULL);
-//        #define COUNT_PARTIAL_INPUT_TIME_START gettimeofday(&partial_input_time_start, NULL);
-//        #define COUNT_PARTIAL_OUTPUT_TIME_START gettimeofday(&partial_output_time_start, NULL);
-//        #define COUNT_PARTIAL_LOAD_NODE_TIME_START gettimeofday(&partial_load_node_time_start, NULL);
-//
-//        #define COUNT_PARSE_TIME_START gettimeofday(&parse_time_start, NULL);
-//        #define COUNT_LOAD_NODE_START gettimeofday(&load_node_start, NULL);
-//        #define COUNT_INPUT_TIME_END  gettimeofday(&current_time, NULL);\
-//                                      tS = input_time_start.tv_sec*1000000 + (input_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000 + (current_time.tv_usec); \
-//                                      total_input_time += (tE - tS);
-//        #define COUNT_OUTPUT_TIME_END gettimeofday(&current_time, NULL); \
-//                                      tS = output_time_start.tv_sec*1000000 + (output_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_output_time += (tE - tS);
-//        #define COUNT_TOTAL_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = total_time_start.tv_sec*1000000 + (total_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_time += (tE - tS);
-//        #define COUNT_PARTIAL_INPUT_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = partial_input_time_start.tv_sec*1000000 + (partial_input_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000 + (current_time.tv_usec); \
-//                                      partial_input_time += (tE - tS);
-//        #define COUNT_PARTIAL_LOAD_NODE_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = partial_load_node_time_start.tv_sec*1000000 + (partial_load_node_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000 + (current_time.tv_usec); \
-//                                      partial_load_node_time += (tE - tS);
-//        #define COUNT_PARTIAL_OUTPUT_TIME_END gettimeofday(&current_time, NULL); \
-//                                      tS = partial_output_time_start.tv_sec*1000000 + (partial_output_time_start.tv_usec); \
-//				      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      partial_output_time += (tE - tS);
-//        #define COUNT_PARTIAL_TIME_END  gettimeofday(&current_time, NULL); \
-//                                      tS = partial_time_start.tv_sec*1000000 + (partial_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      partial_time += (tE - tS);
-//        #define COUNT_PARSE_TIME_END  gettimeofday(&current_time, NULL);  \
-//                                      tS = parse_time_start.tv_sec*1000000 + (parse_time_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      total_parse_time += (tE - tS);
-//        #define COUNT_LOAD_NODE_END   gettimeofday(&current_time, NULL);  \
-//                                      tS = load_node_start.tv_sec*1000000 + (load_node_start.tv_usec); \
-//                                      tE = current_time.tv_sec*1000000  + (current_time.tv_usec); \
-//                                      load_node_time += (tE - tS);
-//
-///*
-//  #else
-//        #define INIT_STATS() ;
-//        #define PRINT_STATS() ;
-//        #define COUNT_NEW_NODE() ;
-//        #define COUNT_CHECKED_NODE();
-//        #define COUNT_LOADED_NODE() ;
-//        #define COUNT_LOADED_RECORD() ;
-//        #define COUNT_INPUT_TIME_START ;
-//        #define COUNT_INPUT_TIME_END ;
-//        #define COUNT_OUTPUT_TIME_START ;
-//        #define COUNT_OUTPUT_TIME_END ;
-//        #define COUNT_TOTAL_TIME_START ;
-//        #define COUNT_TOTAL_TIME_END ;
-//        #define COUNT_PARSE_TIME_START ;
-//        #define COUNT_PARSE_TIME_END ;
-//    #endif
-//
-//*/
 #endif

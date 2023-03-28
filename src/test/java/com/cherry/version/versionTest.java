@@ -4,7 +4,7 @@ import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 import com.cherry.domain.Version;
 import com.cherry.util.CacheUtil;
 import com.cherry.domain.Pair;

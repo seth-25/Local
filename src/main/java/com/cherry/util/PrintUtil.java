@@ -1,6 +1,6 @@
 package com.cherry.util;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 import com.cherry.search.SearchUtil;
 
 import java.io.BufferedWriter;

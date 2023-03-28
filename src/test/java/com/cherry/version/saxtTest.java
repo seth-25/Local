@@ -1,6 +1,6 @@
 package com.cherry.version;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 import com.cherry.util.DBUtil;
 import com.cherry.util.FileUtil;
 import com.cherry.util.MappedFileReader;

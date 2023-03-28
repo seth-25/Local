@@ -1,6 +1,6 @@
 package com.cherry.util;
 
-import com.cherry.domain.Parameters;
+import com.cherry.Parameters;
 
 import java.util.Arrays;
 

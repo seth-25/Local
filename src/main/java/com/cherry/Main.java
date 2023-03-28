@@ -1,8 +1,7 @@
 package com.cherry;
 
-import com.cherry.domain.Parameters;
 import com.cherry.insert.Insert;
-import com.cherry.search.SearchBuffer;
+import com.cherry.search.Search;
 import com.cherry.util.*;
 import com.cherry.version.VersionAction;
 
@@ -13,7 +12,7 @@ import java.util.*;
 
 public class Main {
     public static void init() {
-        CacheUtil.clearCache.run(); // 清除缓存
+//        CacheUtil.clearCache.run(); // 清除缓存
 
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
@@ -29,7 +28,6 @@ public class Main {
 
         DBUtil.dataBase.open("db");
         int initTsNum = Parameters.FileSetting.readTsNum * Parameters.initNum;
-//        ByteBuffer leafTimeKeyBuffer = ByteBuffer.allocateDirect(initTsNum * Parameters.leafTimeKeysSize);
 
         DBUtil.dataBase.init_malloc(initTsNum);
         for (int i = 0; i < Parameters.initNum; i ++ ) {
@@ -106,12 +104,12 @@ public class Main {
         long totalCntP = 0, totalCntRes = 0, totalSearchTime = 0, totalReadTime = 0;
         double totalDis = 0;
 
-        SearchBuffer search;
+        Search search;
         if (isExact == 1) {
-            search = new SearchBuffer(true, k);
+            search = new Search(true, k);
         }
         else {
-            search = new SearchBuffer(false, k);
+            search = new Search(false, k);
         }
 
         int totalSearchNum = 0;
