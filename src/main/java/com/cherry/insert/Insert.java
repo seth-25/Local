@@ -72,7 +72,7 @@ public class Insert implements Runnable{
 
                     put(tsReadBatch);
                     if (offset % 1000000 == 0) {
-                        System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset);
+                        System.out.println("Read file: " + reader.getFileNum() + ";\toffset: " + offset);
                     }
 
                     ++cntRead;
@@ -123,7 +123,7 @@ public class Insert implements Runnable{
 //                tsReadBatch.getReader().arraysListOffer(tsReadBatch.getTsBytes());
                 notifyAll();
                 if (++cntInsert % 10 == 0) {
-                    System.out.println("number of insertions：" + cntInsert);
+                    System.out.println("Number of insertions：" + cntInsert);
                 }
             }
             return true;

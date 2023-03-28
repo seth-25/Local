@@ -9,13 +9,15 @@
 #ifndef isax_globals_h
 #define isax_globals_h
 
+// The number of segments a time series is divided into, support 8 and 16.
+// 0 is 16, 1 is 8
+#define is8_segment 0
 
-#define is8_segment 0 // 0为16字节， 1为8字节
-
-#define istime 0  // 0, 1, 2 代表 不要时间， 要时间但不存，要时间存
+// Whether the data contains a timestamp, 0:No timestamp, 1:has timestamp but not store, 2: has timestamp and store
+#define istime 0
 
 // 是否统计精确查询所计算下界距离的saxt 0不统计 1统计
-#define iscount_saxt_for_exact 0
+#define iscount_saxt_for_exact 1
 
 // 是否print
 #define isprint 0

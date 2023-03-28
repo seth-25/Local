@@ -34,7 +34,7 @@ public class Parameters {
         public static final String queryFilePath = "../query/query.bin";
         // The number of time series read at once from the file.
         public static final int readTsNum = 100000;
-        // The maximum number of times to read the file.
+        // The maximum number of times to read a file.
         public static final int readLimit = 100;
         // The size (in bytes) to read at once when reading a file.
         public static final int readSize = tsSize * readTsNum;
@@ -47,7 +47,7 @@ public class Parameters {
      * Init and Insert
      */
 
-    // The number of times to initialize reading files, ensuring that `initNum` * `readTsNum` = `init_num` in `leveldb/sax/include/globals.h`
+    // The number of times to read a file for init, ensuring that `initNum` * `readTsNum` = `init_num` in `leveldb/sax/include/globals.h`
     public static final int initNum = 10;
     // The number of threads used for insertion. Corresponds to `pool_size` in `leveldb/sax/include/globals.h`
     public static final int insertNumThread = 1;
@@ -79,7 +79,9 @@ public class Parameters {
     // exact_res(no timestamp): ts 256*4, float dist 4
     public static final int exactResSize = tsSize + ((hasTimeStamp > 0) ? 8 : 4);
 
-
-    public static final boolean isSuffix = true;
+    // Print debug information
     public static final boolean debug = false;
+
+    // Whether to store saxT in little-endian
+    public static final boolean isSuffix = true;
 }

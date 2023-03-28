@@ -36,11 +36,11 @@ public class Main {
             ByteBuffer tsBuffer = reader.read();
             tsBuffer.flip();
             if (offset % 1000000 == 0) {
-                System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset + ";\tfor init");
+                System.out.println("Read file: " + reader.getFileNum() + ";\toffset: " + offset + ";\tfor init");
             }
             DBUtil.dataBase.init_putbuffer(i*Parameters.FileSetting.readTsNum, Parameters.FileSetting.readTsNum, tsBuffer, 0, offset);
         }
-        System.out.println("number of insertions (init): " + Parameters.initNum);
+        System.out.println("Number of insertions (init): " + Parameters.initNum);
         DBUtil.dataBase.init_finish(initTsNum);
         PrintUtil.print("===================== init success =====================");
     }

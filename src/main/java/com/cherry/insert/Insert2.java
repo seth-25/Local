@@ -83,7 +83,7 @@ public class Insert2 implements Runnable{
                     put(tsReadBatch);
                     if (offset % 1000000 == 0) {
 //                        System.out.println("读文件: " + reader.getFileNum() + " offset:" + offset );
-                        System.out.println("read file: " + reader.getFileNum() + ";\toffset: " + offset);
+                        System.out.println("Read file: " + reader.getFileNum() + ";\toffset: " + offset);
                     }
                     ++cntRead;
 
@@ -134,7 +134,7 @@ public class Insert2 implements Runnable{
                 notifyAll();
                 if (++cntInsert % 10 == 0) {
 //                    System.out.println("插入次数：" + cntInsert);
-                    System.out.println("number of insertions：" + cntInsert);
+                    System.out.println("Number of insertions：" + cntInsert);
                 }
                 if (cntInsert + Parameters.initNum > searchStart && (cntInsert + Parameters.initNum) % interval == 0) {
                     searchLock.lock.lock();
