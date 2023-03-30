@@ -72,8 +72,8 @@ public class Parameters {
 
 
     // size of approximate query result (has p)
-    // appro_res(has timestamp): ts 256*4, long time 8, float dist 4, empty 4 (time is long, alignment), long p 8
-    // appro_res(no timestamp): ts 256*4, float dist 4, empty 4 (p is long, alignment), long p 8
+    // approximate_res(has timestamp): ts 256*4, long time 8, float dist 4, empty 4 (time is long, alignment), long p 8
+    // approximate_res(no timestamp): ts 256*4, float dist 4, empty 4 (p is long, alignment), long p 8
     public static final int approximateResSize = tsSize + 16;
     // size of exact query result (no p)
     // exact_res(has timestamp): ts 256*4, long time 8, float dist 4, empty 4 (time is long, alignment)

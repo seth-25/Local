@@ -167,7 +167,7 @@ public class Insert implements Runnable{
         System.out.println("TS convert to saxT time：" + Arrays.toString(saxtTime) + " ms");
         CacheUtil.insertThreadPool.shutdown();
 
-//        // todo todo
+//        // todo
 //        Scanner scan = new Scanner(System.in);
 //        System.out.println("clear cache:");
 //        scan.next();
