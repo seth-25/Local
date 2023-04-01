@@ -194,6 +194,10 @@ public class MappedFileReaderBuffer {
         return fileNum;
     }
 
+    public long getFileLength() {
+        return fileLength;
+    }
+
     public void close() throws IOException {
         fileIn.close();
 //        arrays = null;

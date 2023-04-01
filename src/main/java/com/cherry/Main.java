@@ -22,6 +22,9 @@ public class Main {
         if (reader == null) {
             throw new RuntimeException("No files under the ts folder");
         }
+        if (reader.getFileLength() / Parameters.tsSize < Parameters.initNum * Parameters.FileSetting.readTsNum) {
+            throw new RuntimeException(" Please ensure that the input file has sufficient time series to initialize");
+        }
 
         CacheUtil.workerInVerRef.put(Parameters.hostName, new HashMap<>());
         CacheUtil.workerOutVerRef.put(Parameters.hostName, new HashMap<>());
