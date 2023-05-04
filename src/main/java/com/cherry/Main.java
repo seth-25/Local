@@ -14,7 +14,6 @@ import java.util.*;
 public class Main {
     public static void init() {
 //        CacheUtil.clearCache.run(); // clear cache
-
         FileUtil.createFolder("./db");
         FileUtil.deleteFolderFiles("./db");
 
